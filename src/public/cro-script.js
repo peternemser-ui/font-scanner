@@ -265,7 +265,7 @@ async function analyzeCRO(options = {}) {
         0% { color: var(--accent-primary); }
         20% { color: #00ffff; }
         40% { color: #0099ff; }
-        60% { color: #9933ff; }
+        60% { color: #8b5cf6; }
         80% { color: #ff33cc; }
         100% { color: var(--accent-primary); }
       }
@@ -348,6 +348,7 @@ async function analyzeCRO(options = {}) {
     displayResults(data);
     results.style.display = 'block';
     window.__REPORT_READY__ = true;
+    window.dispatchEvent(new CustomEvent('scan:completed'));
     window.dispatchEvent(new CustomEvent('report:ready'));
 
   } catch (error) {
@@ -381,9 +382,19 @@ async function displayResults(data) {
     resultsContainer.style.display = 'block';
   }
 
-  // Defensive defaults for required properties
+  // Defensive defaults for sub-objects to prevent crashes on missing data
   data.scores = data.scores || {};
+  data.scores.cta = data.scores.cta ?? 0;
+  data.scores.form = data.scores.form ?? 0;
+  data.scores.trust = data.scores.trust ?? 0;
+  data.scores.mobile = data.scores.mobile ?? 0;
+  data.analysis = data.analysis || {};
+  data.analysis.ctas = data.analysis.ctas || {};
+  data.analysis.forms = data.analysis.forms || {};
+  data.analysis.trustSignals = data.analysis.trustSignals || {};
+  data.analysis.mobileUX = data.analysis.mobileUX || {};
   data.recommendations = data.recommendations || [];
+  data.score = data.score ?? 0;
 
   const url = (document.getElementById('url') || {}).value || '';
   const timestamp = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
@@ -812,7 +823,7 @@ function renderCROFixes(data) {
 function renderCROFixAccordion(fix, index) {
   const accordionId = `crofix-${fix.id || index}`;
   const severityColors = {
-    High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    High: { bg: 'rgba(255,68,68,0.1)', border: '#ef4444', color: '#ef4444', icon: '🔴' },
     Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
     Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
   };
@@ -901,8 +912,8 @@ function renderCROFixTabs(fix, accordionId) {
       <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
         ${fix.description}
       </p>
-      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #22c55e; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
         <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${fix.impact}</div>
       </div>
     </div>
@@ -930,7 +941,7 @@ function renderCROFixTabs(fix, accordionId) {
         <!-- Fixed Code -->
         <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
+            <span style="color: #22c55e; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
@@ -1767,17 +1778,17 @@ function createQuickWinsSection(quickWins) {
   return `
     <div style="
       background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
-      border: 2px solid #ffd700;
+      border: 2px solid #eab308;
       border-radius: 12px;
       padding: 1.5rem 2rem;
       margin: 1rem 0 2rem 0;
     ">
       <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
         <span style="font-size: 1.75rem;">⚡</span>
-        <h2 style="margin: 0; color: #ffd700; font-size: 1.35rem;">${t('reports.cro.quickWins', 'Quick Wins')}</h2>
+        <h2 style="margin: 0; color: #eab308; font-size: 1.35rem;">${t('reports.cro.quickWins', 'Quick Wins')}</h2>
         <span style="
           background: rgba(255, 215, 0, 0.2);
-          color: #ffd700;
+          color: #eab308;
           padding: 0.25rem 0.75rem;
           border-radius: 999px;
           font-size: 0.8rem;
@@ -1804,7 +1815,7 @@ function createQuickWinsSection(quickWins) {
             <div style="
               width: 50px;
               height: 50px;
-              background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+              background: linear-gradient(135deg, #eab308 0%, #ffaa00 100%);
               border-radius: 12px;
               display: flex;
               flex-direction: column;
@@ -1823,7 +1834,7 @@ function createQuickWinsSection(quickWins) {
                   display: inline-flex;
                   align-items: center;
                   gap: 0.35rem;
-                  color: #00ff41;
+                  color: #22c55e;
                   font-size: 0.85rem;
                   font-weight: 600;
                 ">
@@ -1833,7 +1844,7 @@ function createQuickWinsSection(quickWins) {
                   display: inline-flex;
                   align-items: center;
                   gap: 0.35rem;
-                  color: #00d9ff;
+                  color: #06b6d4;
                   font-size: 0.85rem;
                   font-weight: 600;
                 ">
@@ -1841,7 +1852,7 @@ function createQuickWinsSection(quickWins) {
                 </span>
                 <span style="
                   background: ${win.difficulty === 'Easy' ? 'rgba(0, 255, 65, 0.15)' : 'rgba(255, 140, 0, 0.15)'};
-                  color: ${win.difficulty === 'Easy' ? '#00ff41' : '#ff8c00'};
+                  color: ${win.difficulty === 'Easy' ? '#22c55e' : '#ff8c00'};
                   padding: 0.15rem 0.5rem;
                   border-radius: 4px;
                   font-size: 0.75rem;
@@ -1884,7 +1895,7 @@ function createQuickWinsSection(quickWins) {
         font-size: 0.85rem;
       ">
         <span>💡</span>
-        <span>${t('reports.cro.quickWinsImpact', 'Implementing all quick wins could improve conversions by')} <strong style="color: #ffd700;">30-50%</strong></span>
+        <span>${t('reports.cro.quickWinsImpact', 'Implementing all quick wins could improve conversions by')} <strong style="color: #eab308;">30-50%</strong></span>
       </div>
     </div>
   `;
@@ -1952,7 +1963,7 @@ function renderCTAContent(ctas) {
           border: 1px solid rgba(255, 68, 68, 0.3);
           border-radius: 8px;
           padding: 1rem;
-          color: #ff4444;
+          color: #ef4444;
         ">
           ${t('reports.cro.noCtasDetected', 'No action-oriented CTAs detected. Add buttons with text like "Get Started", "Sign Up", or "Buy Now".')}
         </div>
@@ -1985,7 +1996,7 @@ function renderFormContent(forms) {
 
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 1rem 0;">>> ${t('reports.cro.formAnalysis', 'Form Analysis')}</h3>
+      <h3 style="color: #22c55e; margin: 0 0 1rem 0;">>> ${t('reports.cro.formAnalysis', 'Form Analysis')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem;">
         ${t('reports.cro.formAnalysisDescription', 'Forms are critical for lead capture. Optimize field count, validation, and user experience for higher completion rates.')}
       </p>
@@ -2006,20 +2017,20 @@ function renderFormContent(forms) {
             ${forms.details.map((form, idx) => `
               <tr style="border-bottom: 1px solid #333;">
                 <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280);">${t('reports.cro.formNumber', 'Form {{number}}', { number: idx + 1 })}</td>
-                <td style="padding: 0.75rem; text-align: center; color: ${form.fieldCount <= 5 ? '#00ff41' : form.fieldCount <= 8 ? '#ffd700' : '#ff4444'}; font-weight: bold;">
+                <td style="padding: 0.75rem; text-align: center; color: ${form.fieldCount <= 5 ? '#22c55e' : form.fieldCount <= 8 ? '#eab308' : '#ef4444'}; font-weight: bold;">
                   ${form.fieldCount}
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: ${form.hasEmail ? '#00ff41' : '#808080'};">${form.hasEmail ? '✓' : '–'}</span>
+                  <span style="color: ${form.hasEmail ? '#22c55e' : '#808080'};">${form.hasEmail ? '✓' : '–'}</span>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: ${form.hasPhone ? '#00ff41' : '#808080'};">${form.hasPhone ? '✓' : '–'}</span>
+                  <span style="color: ${form.hasPhone ? '#22c55e' : '#808080'};">${form.hasPhone ? '✓' : '–'}</span>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: ${form.hasValidation ? '#00ff41' : '#ff8c00'};">${form.hasValidation ? '✓' : '✗'}</span>
+                  <span style="color: ${form.hasValidation ? '#22c55e' : '#ff8c00'};">${form.hasValidation ? '✓' : '✗'}</span>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: ${form.hasAutocomplete ? '#00ff41' : '#ff8c00'};">${form.hasAutocomplete ? '✓' : '✗'}</span>
+                  <span style="color: ${form.hasAutocomplete ? '#22c55e' : '#ff8c00'};">${form.hasAutocomplete ? '✓' : '✗'}</span>
                 </td>
               </tr>
             `).join('')}
@@ -2058,7 +2069,7 @@ function renderTrustContent(trust) {
 
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 1rem 0;">>> ${t('reports.cro.trustSignalAnalysis', 'Trust Signal Analysis')}</h3>
+      <h3 style="color: #22c55e; margin: 0 0 1rem 0;">>> ${t('reports.cro.trustSignalAnalysis', 'Trust Signal Analysis')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem;">
         ${t('reports.cro.trustSignalsDescription', 'Trust signals reduce friction and increase conversion rates. {{present}} of {{total}} trust elements detected.', { present: presentCount, total: signals.length })}
       </p>
@@ -2084,7 +2095,7 @@ function renderTrustContent(trust) {
               </div>
               <span style="
                 font-size: 1.5rem;
-                color: ${hasIt ? '#00ff41' : '#ff4444'};
+                color: ${hasIt ? '#22c55e' : '#ef4444'};
               ">${hasIt ? '✓' : '✗'}</span>
             </div>
           `;
@@ -2099,7 +2110,7 @@ function renderMobileContent(mobile) {
 
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 1rem 0;">>> ${t('reports.cro.mobileUxAnalysis', 'Mobile UX Analysis')}</h3>
+      <h3 style="color: #22c55e; margin: 0 0 1rem 0;">>> ${t('reports.cro.mobileUxAnalysis', 'Mobile UX Analysis')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem;">
         ${t('reports.cro.mobileOptimizationCritical', 'Mobile optimization is critical - over 60% of web traffic comes from mobile devices.')}
       </p>
@@ -2119,7 +2130,7 @@ function renderMobileContent(mobile) {
             margin: 0 auto 1rem;
             border-radius: 50%;
             background: #ffffff;
-            border: 3px solid ${mobile.tapTargetCompliance >= 0.8 ? '#00ff41' : '#ff8c00'};
+            border: 3px solid ${mobile.tapTargetCompliance >= 0.8 ? '#22c55e' : '#ff8c00'};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2145,7 +2156,7 @@ function renderMobileContent(mobile) {
             margin: 0 auto 1rem;
             border-radius: 50%;
             background: #ffffff;
-            border: 3px solid ${mobile.avgFontSize >= 16 ? '#00ff41' : '#ff8c00'};
+            border: 3px solid ${mobile.avgFontSize >= 16 ? '#22c55e' : '#ff8c00'};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2171,7 +2182,7 @@ function renderMobileContent(mobile) {
             margin: 0 auto 1rem;
             border-radius: 50%;
             background: #ffffff;
-            border: 3px solid ${mobile.hasViewportMeta ? '#00ff41' : '#ff4444'};
+            border: 3px solid ${mobile.hasViewportMeta ? '#22c55e' : '#ef4444'};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2190,7 +2201,7 @@ function renderRecommendationsContent(recommendations, quickWins = []) {
   if (!recommendations || recommendations.length === 0) {
     return `
       <div>
-        <h3 style="color: #00ff41; margin: 0 0 1rem 0;">>> ${t('reports.cro.recommendations', 'Recommendations')}</h3>
+        <h3 style="color: #22c55e; margin: 0 0 1rem 0;">>> ${t('reports.cro.recommendations', 'Recommendations')}</h3>
         <div style="
           background: rgba(0, 255, 65, 0.1);
           border: 1px solid rgba(0, 255, 65, 0.3);
@@ -2199,7 +2210,7 @@ function renderRecommendationsContent(recommendations, quickWins = []) {
           text-align: center;
         ">
           <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
-          <p style="color: #00ff41; font-weight: bold; margin: 0;">${t('reports.cro.noCriticalIssues', 'Great job! No critical issues found.')}</p>
+          <p style="color: #22c55e; font-weight: bold; margin: 0;">${t('reports.cro.noCriticalIssues', 'Great job! No critical issues found.')}</p>
           <p style="color: var(--r-text-muted, #6B7280); margin: 0.5rem 0 0 0; font-size: 0.9rem;">
             ${t('reports.cro.followsBestPractices', 'Your page follows CRO best practices.')}
           </p>
@@ -2209,10 +2220,10 @@ function renderRecommendationsContent(recommendations, quickWins = []) {
   }
 
   const priorityColors = {
-    critical: '#ff4444',
+    critical: '#ef4444',
     high: '#ff8c00',
-    medium: '#ffd700',
-    low: '#00ff41'
+    medium: '#eab308',
+    low: '#22c55e'
   };
 
   const quickWinsSection = quickWins && quickWins.length > 0 ? `
@@ -2264,7 +2275,7 @@ function renderRecommendationsContent(recommendations, quickWins = []) {
 }
 
 function getGradeColor(grade) {
-  const colors = { 'A': '#00ff41', 'B': '#ffd700', 'C': '#ff8c00', 'D': '#ff4444', 'F': '#ff4444' };
+  const colors = { 'A': '#22c55e', 'B': '#eab308', 'C': '#ff8c00', 'D': '#ef4444', 'F': '#ef4444' };
   return colors[grade] || '#888';
 }
 

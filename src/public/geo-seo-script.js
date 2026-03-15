@@ -148,7 +148,7 @@ async function analyze() {
         0% { color: var(--accent-primary); }
         20% { color: #00ffff; }
         40% { color: #0099ff; }
-        60% { color: #9933ff; }
+        60% { color: #8b5cf6; }
         80% { color: #ff33cc; }
         100% { color: var(--accent-primary); }
       }
@@ -227,6 +227,7 @@ async function analyze() {
     displayResults(data);
     results.style.display = 'block';
     window.__REPORT_READY__ = true;
+    window.dispatchEvent(new CustomEvent('scan:completed'));
     window.dispatchEvent(new CustomEvent('report:ready'));
 
   } catch (error) {
@@ -629,19 +630,19 @@ function createOverviewSection(data) {
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.geoSeo.phoneNumbersFound', 'Phone Numbers Found')}</span>
-              <span style="color: ${nap.phoneCount > 0 ? '#00ff41' : '#ff4444'}; font-weight: bold;">${nap.phoneCount}</span>
+              <span style="color: ${nap.phoneCount > 0 ? '#22c55e' : '#ef4444'}; font-weight: bold;">${nap.phoneCount}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.geoSeo.businessAddress', 'Business Address')}</span>
-              <span style="color: ${nap.hasAddress ? '#00ff41' : '#ff8c00'}; font-weight: bold;">${nap.hasAddress ? t('reports.common.detected', 'Detected') : t('reports.common.notFound', 'Not Found')}</span>
+              <span style="color: ${nap.hasAddress ? '#22c55e' : '#ff8c00'}; font-weight: bold;">${nap.hasAddress ? t('reports.common.detected', 'Detected') : t('reports.common.notFound', 'Not Found')}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.geoSeo.localBusinessSchema', 'LocalBusiness Schema')}</span>
-              <span style="color: ${data.analysis.schema.hasLocalBusinessSchema ? '#00ff41' : '#ff4444'}; font-weight: bold;">${data.analysis.schema.hasLocalBusinessSchema ? t('reports.common.present', 'Present') : t('reports.common.missing', 'Missing')}</span>
+              <span style="color: ${data.analysis.schema.hasLocalBusinessSchema ? '#22c55e' : '#ef4444'}; font-weight: bold;">${data.analysis.schema.hasLocalBusinessSchema ? t('reports.common.present', 'Present') : t('reports.common.missing', 'Missing')}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.geoSeo.googleMapsEmbed', 'Google Maps Embed')}</span>
-              <span style="color: ${presence.hasGoogleMap ? '#00ff41' : '#ff8c00'}; font-weight: bold;">${presence.hasGoogleMap ? t('reports.common.found', 'Found') : t('reports.common.notFound', 'Not Found')}</span>
+              <span style="color: ${presence.hasGoogleMap ? '#22c55e' : '#ff8c00'}; font-weight: bold;">${presence.hasGoogleMap ? t('reports.common.found', 'Found') : t('reports.common.notFound', 'Not Found')}</span>
             </div>
           </div>
         </div>
@@ -663,14 +664,14 @@ function createQuickWinsSection(quickWins) {
   return `
     <div style="
       background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
-      border: 2px solid #ffd700;
+      border: 2px solid #eab308;
       border-radius: 12px;
       padding: 1.5rem 2rem;
       margin: 1rem 0 2rem 0;
     ">
       <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
         <span style="font-size: 1.75rem;">⚡</span>
-        <div style="margin: 0; color: #ffd700; font-size: 1.1rem; font-weight: 700;">${t('reports.common.highImpactLowEffort', 'High Impact • Low Effort')}</div>
+        <div style="margin: 0; color: #eab308; font-size: 1.1rem; font-weight: 700;">${t('reports.common.highImpactLowEffort', 'High Impact • Low Effort')}</div>
       </div>
       <p style="color: var(--r-text-muted, #6B7280); margin: 0 0 1.5rem 0; font-size: 0.95rem;">
         ${t('reports.geoSeo.quickFixesDescription', 'These quick fixes can boost your local search visibility fast.')}
@@ -692,7 +693,7 @@ function createQuickWinsSection(quickWins) {
             <div style="
               width: 50px;
               height: 50px;
-              background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+              background: linear-gradient(135deg, #eab308 0%, #ffaa00 100%);
               border-radius: 12px;
               display: flex;
               align-items: center;
@@ -710,7 +711,7 @@ function createQuickWinsSection(quickWins) {
                   display: inline-flex;
                   align-items: center;
                   gap: 0.35rem;
-                  color: #00ff41;
+                  color: #22c55e;
                   font-size: 0.85rem;
                   font-weight: 600;
                 ">
@@ -720,7 +721,7 @@ function createQuickWinsSection(quickWins) {
                   display: inline-flex;
                   align-items: center;
                   gap: 0.35rem;
-                  color: #00d9ff;
+                  color: #06b6d4;
                   font-size: 0.85rem;
                   font-weight: 600;
                 ">
@@ -728,7 +729,7 @@ function createQuickWinsSection(quickWins) {
                 </span>
                 <span style="
                   background: ${win.difficulty === 'Easy' ? 'rgba(0, 255, 65, 0.15)' : 'rgba(255, 140, 0, 0.15)'};
-                  color: ${win.difficulty === 'Easy' ? '#00ff41' : '#ff8c00'};
+                  color: ${win.difficulty === 'Easy' ? '#22c55e' : '#ff8c00'};
                   padding: 0.15rem 0.5rem;
                   border-radius: 4px;
                   font-size: 0.75rem;
@@ -838,7 +839,7 @@ function renderNAPContent(analysis) {
 
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.contactInfoAnalysis', 'Contact Information Analysis')}</h3>
+      <h3 style="color: #22c55e; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.contactInfoAnalysis', 'Contact Information Analysis')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem; font-size: 0.9rem;">
         ${t('reports.geoSeo.napConsistencyDesc', 'NAP (Name, Address, Phone) consistency is crucial for local SEO. Ensure this information matches across all platforms.')}
       </p>
@@ -853,7 +854,7 @@ function renderNAPContent(analysis) {
         ">
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
             <span style="font-size: 1.5rem;">📞</span>
-            <span style="color: #00ff41; font-weight: bold;">${t('reports.geoSeo.phoneNumbers', 'Phone Numbers')}</span>
+            <span style="color: #22c55e; font-weight: bold;">${t('reports.geoSeo.phoneNumbers', 'Phone Numbers')}</span>
           </div>
           <div style="font-size: 2rem; font-weight: 900; color: var(--r-text, #111827); margin-bottom: 0.5rem;">${nap.phoneCount}</div>
           <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.geoSeo.detectedOnPage', 'detected on page')}</div>
@@ -862,7 +863,7 @@ function renderNAPContent(analysis) {
               ${nap.phones.map(phone => `
                 <span style="
                   background: rgba(0, 255, 65, 0.1);
-                  color: #00ff41;
+                  color: #22c55e;
                   padding: 0.35rem 0.75rem;
                   border-radius: 4px;
                   font-size: 0.85rem;
@@ -882,9 +883,9 @@ function renderNAPContent(analysis) {
         ">
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
             <span style="font-size: 1.5rem;">📍</span>
-            <span style="color: ${nap.hasAddress ? '#00ff41' : '#ff8c00'}; font-weight: bold;">${t('reports.geoSeo.businessAddress', 'Business Address')}</span>
+            <span style="color: ${nap.hasAddress ? '#22c55e' : '#ff8c00'}; font-weight: bold;">${t('reports.geoSeo.businessAddress', 'Business Address')}</span>
           </div>
-          <div style="font-size: 1.5rem; font-weight: 900; color: ${nap.hasAddress ? '#00ff41' : '#ff8c00'}; margin-bottom: 0.5rem;">
+          <div style="font-size: 1.5rem; font-weight: 900; color: ${nap.hasAddress ? '#22c55e' : '#ff8c00'}; margin-bottom: 0.5rem;">
             ${nap.hasAddress ? '✅ ' + t('reports.common.detected', 'Detected') : '⚠️ ' + t('reports.common.notFound', 'Not Found')}
           </div>
           ${nap.zipCodes.length > 0 ? `
@@ -910,7 +911,7 @@ function renderNAPContent(analysis) {
             ${nap.emails.map(email => `
               <span style="
                 background: rgba(0, 217, 255, 0.1);
-                color: #00d9ff;
+                color: #06b6d4;
                 padding: 0.35rem 0.75rem;
                 border-radius: 4px;
                 font-size: 0.85rem;
@@ -936,7 +937,7 @@ function renderSchemaContent(schema) {
 
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.structuredDataAnalysis', 'Structured Data Analysis')}</h3>
+      <h3 style="color: #22c55e; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.structuredDataAnalysis', 'Structured Data Analysis')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem; font-size: 0.9rem;">
         ${t('reports.geoSeo.schemaDescription', 'Schema markup helps search engines understand your business. LocalBusiness schema is essential for local pack results.')}
       </p>
@@ -950,7 +951,7 @@ function renderSchemaContent(schema) {
           margin-bottom: 1rem;
         ">
           <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.geoSeo.businessNameInSchema', 'Business Name in Schema')}:</span>
-          <div style="color: #00ff41; font-size: 1.1rem; font-weight: bold; margin-top: 0.25rem;">${schema.businessName}</div>
+          <div style="color: #22c55e; font-size: 1.1rem; font-weight: bold; margin-top: 0.25rem;">${schema.businessName}</div>
         </div>
       ` : ''}
 
@@ -963,11 +964,11 @@ function renderSchemaContent(schema) {
             padding: 0.75rem 1rem;
             background: rgba(255, 255, 255, 0.03);
             border-radius: 6px;
-            border-left: 3px solid ${item.value ? '#00ff41' : (item.critical ? '#ff4444' : '#ff8c00')};
+            border-left: 3px solid ${item.value ? '#22c55e' : (item.critical ? '#ef4444' : '#ff8c00')};
           ">
             <span style="color: var(--r-text-muted, #6B7280);">${item.label}</span>
             <span style="
-              color: ${item.value ? '#00ff41' : '#ff4444'};
+              color: ${item.value ? '#22c55e' : '#ef4444'};
               font-weight: bold;
               display: flex;
               align-items: center;
@@ -987,7 +988,7 @@ function renderSchemaContent(schema) {
           border: 1px solid rgba(255, 68, 68, 0.3);
           border-radius: 8px;
         ">
-          <div style="display: flex; align-items: center; gap: 0.5rem; color: #ff4444; font-weight: bold; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: #ef4444; font-weight: bold; margin-bottom: 0.5rem;">
             <span>⚠️</span> ${t('reports.geoSeo.criticalSchemaMissing', 'Critical: LocalBusiness Schema Missing')}
           </div>
           <p style="color: var(--r-text-muted, #6B7280); margin: 0; font-size: 0.9rem;">
@@ -1009,7 +1010,7 @@ function renderLocalPresenceContent(presence) {
 
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.localPresenceSignals', 'Local Presence Signals')}</h3>
+      <h3 style="color: #22c55e; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.localPresenceSignals', 'Local Presence Signals')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem; font-size: 0.9rem;">
         ${t('reports.geoSeo.presenceSignalsDesc', 'These signals help establish your local presence and build trust with potential customers.')}
       </p>
@@ -1029,13 +1030,13 @@ function renderLocalPresenceContent(presence) {
             <span style="font-size: 1.5rem;">${signal.icon}</span>
             <div style="flex: 1;">
               <div style="color: var(--r-text, #111827); font-weight: 600;">${signal.label}</div>
-              <div style="color: ${signal.value ? '#00ff41' : '#ff8c00'}; font-size: 0.85rem;">
+              <div style="color: ${signal.value ? '#22c55e' : '#ff8c00'}; font-size: 0.85rem;">
                 ${signal.value ? '✅ ' + t('reports.common.found', 'Found') : '⚠️ ' + t('reports.common.notFound', 'Not Found')}
               </div>
             </div>
             <span style="
               background: rgba(${signal.impact === 'High' ? '255, 68, 68' : '255, 215, 0'}, 0.15);
-              color: ${signal.impact === 'High' ? '#ff6b6b' : '#ffd700'};
+              color: ${signal.impact === 'High' ? '#ff6b6b' : '#eab308'};
               padding: 0.2rem 0.5rem;
               border-radius: 4px;
               font-size: 0.7rem;
@@ -1056,7 +1057,7 @@ function renderLocalPresenceContent(presence) {
           <span style="color: var(--r-text-muted, #6B7280); font-weight: bold;">${t('reports.geoSeo.socialProfilesLinked', 'Social Profiles Linked')}</span>
           <span style="
             background: rgba(0, 217, 255, 0.15);
-            color: #00d9ff;
+            color: #06b6d4;
             padding: 0.15rem 0.5rem;
             border-radius: 4px;
             font-size: 0.75rem;
@@ -1068,7 +1069,7 @@ function renderLocalPresenceContent(presence) {
             ${presence.socialProfiles.map(profile => `
               <span style="
                 background: rgba(0, 217, 255, 0.1);
-                color: #00d9ff;
+                color: #06b6d4;
                 padding: 0.5rem 1rem;
                 border-radius: 6px;
                 font-size: 0.9rem;
@@ -1096,7 +1097,7 @@ function renderCitationsContent(citations) {
 
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.citationsDirectoryAnalysis', 'Citations & Directory Analysis')}</h3>
+      <h3 style="color: #22c55e; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.citationsDirectoryAnalysis', 'Citations & Directory Analysis')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem; font-size: 0.9rem;">
         ${t('reports.geoSeo.citationsDesc', 'Citations are mentions of your business on external directories and platforms. Consistent citations boost local search rankings.')}
       </p>
@@ -1109,12 +1110,12 @@ function renderCitationsContent(citations) {
         padding: 0.75rem 1rem;
         background: rgba(255, 255, 255, 0.03);
         border-radius: 6px;
-        border-left: 3px solid ${hasCitationSection ? '#00ff41' : '#ff8c00'};
+        border-left: 3px solid ${hasCitationSection ? '#22c55e' : '#ff8c00'};
         margin-bottom: 1rem;
       ">
         <span style="color: var(--r-text-muted, #6B7280);">${t('reports.geoSeo.citationSectionDetected', 'Citation Section Detected')}</span>
         <span style="
-          color: ${hasCitationSection ? '#00ff41' : '#ff8c00'};
+          color: ${hasCitationSection ? '#22c55e' : '#ff8c00'};
           font-weight: bold;
           display: flex;
           align-items: center;
@@ -1136,7 +1137,7 @@ function renderCitationsContent(citations) {
           <span style="color: var(--r-text-muted, #6B7280); font-weight: bold;">${t('reports.geoSeo.directoryLinksFound', 'Directory Links Found')}</span>
           <span style="
             background: rgba(0, 217, 255, 0.15);
-            color: #00d9ff;
+            color: #06b6d4;
             padding: 0.15rem 0.5rem;
             border-radius: 4px;
             font-size: 0.75rem;
@@ -1155,7 +1156,7 @@ function renderCitationsContent(citations) {
                 border: 1px solid rgba(0, 255, 65, 0.15);
                 border-radius: 6px;
               ">
-                <span style="color: #00d9ff; font-size: 0.85rem; font-weight: 600;">${escapeGeoSeoHtml(link.domain || link.url || '')}</span>
+                <span style="color: #06b6d4; font-size: 0.85rem; font-weight: 600;">${escapeGeoSeoHtml(link.domain || link.url || '')}</span>
                 <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">${escapeGeoSeoHtml(link.text || link.anchorText || '')}</span>
               </div>
             `).join('')}
@@ -1176,7 +1177,7 @@ function renderCitationsContent(citations) {
           <span style="color: var(--r-text-muted, #6B7280); font-weight: bold;">${t('reports.geoSeo.directoryBadges', 'Directory Badges Detected')}</span>
           <span style="
             background: rgba(255, 215, 0, 0.15);
-            color: #ffd700;
+            color: #eab308;
             padding: 0.15rem 0.5rem;
             border-radius: 4px;
             font-size: 0.75rem;
@@ -1188,7 +1189,7 @@ function renderCitationsContent(citations) {
             ${directoryBadges.map(badge => `
               <span style="
                 background: rgba(255, 215, 0, 0.1);
-                color: #ffd700;
+                color: #eab308;
                 padding: 0.35rem 0.75rem;
                 border-radius: 4px;
                 font-size: 0.85rem;
@@ -1222,7 +1223,7 @@ function renderMultiLocationContent(multiLocation) {
 
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.multiLocationAnalysis', 'Multi-Location & Geo Pages Analysis')}</h3>
+      <h3 style="color: #22c55e; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.multiLocationAnalysis', 'Multi-Location & Geo Pages Analysis')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem; font-size: 0.9rem;">
         ${t('reports.geoSeo.multiLocationDesc', 'Multi-location signals help search engines associate your business with specific geographic areas and serve relevant results.')}
       </p>
@@ -1237,14 +1238,14 @@ function renderMultiLocationContent(multiLocation) {
             padding: 0.75rem 1rem;
             background: rgba(255, 255, 255, 0.03);
             border-radius: 6px;
-            border-left: 3px solid ${item.value ? '#00ff41' : '#ff8c00'};
+            border-left: 3px solid ${item.value ? '#22c55e' : '#ff8c00'};
           ">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span style="font-size: 1.1rem;">${item.icon}</span>
               <span style="color: var(--r-text-muted, #6B7280);">${item.label}</span>
             </div>
             <span style="
-              color: ${item.value ? '#00ff41' : '#ff8c00'};
+              color: ${item.value ? '#22c55e' : '#ff8c00'};
               font-weight: bold;
               display: flex;
               align-items: center;
@@ -1270,7 +1271,7 @@ function renderMultiLocationContent(multiLocation) {
           <span style="color: var(--r-text-muted, #6B7280); font-weight: bold;">${t('reports.geoSeo.locationLandingPages', 'Location Landing Pages')}</span>
           <span style="
             background: rgba(0, 217, 255, 0.15);
-            color: #00d9ff;
+            color: #06b6d4;
             padding: 0.15rem 0.5rem;
             border-radius: 4px;
             font-size: 0.75rem;
@@ -1290,7 +1291,7 @@ function renderMultiLocationContent(multiLocation) {
                 border-radius: 6px;
               ">
                 <span style="font-size: 0.9rem;">🔗</span>
-                <span style="color: #00d9ff; font-size: 0.85rem; word-break: break-all;">${escapeGeoSeoHtml(page.url || page.href || page)}</span>
+                <span style="color: #06b6d4; font-size: 0.85rem; word-break: break-all;">${escapeGeoSeoHtml(page.url || page.href || page)}</span>
               </div>
             `).join('')}
           </div>
@@ -1317,7 +1318,7 @@ function renderReviewsContent(reviews) {
 
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.reviewsReputationAnalysis', 'Reviews & Reputation Analysis')}</h3>
+      <h3 style="color: #22c55e; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.geoSeo.reviewsReputationAnalysis', 'Reviews & Reputation Analysis')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem; font-size: 0.9rem;">
         ${t('reports.geoSeo.reviewsDesc', 'Reviews and reputation signals influence local search rankings and customer trust. Displaying ratings and linking to review platforms improves credibility.')}
       </p>
@@ -1336,13 +1337,13 @@ function renderReviewsContent(reviews) {
         ">
           <div style="text-align: center;">
             <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-bottom: 0.25rem;">${t('reports.geoSeo.ratingValue', 'Rating Value')}</div>
-            <div style="font-size: 2rem; font-weight: 900; color: #ffd700;">
+            <div style="font-size: 2rem; font-weight: 900; color: #eab308;">
               ${ratingValue !== null ? '⭐ ' + ratingValue : '—'}
             </div>
           </div>
           <div style="text-align: center;">
             <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-bottom: 0.25rem;">${t('reports.geoSeo.totalReviews', 'Total Reviews')}</div>
-            <div style="font-size: 2rem; font-weight: 900; color: #00d9ff;">
+            <div style="font-size: 2rem; font-weight: 900; color: #06b6d4;">
               ${reviewCount}
             </div>
           </div>
@@ -1378,7 +1379,7 @@ function renderReviewsContent(reviews) {
           <span style="font-size: 1.3rem;">📝</span>
           <div>
             <div style="color: var(--r-text, #111827); font-weight: 600; font-size: 0.9rem;">${t('reports.geoSeo.reviewSchema', 'Review Schema')}</div>
-            <div style="color: ${hasReviewSchema ? '#00ff41' : '#ff8c00'}; font-size: 0.8rem;">
+            <div style="color: ${hasReviewSchema ? '#22c55e' : '#ff8c00'}; font-size: 0.8rem;">
               ${hasReviewSchema ? '✅ ' + t('reports.common.present', 'Present') : '⚠️ ' + t('reports.common.missing', 'Missing')}
             </div>
           </div>
@@ -1396,7 +1397,7 @@ function renderReviewsContent(reviews) {
           <span style="font-size: 1.3rem;">💬</span>
           <div>
             <div style="color: var(--r-text, #111827); font-weight: 600; font-size: 0.9rem;">${t('reports.geoSeo.testimonialsSection', 'Testimonials Section')}</div>
-            <div style="color: ${hasTestimonials ? '#00ff41' : '#ff8c00'}; font-size: 0.8rem;">
+            <div style="color: ${hasTestimonials ? '#22c55e' : '#ff8c00'}; font-size: 0.8rem;">
               ${hasTestimonials ? '✅ ' + t('reports.common.found', 'Found') : '⚠️ ' + t('reports.common.notFound', 'Not Found')}
             </div>
           </div>
@@ -1414,7 +1415,7 @@ function renderReviewsContent(reviews) {
           <span style="font-size: 1.3rem;">⭐</span>
           <div>
             <div style="color: var(--r-text, #111827); font-weight: 600; font-size: 0.9rem;">${t('reports.geoSeo.starWidgets', 'Star Widgets')}</div>
-            <div style="color: ${hasStarWidgets ? '#00ff41' : '#ff8c00'}; font-size: 0.8rem;">
+            <div style="color: ${hasStarWidgets ? '#22c55e' : '#ff8c00'}; font-size: 0.8rem;">
               ${hasStarWidgets ? '✅ ' + t('reports.common.found', 'Found') : '⚠️ ' + t('reports.common.notFound', 'Not Found')}
             </div>
           </div>
@@ -1432,7 +1433,7 @@ function renderReviewsContent(reviews) {
           <span style="font-size: 1.3rem;">🔢</span>
           <div>
             <div style="color: var(--r-text, #111827); font-weight: 600; font-size: 0.9rem;">${t('reports.geoSeo.reviewCountDisplay', 'Review Count Display')}</div>
-            <div style="color: ${hasReviewCountDisplay ? '#00ff41' : '#ff8c00'}; font-size: 0.8rem;">
+            <div style="color: ${hasReviewCountDisplay ? '#22c55e' : '#ff8c00'}; font-size: 0.8rem;">
               ${hasReviewCountDisplay ? '✅ ' + t('reports.common.found', 'Found') : '⚠️ ' + t('reports.common.notFound', 'Not Found')}
             </div>
           </div>
@@ -1450,7 +1451,7 @@ function renderReviewsContent(reviews) {
           <span style="color: var(--r-text-muted, #6B7280); font-weight: bold;">${t('reports.geoSeo.reviewPlatformLinks', 'Review Platform Links')}</span>
           <span style="
             background: rgba(0, 217, 255, 0.15);
-            color: #00d9ff;
+            color: #06b6d4;
             padding: 0.15rem 0.5rem;
             border-radius: 4px;
             font-size: 0.75rem;
@@ -1464,7 +1465,7 @@ function renderReviewsContent(reviews) {
               return `
                 <span style="
                   background: rgba(0, 217, 255, 0.1);
-                  color: #00d9ff;
+                  color: #06b6d4;
                   padding: 0.5rem 1rem;
                   border-radius: 6px;
                   font-size: 0.9rem;
@@ -1692,7 +1693,7 @@ function renderGeoSeoFixAccordion(rec, index) {
   const severityLabel = t(`reports.common.severity.${severityKey}`, severityKey.charAt(0).toUpperCase() + severityKey.slice(1));
 
   const severityColors = {
-    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    high: { bg: 'rgba(255,68,68,0.1)', border: '#ef4444', color: '#ef4444', icon: '🔴' },
     medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
     low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
   };
@@ -1789,10 +1790,10 @@ function renderGeoSeoFixTabs(accordionId, rec, codeSnippet, steps) {
     <!-- Summary Tab -->
     <div class="geo-seo-fix-tab-content active" id="${accordionId}-summary" style="display: block;">
       <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; padding: 1rem;">
-        <h5 style="margin: 0 0 0.75rem 0; color: #00ff41; font-size: 0.95rem;">${t('reports.common.whatsTheIssue', "What's the issue?")}</h5>
+        <h5 style="margin: 0 0 0.75rem 0; color: #22c55e; font-size: 0.95rem;">${t('reports.common.whatsTheIssue', "What's the issue?")}</h5>
         <p style="margin: 0 0 1rem 0; color: var(--r-text-muted, #6B7280); font-size: 0.9rem; line-height: 1.6;">${translatedFix.description}</p>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <span style="background: rgba(0,255,65,0.1); color: #00ff41; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">${t('reports.common.impact', 'Impact')}: ${rec.priority === 'critical' || rec.priority === 'high' ? t('reports.common.high', 'High') : t('reports.common.medium', 'Medium')}</span>
+          <span style="background: rgba(0,255,65,0.1); color: #22c55e; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">${t('reports.common.impact', 'Impact')}: ${rec.priority === 'critical' || rec.priority === 'high' ? t('reports.common.high', 'High') : t('reports.common.medium', 'Medium')}</span>
           <span style="background: rgba(59,130,246,0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">${t('reports.common.category', 'Category')}: ${t('reports.geoSeo.geoSeo', 'GEO SEO')}</span>
         </div>
       </div>
@@ -1804,7 +1805,7 @@ function renderGeoSeoFixTabs(accordionId, rec, codeSnippet, steps) {
         <!-- Recommended Fix -->
         <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.recommendedImplementation', 'Recommended Implementation')}</span>
+            <span style="color: #22c55e; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.recommendedImplementation', 'Recommended Implementation')}</span>
             <button data-action="copy-geo-seo-code" data-code-id="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
@@ -1946,10 +1947,10 @@ function getGeoSeoSteps(rec) {
 // Helper functions
 function getGradeColor(grade) {
   const colors = {
-    'A': '#00ff41',
-    'B': '#ffd700',
+    'A': '#22c55e',
+    'B': '#eab308',
     'C': '#ff8c00',
-    'D': '#ff4444',
+    'D': '#ef4444',
     'F': '#ff0000'
   };
   return colors[grade] || '#888888';

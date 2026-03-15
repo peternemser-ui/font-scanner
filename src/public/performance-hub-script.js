@@ -551,7 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Show placeholder instead of blank screen
       const errContainer = document.getElementById('resultsContent') || document.getElementById('results');
       if (errContainer) {
-        errContainer.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted,#9ca3af)"><p style="font-size:1.1rem;margin-bottom:0.5rem">Data unavailable</p><p style="font-size:0.9rem">The cached data was invalid. Please run a new scan.</p></div>';
+        errContainer.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted,#9ca3af)"><p style="font-size:1.1rem;margin-bottom:0.5rem">' + t('reports.storage.dataUnavailable', 'Data unavailable') + '</p><p style="font-size:0.9rem">' + t('reports.storage.pleaseRescan', 'The cached data was invalid. Please run a new scan.') + '</p></div>';
       }
       window.__REPORT_READY__ = true;
       window.dispatchEvent(new CustomEvent('report:ready'));
@@ -1072,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
           0% { color: var(--accent-primary); }
           20% { color: #00ffff; }
           40% { color: #0099ff; }
-          60% { color: #9933ff; }
+          60% { color: #8b5cf6; }
           80% { color: #ff33cc; }
           100% { color: var(--accent-primary); }
         }
@@ -1566,7 +1566,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="report-shell__metric-grid">
           ${metrics.map(m => `
             <div class="metric-card" style="background: var(--bg-tertiary, #1a1a1a); border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); border-radius: 12px; padding: 1.25rem;">
-              <div style="font-weight: 700; color: #00ff41; margin-bottom: 0.75rem; font-size: 1.05rem;">${m.label}</div>
+              <div style="font-weight: 700; color: #22c55e; margin-bottom: 0.75rem; font-size: 1.05rem;">${m.label}</div>
               <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary, #111); border-radius: 8px; color: ${m.color}; font-weight: 700; font-size: 1.25rem;">${m.value}</div>
             </div>
           `).join('')}
@@ -2128,7 +2128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chartMetrics = entries.filter(e => e.thresholds);
     const chartHtml = `
       <div style="margin-bottom: 1.5rem;">
-        <div style="font-weight: 700; color: #00ff41; margin-bottom: 0.75rem;">${t('reports.performance.performanceMetrics', 'Performance Metrics')}</div>
+        <div style="font-weight: 700; color: #22c55e; margin-bottom: 0.75rem;">${t('reports.performance.performanceMetrics', 'Performance Metrics')}</div>
         ${chartMetrics.map(e => {
           const worst = Math.max(e.dVal || 0, e.mVal || 0);
           const getColor = (val) => {
@@ -2165,7 +2165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (entry.single) {
               return `
               <div class="metric-card" style="background: var(--bg-tertiary, #1a1a1a); border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); border-radius: 12px; padding: 1.25rem;">
-                <div style="font-weight: 700; color: #00ff41; margin-bottom: 0.75rem; font-size: 1.1rem;">${entry.label}</div>
+                <div style="font-weight: 700; color: #22c55e; margin-bottom: 0.75rem; font-size: 1.1rem;">${entry.label}</div>
                 <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary, #fff); text-align: center; padding: 0.5rem; background: var(--bg-secondary, #111); border-radius: 8px;">${entry.d}</div>
               </div>
               `;
@@ -2173,7 +2173,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             return `
             <div class="metric-card" style="background: var(--bg-tertiary, #1a1a1a); border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); border-radius: 12px; padding: 1.25rem;">
-              <div style="font-weight: 700; color: #00ff41; margin-bottom: 1rem; font-size: 1.1rem;">${entry.label}</div>
+              <div style="font-weight: 700; color: #22c55e; margin-bottom: 1rem; font-size: 1.1rem;">${entry.label}</div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary, #111); border-radius: 8px;">
                   <div style="color: var(--text-muted, #9ca3af); font-size: 0.8rem; margin-bottom: 0.35rem;">Desktop</div>
@@ -2204,7 +2204,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Build bar chart
     const chartHtml = `
       <div style="margin-bottom: 1.5rem;">
-        <div style="font-weight: 700; color: #00ff41; margin-bottom: 0.75rem;">${t('reports.performance.scoreComparison', 'Score Comparison')}</div>
+        <div style="font-weight: 700; color: #22c55e; margin-bottom: 0.75rem;">${t('reports.performance.scoreComparison', 'Score Comparison')}</div>
         ${entries.map(e => {
           const avg = averageScore(e.d, e.m) || 0;
           const color = getScoreColor(avg);
@@ -2230,7 +2230,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const mColor = getScoreColor(e.m);
             return `
             <div class="metric-card" style="background: var(--bg-tertiary, #1a1a1a); border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); border-radius: 12px; padding: 1.25rem;">
-              <div style="font-weight: 700; color: #00ff41; margin-bottom: 1rem; font-size: 1.1rem;">${e.label}</div>
+              <div style="font-weight: 700; color: #22c55e; margin-bottom: 1rem; font-size: 1.1rem;">${e.label}</div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary, #111); border-radius: 8px;">
                   <div style="color: var(--text-muted, #9ca3af); font-size: 0.8rem; margin-bottom: 0.35rem;">Desktop</div>
@@ -2261,7 +2261,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Build CWV bar chart
     const chartHtml = `
       <div style="margin-bottom: 1.5rem;">
-        <div style="font-weight: 700; color: #00ff41; margin-bottom: 0.75rem;">${t('reports.performance.coreWebVitalsOverview', 'Core Web Vitals Overview')}</div>
+        <div style="font-weight: 700; color: #22c55e; margin-bottom: 0.75rem;">${t('reports.performance.coreWebVitalsOverview', 'Core Web Vitals Overview')}</div>
         ${items.map(item => {
           const worst = Math.max(item.dVal || 0, item.mVal || 0);
           const getColor = (val) => {
@@ -2302,7 +2302,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
             <div class="metric-card" style="background: var(--bg-tertiary, #1a1a1a); border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); border-radius: 12px; padding: 1.25rem;">
               <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                <div style="font-weight: 700; color: #00ff41; font-size: 1.1rem;">${item.label}</div>
+                <div style="font-weight: 700; color: #22c55e; font-size: 1.1rem;">${item.label}</div>
                 <div style="color: var(--text-muted, #9ca3af); font-size: 0.85rem; padding: 0.2rem 0.5rem; background: var(--bg-secondary, #111); border-radius: 4px;">Target: ${item.target}</div>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -2368,7 +2368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <strong style="color: var(--text-primary, #fff);">${op.title || op.name || t('reports.common.opportunity', 'Opportunity')}</strong>
             ${op.priority ? `<span style="display:inline-block; margin-left:0.5rem; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; background:${op.priority === 'high' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}; color:${op.priority === 'high' ? '#ef4444' : '#f59e0b'};">${t('reports.performance.priorityLabels.' + op.priority, op.priority)}</span>` : ''}
             ${op.description ? `<div style="color: var(--text-muted, #9ca3af); font-size: 0.9rem; margin-top: 0.25rem;">${op.description}</div>` : ''}
-            ${op.impact ? `<div style="color: #00ff41; font-size: 0.85rem; margin-top: 0.25rem;">${t('reports.common.impactLabel', 'Impact: ')}${op.impact}</div>` : ''}
+            ${op.impact ? `<div style="color: #22c55e; font-size: 0.85rem; margin-top: 0.25rem;">${t('reports.common.impactLabel', 'Impact: ')}${op.impact}</div>` : ''}
           </li>
         `).join('')}
       </ul>
@@ -2508,7 +2508,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const width = `${Math.max(6, Math.round(normalized * 100))}%`;
       const display = row.isCls ? formatCls(row.value) : formatMsCompact(row.value);
       const status = getCwvStatus(row.value, row.label === 'LCP' ? 'lcp' : row.label === 'CLS' ? 'cls' : 'inp');
-      const barColor = status.tier === 'good' ? '#00ff41' : status.tier === 'warn' ? '#f59e0b' : status.tier === 'fail' ? '#ef4444' : '#00b5ff';
+      const barColor = status.tier === 'good' ? '#22c55e' : status.tier === 'warn' ? '#f59e0b' : status.tier === 'fail' ? '#ef4444' : '#00b5ff';
       return `
         <div class="report-shell__bar-row">
           <div class="report-shell__bar-label">${row.label}</div>
@@ -2524,7 +2524,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="report-shell__card">
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-bottom:1rem;">
           <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
-            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">${t('reports.cwv.lcp', 'LCP')} (${t('reports.cwv.lcpName', 'Largest Contentful Paint')})</div>
+            <div style="font-weight:700; color:#22c55e; margin-bottom:0.5rem;">${t('reports.cwv.lcp', 'LCP')} (${t('reports.cwv.lcpName', 'Largest Contentful Paint')})</div>
             <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
               <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.lcpMs)}</strong></span>
               <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.lcpMs)}</strong></span>
@@ -2532,7 +2532,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.lcp.target}</div>
           </div>
           <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
-            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">${t('reports.cwv.cls', 'CLS')} (${t('reports.cwv.clsName', 'Cumulative Layout Shift')})</div>
+            <div style="font-weight:700; color:#22c55e; margin-bottom:0.5rem;">${t('reports.cwv.cls', 'CLS')} (${t('reports.cwv.clsName', 'Cumulative Layout Shift')})</div>
             <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
               <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatCls(d.clsNum)}</strong></span>
               <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatCls(m.clsNum)}</strong></span>
@@ -2540,7 +2540,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.cls.target}</div>
           </div>
           <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
-            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">${t('reports.cwv.inp', 'INP/TBT')} (${t('reports.cwv.inpName', 'Interaction to Next Paint')})</div>
+            <div style="font-weight:700; color:#22c55e; margin-bottom:0.5rem;">${t('reports.cwv.inp', 'INP/TBT')} (${t('reports.cwv.inpName', 'Interaction to Next Paint')})</div>
             <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
               <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.inpMs || d.fidMs)}</strong></span>
               <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.inpMs || m.fidMs)}</strong></span>
@@ -2548,7 +2548,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.inp.target}</div>
           </div>
           <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
-            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">${t('reports.cwv.fcp', 'FCP')} (${t('reports.cwv.fcpName', 'First Contentful Paint')})</div>
+            <div style="font-weight:700; color:#22c55e; margin-bottom:0.5rem;">${t('reports.cwv.fcp', 'FCP')} (${t('reports.cwv.fcpName', 'First Contentful Paint')})</div>
             <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
               <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.fcpMs)}</strong></span>
               <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.fcpMs)}</strong></span>
@@ -2557,7 +2557,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
         <div style="margin-top:1rem;">
-          <div style="font-weight:700; color:#00ff41; margin-bottom:0.75rem;">${t('reports.performance.performanceOverview', 'Performance Overview')}</div>
+          <div style="font-weight:700; color:#22c55e; margin-bottom:0.75rem;">${t('reports.performance.performanceOverview', 'Performance Overview')}</div>
           ${chartHtml}
         </div>
       </div>
@@ -2575,7 +2575,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const th = thresholds[metric] || { good: 0, poor: 1 };
     const getColor = (val) => {
       if (val === null || val === undefined) return '#6b7280';
-      if (val <= th.good) return '#00ff41';
+      if (val <= th.good) return '#22c55e';
       if (val <= th.poor) return '#f59e0b';
       return '#ef4444';
     };
@@ -2598,7 +2598,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="report-shell__card">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
           <span style="font-weight:700; color:#e5e7eb;">${t('reports.cwv.target', 'Target')}:</span>
-          <span style="color:#00ff41; font-weight:600;">${entry.target || '—'}</span>
+          <span style="color:#22c55e; font-weight:600;">${entry.target || '—'}</span>
         </div>
         <div style="display:grid; gap:1rem; margin-bottom:1rem;">
           <div style="background:#111b16; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:1rem;">
@@ -2621,7 +2621,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
         <div style="background:rgba(0,255,65,0.06); border:1px solid rgba(0,255,65,0.2); border-radius:8px; padding:0.75rem; color:#c7f5d9; font-size:0.9rem;">
-          <strong style="color:#00ff41;">💡 ${t('reports.common.howToImprove', 'How to improve')}:</strong> ${tips[metric] || t('reports.cwv.tips.default', 'Optimize render-blocking resources, compress images, and reduce JS long tasks.')}
+          <strong style="color:#22c55e;">💡 ${t('reports.common.howToImprove', 'How to improve')}:</strong> ${tips[metric] || t('reports.cwv.tips.default', 'Optimize render-blocking resources, compress images, and reduce JS long tasks.')}
         </div>
       </div>
     `;
@@ -3120,7 +3120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!thresholds || value === null || value === undefined || Number.isNaN(value)) {
       return { tier: 'unknown', label: '—', badge: t('reports.common.cwvStatus.unknown', 'Unknown'), tone: '#9ca3af' };
     }
-    if (value <= thresholds.good) return { tier: 'good', label: t('reports.common.cwvStatus.pass', 'Pass'), badge: t('reports.common.cwvStatus.pass', 'Pass'), tone: '#00ff41' };
+    if (value <= thresholds.good) return { tier: 'good', label: t('reports.common.cwvStatus.pass', 'Pass'), badge: t('reports.common.cwvStatus.pass', 'Pass'), tone: '#22c55e' };
     if (value <= thresholds.poor) return { tier: 'warn', label: t('reports.common.cwvStatus.atRisk', 'At risk'), badge: t('reports.common.cwvStatus.atRisk', 'At risk'), tone: '#f59e0b' };
     return { tier: 'fail', label: t('reports.common.cwvStatus.fail', 'Fail'), badge: t('reports.common.cwvStatus.fail', 'Fail'), tone: '#ef4444' };
   }
@@ -3723,7 +3723,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <button class="accordion__header" type="button" data-accordion-toggle="${id}">
           <div class="accordion__title">${title}</div>
           <div class="accordion__meta">
-            ${isProLocked ? '<span class="pro-pill">PRO</span>' : ''}
+            ${isProLocked ? '<span class="pro-pill">' + t('reports.common.pro', 'PRO') + '</span>' : ''}
             <span class="accordion__chevron">${chevron}</span>
           </div>
         </button>
@@ -3866,12 +3866,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const data = current.data || current;
 
     const rows = [
-      ['Mode', mode],
-      ['URL', current.url || ''],
-      ['Performance Score', data?.performanceScore || data?.score || data?.overallScore || ''],
-      ['Pages Scanned', data?.pagesScanned || ''],
-      ['Recommendations', (data?.recommendations?.length || data?.recommendations?.recommendations?.length || 0)],
-      ['Issues', (data?.issues?.length || 0)]
+      [t('reports.common.mode', 'Mode'), mode],
+      [t('reports.common.url', 'URL'), current.url || ''],
+      [t('reports.performance.performanceScore', 'Performance Score'), data?.performanceScore || data?.score || data?.overallScore || ''],
+      [t('reports.common.pagesScanned', 'Pages Scanned'), data?.pagesScanned || ''],
+      [t('reports.common.recommendations', 'Recommendations'), (data?.recommendations?.length || data?.recommendations?.recommendations?.length || 0)],
+      [t('reports.common.issuesFound', 'Issues'), (data?.issues?.length || 0)]
     ];
 
     const csv = rows
@@ -3934,11 +3934,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ensureProStyles();
     return `
       <div class="summary-footer">
-        <div class="summary-footer__pill">Speed & UX</div>
+        <div class="summary-footer__pill">${t('performanceHub.title', 'Speed & UX')}</div>
         <div class="summary-footer__stats">
-          <div><div class="summary-footer__label">Issues</div><div class="summary-footer__value">${stats.issues}</div></div>
-          <div><div class="summary-footer__label">Recommendations</div><div class="summary-footer__value">${stats.recommendations}</div></div>
-          <div><div class="summary-footer__label">Checks</div><div class="summary-footer__value">${stats.checks}</div></div>
+          <div><div class="summary-footer__label">${t('reports.common.issuesFound', 'Issues')}</div><div class="summary-footer__value">${stats.issues}</div></div>
+          <div><div class="summary-footer__label">${t('reports.common.recommendations', 'Recommendations')}</div><div class="summary-footer__value">${stats.recommendations}</div></div>
+          <div><div class="summary-footer__label">${t('reports.common.checksPassed', 'Checks')}</div><div class="summary-footer__value">${stats.checks}</div></div>
         </div>
       </div>
     `;
@@ -4178,7 +4178,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="take-action__title">${t('reports.common.takeAction', 'Take Action')}</div>
             <div class="take-action__subtitle">${t('reports.common.exportAndShare', 'Export and share results (Pro)')}</div>
           </div>
-          <span class="pro-pill">PRO</span>
+          <span class="pro-pill">${t('reports.common.pro', 'PRO')}</span>
         </div>
         <div class="take-action__actions">
           <button class="take-action__btn" data-action="export-pdf">${t('reports.common.exportPdf', 'Export PDF')}</button>
@@ -4224,7 +4224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         border-radius: 999px;
         border: 1px solid rgba(0, 255, 65, 0.4);
         background: rgba(0, 255, 65, 0.1);
-        color: #00ff41;
+        color: #22c55e;
         font-size: 0.7rem;
         font-weight: 700;
         letter-spacing: 0.05em;
@@ -4379,7 +4379,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .lh-report-title {
         font-weight: 700;
         font-size: 1.1rem;
-        color: #00ff41;
+        color: #22c55e;
       }
       .lh-report-meta {
         color: #a7a7a7;
@@ -4401,7 +4401,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       .lh-score-status {
         font-weight: 700;
-        color: #00ff41;
+        color: #22c55e;
       }
       .lh-grid {
         display: grid;
@@ -4718,11 +4718,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;">
               <div style="flex: 1; background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: ${info.color};">$5</div>
-                <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">This report only</div>
+                <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">${t('reports.common.thisReportOnly', 'This report only')}</div>
               </div>
               <div style="flex: 1; background: var(--color-primary-dim); border: 1px solid var(--color-primary); border-radius: 8px; padding: 1rem;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);">$30/mo</div>
-                <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">All reports</div>
+                <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">${t('reports.common.allReports', 'All reports')}</div>
               </div>
             </div>
           </div>

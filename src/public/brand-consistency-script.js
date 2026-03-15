@@ -425,6 +425,7 @@ async function analyze() {
     setTimeout(() => {
       displayResults(data);
       window.__REPORT_READY__ = true;
+      window.dispatchEvent(new CustomEvent('scan:completed'));
       window.dispatchEvent(new CustomEvent('report:ready'));
     }, 500);
 
@@ -466,9 +467,9 @@ function getScoreColor(score) {
 
 function getGradeColor(grade) {
   if (grade.startsWith('A')) return 'var(--accent-primary)';
-  if (grade.startsWith('B')) return '#ffd700';
+  if (grade.startsWith('B')) return '#eab308';
   if (grade.startsWith('C')) return '#ff8c00';
-  return '#ff4444';
+  return '#ef4444';
 }
 
 async function displayResults(data) {
@@ -1753,7 +1754,7 @@ function lightenColor(hex) {
 function renderBrandFixAccordion(fix, index) {
   const accordionId = `brandfix-${fix.id || index}`;
   const severityColors = {
-    High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    High: { bg: 'rgba(255,68,68,0.1)', border: '#ef4444', color: '#ef4444', icon: '🔴' },
     Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
     Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
   };
@@ -1842,8 +1843,8 @@ function renderBrandFixTabs(fix, accordionId) {
       <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
         ${escapeBrandHtml(fix.description)}
       </p>
-      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #22c55e; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
         <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${escapeBrandHtml(fix.impact)}</div>
       </div>
     </div>
@@ -1871,7 +1872,7 @@ function renderBrandFixTabs(fix, accordionId) {
         
         <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
+            <span style="color: #22c55e; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
@@ -1950,7 +1951,7 @@ function getStatusColor(status) {
   const s = status.toLowerCase();
   if (s === 'excellent' || s === 'detected' || s === 'present') return 'var(--accent-primary)';
   if (s === 'good') return '#90EE90';
-  if (s === 'fair') return '#ffd700';
+  if (s === 'fair') return '#eab308';
   if (s === 'poor' || s === 'missing') return '#ff6b6b';
   return 'rgba(255,255,255,0.5)';
 }
@@ -2220,9 +2221,9 @@ function renderRecommendationsContent(recommendations) {
   }
   
   const priorityColors = {
-    critical: '#ff4444',
+    critical: '#ef4444',
     high: '#ff8c00',
-    medium: '#ffd700',
+    medium: '#eab308',
     low: '#90EE90',
     success: getAccentPrimaryHex()
   };
@@ -2469,7 +2470,7 @@ function renderColorUsageContent(colorUsageAnalysis) {
   const categoryColors = {
     text: 'var(--accent-primary)',
     background: '#667eea',
-    border: '#ffd700',
+    border: '#eab308',
     accent: '#ff6b6b'
   };
   
@@ -2553,7 +2554,7 @@ function renderVisualHierarchyContent(hierarchyAnalysis) {
           ${typeScale.map(s => `
             <div style="background: rgba(255,255,255,0.05); padding: 0.5rem 0.75rem; border-radius: 4px; font-size: 0.85rem;">
               <span style="color: rgba(255,255,255,0.6);">${s.from}/${s.to}:</span>
-              <span style="color: ${s.ratio >= 1.2 && s.ratio <= 1.5 ? 'var(--accent-primary)' : '#ffd700'}; margin-left: 0.25rem; font-weight: 500;">${s.ratio}</span>
+              <span style="color: ${s.ratio >= 1.2 && s.ratio <= 1.5 ? 'var(--accent-primary)' : '#eab308'}; margin-left: 0.25rem; font-weight: 500;">${s.ratio}</span>
             </div>
           `).join('')}
         </div>
@@ -2691,7 +2692,7 @@ function renderCrossPageConsistencyContent(data) {
   const getSeverityBadge = (severity) => {
     const colors = {
       high: '#ff6b6b',
-      medium: '#ffd700',
+      medium: '#eab308',
       low: getAccentPrimaryHex()
     };
     return `<span style="display: inline-block; padding: 2px 8px; background: ${colors[severity] || '#888'}20; color: ${colors[severity] || '#888'}; font-size: 0.7rem; border-radius: 4px; font-weight: 600; text-transform: uppercase;">${t('reports.common.severity.' + severity.toLowerCase(), severity)}</span>`;
@@ -2728,7 +2729,7 @@ function renderCrossPageConsistencyContent(data) {
         <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.consistencyIssues', 'Consistency Issues')} (${issues.length})</h4>
         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
           ${issues.map(issue => `
-            <div style="padding: 0.75rem 1rem; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid ${issue.severity === 'high' ? '#ff6b6b' : issue.severity === 'medium' ? '#ffd700' : getAccentPrimaryHex()};">
+            <div style="padding: 0.75rem 1rem; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid ${issue.severity === 'high' ? '#ff6b6b' : issue.severity === 'medium' ? '#eab308' : getAccentPrimaryHex()};">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.35rem;">
                 <span style="color: rgba(255,255,255,0.9); font-weight: 500;">${issue.message}</span>
                 ${getSeverityBadge(issue.severity)}
@@ -2761,7 +2762,7 @@ function renderCrossPageConsistencyContent(data) {
           ${crossPage.pageVariations.map(v => `
             <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; text-align: center;">
               <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 0.25rem;">${v.metric}</div>
-              <div style="font-size: 1.1rem; font-weight: 600; color: ${v.variation === 'consistent' || v.variation === 'low' || (typeof v.variation === 'number' && v.variation < 5) ? 'var(--accent-primary)' : '#ffd700'};">
+              <div style="font-size: 1.1rem; font-weight: 600; color: ${v.variation === 'consistent' || v.variation === 'low' || (typeof v.variation === 'number' && v.variation < 5) ? 'var(--accent-primary)' : '#eab308'};">
                 ${typeof v.variation === 'number' ? '±' + v.variation : v.variation}
               </div>
             </div>
@@ -2803,10 +2804,10 @@ function renderPageBreakdownContent(pageBreakdown) {
                   </div>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: ${page.colorCount <= 20 ? 'var(--accent-primary)' : page.colorCount <= 35 ? '#ffd700' : '#ff6b6b'};">${page.colorCount}</span>
+                  <span style="color: ${page.colorCount <= 20 ? 'var(--accent-primary)' : page.colorCount <= 35 ? '#eab308' : '#ff6b6b'};">${page.colorCount}</span>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: ${page.fontCount <= 3 ? 'var(--accent-primary)' : page.fontCount <= 5 ? '#ffd700' : '#ff6b6b'};">${page.fontCount}</span>
+                  <span style="color: ${page.fontCount <= 3 ? 'var(--accent-primary)' : page.fontCount <= 5 ? '#eab308' : '#ff6b6b'};">${page.fontCount}</span>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
                   <span style="color: ${page.hasLogo ? 'var(--accent-primary)' : '#ff6b6b'};">${page.hasLogo ? '✓' : '✗'}</span>
@@ -3005,7 +3006,7 @@ function generateScoreBreakdown(scoreBreakdown) {
           const score = data.score || 0;
           const maxScore = data.maxScore || 100;
           const percentage = Math.round((score / maxScore) * 100);
-          const color = percentage >= 70 ? '#00ff41' : percentage >= 40 ? '#ffd700' : '#ff4444';
+          const color = percentage >= 70 ? '#22c55e' : percentage >= 40 ? '#eab308' : '#ef4444';
           const label = t(`brandConsistency.breakdown.${key}`, key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()));
           
           return `

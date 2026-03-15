@@ -126,10 +126,10 @@
       'broken-links': t('common.pdf.reportLabel.broken-links', 'Broken Links'),
       'ip-reputation': t('common.pdf.reportLabel.ip-reputation', 'IP Reputation'),
       'geo-seo': t('common.pdf.reportLabel.geo-seo', 'GEO SEO'),
-      'local-seo': t('common.pdf.reportLabel.geo-seo', 'GEO SEO'),
-      'mobile-analyzer': t('common.pdf.reportLabel.mobile-analyzer', 'Mobile'),
+      'local-seo': t('common.pdf.reportLabel.local-seo', 'Local SEO'),
+      mobile: t('common.pdf.reportLabel.mobile', 'Mobile'),
       competitive: t('common.pdf.reportLabel.competitive', 'Competitive'),
-      'hosting-analyzer': t('common.pdf.reportLabel.hosting', 'Hosting'),
+      hosting: t('common.pdf.reportLabel.hosting', 'Hosting'),
       'site-crawler': t('common.pdf.reportLabel.site-crawler', 'Site Crawler'),
       'core-web-vitals': t('common.pdf.reportLabel.core-web-vitals', 'Core Web Vitals')
     };

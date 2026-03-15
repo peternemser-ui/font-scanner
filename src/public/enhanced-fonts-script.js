@@ -353,12 +353,14 @@ document.addEventListener('DOMContentLoaded', () => {
           results.classList.remove('hidden');
           displayResults(data);
           window.__REPORT_READY__ = true;
+          window.dispatchEvent(new CustomEvent('scan:completed'));
           window.dispatchEvent(new CustomEvent('report:ready'));
         }, 800);
       } else {
         results.classList.remove('hidden');
         displayResults(data);
         window.__REPORT_READY__ = true;
+        window.dispatchEvent(new CustomEvent('scan:completed'));
         window.dispatchEvent(new CustomEvent('report:ready'));
       }
 
@@ -1636,7 +1638,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
   function renderFontsFixAccordion(fix, index) {
     const accordionId = `fontsfix-${fix.id || index}`;
     const severityColors = {
-      High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+      High: { bg: 'rgba(255,68,68,0.1)', border: '#ef4444', color: '#ef4444', icon: '🔴' },
       Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
       Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
     };
@@ -1725,8 +1727,8 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
         <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
           ${fix.description}
         </p>
-        <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
+        <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
+          <div style="color: #22c55e; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
           <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${fix.impact}</div>
         </div>
       </div>
@@ -1754,7 +1756,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           <!-- Fixed Code -->
           <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-              <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
+              <span style="color: #22c55e; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
               <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
                 padding: 0.25rem 0.75rem;
                 border-radius: 4px;
@@ -1853,7 +1855,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
     return `
       <!-- Font Format Analysis -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           >> ${t('reports.fonts.fontFormatAnalysis', 'Font Format Analysis')}
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${getRecommendationColor(formats?.summary?.recommendation)}; color: white;">
             ${formats?.summary?.recommendation || t('reports.common.na', 'N/A')}
@@ -1888,7 +1890,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- font-display Audit -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           >> ${t('reports.fonts.fontDisplayAudit', 'font-display Audit')}
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${getRecommendationColor(fontDisplay?.summary?.recommendation)}; color: white;">
             ${fontDisplay?.summary?.score || 0}/100
@@ -1941,7 +1943,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- Typography Accessibility -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           >> ${t('reports.fonts.typographyAccessibility', 'Typography Accessibility')}
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${getRecommendationColor(accessibility?.summary?.recommendation)}; color: white;">
             ${accessibility?.score || 0}/100
@@ -1973,7 +1975,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- Fallback Stack Quality -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           >> ${t('reports.fonts.fallbackStackQuality', 'Fallback Stack Quality')}
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${getRecommendationColor(fallbackStacks?.summary?.recommendation)}; color: white;">
             ${fallbackStacks?.summary?.score || 0}/100
@@ -2002,7 +2004,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- Variable Fonts Detection -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           >> ${t('reports.fonts.variableFonts', 'Variable Fonts')}
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${variableFonts?.hasVariableFonts ? '#10b981' : '#6b7280'}; color: white;">
             ${variableFonts?.variableFonts?.length || 0} ${t('reports.fonts.detected', 'detected')}
@@ -2030,7 +2032,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- CLS Risk Score -->
       <div style="margin-bottom: 1rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           >> ${t('reports.fonts.layoutShiftRiskCLS', 'Layout Shift Risk (CLS)')}
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${clsRisk?.level === 'low' ? '#10b981' : clsRisk?.level === 'medium' ? '#f59e0b' : '#ef4444'}; color: white;">
             ${clsRisk?.level || t('reports.common.na', 'N/A')}
@@ -2109,7 +2111,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
         <p>>> ${t('reports.common.url', 'URL')}: ${data.url || 'N/A'}</p>
         <p>>> ${t('reports.common.timestamp', 'timestamp')}: ${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date(data.analyzedAt)) : new Date(data.analyzedAt).toLocaleString()}</p>
         
-        <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">>> ${t('reports.fonts.fontHealthSummary', 'Font Health Summary')}</h3>
+        <h3 style="color: #22c55e; margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">>> ${t('reports.fonts.fontHealthSummary', 'Font Health Summary')}</h3>
 
         <!-- Circular Progress Dials -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2rem; margin: 2rem 0;">
@@ -2160,7 +2162,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       </div>
       
       <!-- Charts Row -->
-      <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">>> ${t('reports.fonts.fontDistribution', 'Font Distribution')}</h3>
+      <h3 style="color: #22c55e; margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">>> ${t('reports.fonts.fontDistribution', 'Font Distribution')}</h3>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1rem;">
         <div class="chart-container">
           <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: var(--r-text-muted, #6B7280);">${t('reports.fonts.providerDistribution', 'Provider Distribution')}</h4>
@@ -2174,7 +2176,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       
       <!-- Screenshot Preview -->
       ${screenshot ? `
-        <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">>> ${t('reports.common.pagePreview', 'Page Preview')}</h3>
+        <h3 style="color: #22c55e; margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">>> ${t('reports.common.pagePreview', 'Page Preview')}</h3>
         <div style="margin-bottom: 1rem;">
           <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); border-radius: 8px; padding: 1rem; text-align: center;">
             <img src="${screenshot}" alt="${t('reports.common.websiteScreenshot', 'Website screenshot')}" style="max-width: 100%; max-height: 300px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);" loading="lazy" />
@@ -2228,7 +2230,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       <!-- Categorized Fonts (from full scan) -->
       ${hasFullScan && fonts.categorizedFonts ? `
         <div style="margin-top: 1.5rem;">
-          <h4 style="margin-bottom: 1rem; color: #00ff41;">>> ${t('reports.fonts.fontCategories', 'Font Categories')}</h4>
+          <h4 style="margin-bottom: 1rem; color: #22c55e;">>> ${t('reports.fonts.fontCategories', 'Font Categories')}</h4>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
             ${fonts.categorizedFonts.googleFonts?.length > 0 ? `
               <div style="background: rgba(66, 133, 244, 0.1); border: 1px solid rgba(66, 133, 244, 0.3); border-radius: 8px; padding: 1rem;">
@@ -2330,7 +2332,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       // Determine provider color scheme
       const providerColors = {
         'Google Fonts': { bg: 'rgba(66, 133, 244, 0.1)', border: '#4285f4', text: '#4285f4' },
-        'Adobe Fonts': { bg: 'rgba(255, 0, 0, 0.1)', border: '#ff0000', text: '#ff4444' },
+        'Adobe Fonts': { bg: 'rgba(255, 0, 0, 0.1)', border: '#ff0000', text: '#ef4444' },
         'Font Awesome': { bg: 'rgba(52, 152, 219, 0.1)', border: '#3498db', text: '#3498db' },
         'Bunny Fonts': { bg: 'rgba(255, 165, 0, 0.1)', border: '#ffa500', text: '#ffa500' },
         'Self-Hosted': { bg: 'rgba(16, 185, 129, 0.1)', border: '#10b981', text: '#10b981' }
@@ -2465,7 +2467,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- Format Distribution -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41; font-size: 0.95rem;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e; font-size: 0.95rem;">
           >> ${t('reports.fonts.fontFormats', 'Font Formats')}
         </h4>
         <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
@@ -2484,7 +2486,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- Preconnect Status -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41; font-size: 0.95rem;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e; font-size: 0.95rem;">
           >> ${t('reports.fonts.preconnectHints', 'Preconnect Hints')}
           <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: ${fontDelivery.preconnectsMissing === 0 ? 'rgba(16, 185, 129, 0.2); color: #10b981' : 'rgba(245, 158, 11, 0.2); color: #f59e0b'};">
             ${fontDelivery.preconnectsMissing === 0 ? t('reports.fonts.allFound', 'All found') : `${fontDelivery.preconnectsMissing} ${t('reports.fonts.missing', 'missing')}`}
@@ -2515,7 +2517,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- Preload Status -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41; font-size: 0.95rem;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e; font-size: 0.95rem;">
           >> ${t('reports.fonts.fontPreloads', 'Font Preloads')}
           <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: ${(preloads || []).length > 0 ? 'rgba(16, 185, 129, 0.2); color: #10b981' : 'rgba(245, 158, 11, 0.2); color: #f59e0b'};">
             ${(preloads || []).length} ${t('reports.fonts.found', 'found')}
@@ -2543,7 +2545,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       <!-- Font Requests Table -->
       ${(requests || []).length > 0 ? `
         <div style="margin-bottom: 1rem;">
-          <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41; font-size: 0.95rem;">
+          <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e; font-size: 0.95rem;">
             >> ${t('reports.fonts.networkRequests', 'Network Requests')}
           </h4>
           <div style="overflow-x: auto;">
@@ -2622,7 +2624,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       <!-- CLS Risk Details -->
       ${clsRisk?.risks?.length > 0 ? `
         <div style="margin-bottom: 1.5rem;">
-          <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41; font-size: 0.95rem;">
+          <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e; font-size: 0.95rem;">
             >> ${t('reports.fonts.layoutShiftRisks', 'Layout Shift Risks')}
           </h4>
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
@@ -2645,7 +2647,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- font-display Breakdown -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41; font-size: 0.95rem;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e; font-size: 0.95rem;">
           >> ${t('reports.fonts.fontDisplayValues', 'font-display Values')}
           <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: ${fontDisplaySummary?.problematic === 0 ? 'rgba(16, 185, 129, 0.2); color: #10b981' : 'rgba(245, 158, 11, 0.2); color: #f59e0b'};">
             ${fontDisplaySummary?.optimal || 0} ${t('reports.fonts.optimal', 'optimal')}
@@ -2696,7 +2698,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- Metric Overrides -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41; font-size: 0.95rem;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e; font-size: 0.95rem;">
           >> ${t('reports.fonts.metricOverrides', 'Metric Overrides')}
           <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: ${(metricOverrides || []).length > 0 ? 'rgba(16, 185, 129, 0.2); color: #10b981' : 'rgba(107, 114, 128, 0.2); color: var(--r-text-faint, #9CA3AF)'};">
             ${(metricOverrides || []).length} ${t('reports.fonts.found', 'found')}
@@ -2742,7 +2744,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- Fallback Stack Quality -->
       <div style="margin-bottom: 1rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41; font-size: 0.95rem;">
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #22c55e; font-size: 0.95rem;">
           >> ${t('reports.fonts.fallbackStackQuality', 'Fallback Stack Quality')}
           <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: ${fallbackStacksSummary?.poor === 0 ? 'rgba(16, 185, 129, 0.2); color: #10b981' : 'rgba(245, 158, 11, 0.2); color: #f59e0b'};">
             ${fallbackStacksSummary?.excellent || 0} ${t('reports.fonts.excellentLabel', 'excellent')}, ${fallbackStacksSummary?.poor || 0} ${t('reports.fonts.poorLabel', 'poor')}
@@ -3090,7 +3092,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       <!-- Typography Scale Analysis -->
       ${typographyStats.sizeBreakdown.length > 0 ? `
         <div style="margin-bottom: 1.5rem;">
-          <h4 style="margin-bottom: 1rem; color: #00ff41; display: flex; align-items: center; gap: 0.5rem;">
+          <h4 style="margin-bottom: 1rem; color: #22c55e; display: flex; align-items: center; gap: 0.5rem;">
             >> ${t('reports.fonts.typographyScale', 'Typography Scale')}
             <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: ${typographyStats.hasConsistentScale ? 'rgba(16, 185, 129, 0.2); color: #10b981' : 'rgba(245, 158, 11, 0.2); color: #f59e0b'};">
               ${typographyStats.hasConsistentScale ? t('reports.fonts.consistent', 'Consistent') : t('reports.fonts.reviewNeeded', 'Review needed')}
@@ -3111,7 +3113,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       <!-- Font Weight Distribution -->
       ${typographyStats.weightBreakdown.length > 0 ? `
         <div style="margin-bottom: 1.5rem;">
-          <h4 style="margin-bottom: 1rem; color: #00ff41;">>> ${t('reports.fonts.weightDistribution', 'Weight Distribution')}</h4>
+          <h4 style="margin-bottom: 1rem; color: #22c55e;">>> ${t('reports.fonts.weightDistribution', 'Weight Distribution')}</h4>
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
             ${typographyStats.weightBreakdown.map(weight => `
               <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
@@ -3126,7 +3128,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       <!-- Typography Usage Table -->
       ${fontMetrics.length > 0 ? `
         <div style="margin-bottom: 1rem;">
-          <h4 style="margin-bottom: 1rem; color: #00ff41;">>> ${t('reports.fonts.typographyUsage', 'Typography Usage')}</h4>
+          <h4 style="margin-bottom: 1rem; color: #22c55e;">>> ${t('reports.fonts.typographyUsage', 'Typography Usage')}</h4>
           <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
               <thead>
@@ -3251,7 +3253,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       
       <!-- Quick Fixes with Copy Buttons -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; color: #00ff41;">>> ${t('reports.fonts.quickPerformanceFixes', 'Quick Performance Fixes')}</h4>
+        <h4 style="margin-bottom: 1rem; color: #22c55e;">>> ${t('reports.fonts.quickPerformanceFixes', 'Quick Performance Fixes')}</h4>
 
         <div class="font-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
@@ -3289,7 +3291,7 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
       
       <!-- Detailed Recommendations -->
       ${allRecs.length > 0 ? `
-        <h4 style="margin-bottom: 1rem; color: #00ff41;">>> ${t('reports.fonts.siteSpecificRecommendations', 'Site-Specific Recommendations')}</h4>
+        <h4 style="margin-bottom: 1rem; color: #22c55e;">>> ${t('reports.fonts.siteSpecificRecommendations', 'Site-Specific Recommendations')}</h4>
         ${allRecs.map(rec => `
           <div style="background: rgba(66, 133, 244, 0.05); border-left: 4px solid ${rec.priority === 'high' ? '#ef4444' : rec.priority === 'medium' ? '#f59e0b' : '#3b82f6'}; padding: 1rem; margin-bottom: 0.75rem; border-radius: 0 8px 8px 0;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -3304,7 +3306,7 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
       
       <!-- Best Practices -->
       ${bestPractices.recommendations && bestPractices.recommendations.length > 0 ? `
-        <h4 style="margin: 1.5rem 0 1rem 0; color: #00ff41;">>> ${t('reports.fonts.bestPracticesAudit', 'Best Practices Audit')} (${t('reports.common.score', 'Score')}: ${bestPractices.score || 0}/100)</h4>
+        <h4 style="margin: 1.5rem 0 1rem 0; color: #22c55e;">>> ${t('reports.fonts.bestPracticesAudit', 'Best Practices Audit')} (${t('reports.common.score', 'Score')}: ${bestPractices.score || 0}/100)</h4>
         <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 1rem;">
           ${bestPractices.recommendations.slice(0, 6).map(rec => `
             <div style="display: flex; align-items: flex-start; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">

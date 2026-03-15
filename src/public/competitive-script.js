@@ -643,8 +643,9 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     closePacmanModal();
     resultsDiv.style.display = 'block';
     window.__REPORT_READY__ = true;
+    window.dispatchEvent(new CustomEvent('scan:completed'));
     window.dispatchEvent(new CustomEvent('report:ready'));
-    
+
   } catch (error) {
     // Show detailed error message
     const errorMsg = error.message || 'An unknown error occurred';

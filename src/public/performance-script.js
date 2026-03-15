@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
           0% { color: var(--accent-primary); }
           20% { color: #00ffff; }
           40% { color: #0099ff; }
-          60% { color: #9933ff; }
+          60% { color: #8b5cf6; }
           80% { color: #ff33cc; }
           100% { color: var(--accent-primary); }
         }
@@ -273,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           displayPerformanceResults(data.results);
           window.__REPORT_READY__ = true;
+          window.dispatchEvent(new CustomEvent('scan:completed'));
           window.dispatchEvent(new CustomEvent('report:ready'));
         }, 1000);
       } else {
@@ -372,13 +373,21 @@ function displayPerformanceResults(results) {
     });
   }
 
+  // Defensive defaults for sub-objects to prevent crashes on missing data
+  results.performanceScore = results.performanceScore ?? 0;
+  results.coreWebVitals = results.coreWebVitals || {};
+  results.dimensionalGrades = results.dimensionalGrades || {};
+  results.resources = results.resources || {};
+  results.url = results.url || '';
+  results.timestamp = results.timestamp || new Date().toISOString();
+
   // Check if this is cross-browser results (has browsers.desktop/mobile) or single device
   const isCrossBrowser = results.browsers && (results.browsers.desktop || results.browsers.mobile);
-  
+
   // Calculate average score for cross-browser or use direct score or overallScore
-  const avgScore = isCrossBrowser 
-    ? results.overallScore || Math.round((results.browsers.desktop?.performanceScore + results.browsers.mobile?.performanceScore) / 2)
-    : results.performanceScore;
+  const avgScore = isCrossBrowser
+    ? results.overallScore ?? Math.round(((results.browsers.desktop?.performanceScore ?? 0) + (results.browsers.mobile?.performanceScore ?? 0)) / 2)
+    : results.performanceScore ?? 0;
   
   // Executive Summary (not in accordion)
   const summarySection = document.createElement('div');
@@ -480,14 +489,14 @@ function displayPerformanceResults(results) {
                 color: ${getPerformanceColor(results.siteHealthScore)};
                 text-shadow: 0 0 8px ${getPerformanceColor(results.siteHealthScore)}80;
               ">${getPerformanceGrade(results.siteHealthScore)}</div>
-              <div style="font-size: 0.85rem; color: #00ff41; margin-top: 0.25rem; font-weight: 600;">${t('reports.performance.siteHealth', 'Site Health')}</div>
+              <div style="font-size: 0.85rem; color: #22c55e; margin-top: 0.25rem; font-weight: 600;">${t('reports.performance.siteHealth', 'Site Health')}</div>
             </div>
           ` : ''}
         </div>
 
         <!-- Right: Performance Score Details -->
         <div style="padding: 0 1rem; flex: 1;">
-          <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.3rem;">P ${t('reports.performance.performanceScore', 'Performance Score')}</h3>
+          <h3 style="color: #22c55e; margin: 0 0 1rem 0; font-size: 1.3rem;">P ${t('reports.performance.performanceScore', 'Performance Score')}</h3>
           
           <!-- Quick Stats Grid -->
           <div style="
@@ -506,7 +515,7 @@ function displayPerformanceResults(results) {
               <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
                 ${t('reports.performance.loadTime', 'Load Time')}
               </div>
-              <div style="font-size: 1.3rem; font-weight: bold; color: #00ff41;">
+              <div style="font-size: 1.3rem; font-weight: bold; color: #22c55e;">
                 ${results.loadTime || t('reports.performance.notAvailable', 'N/A')}
               </div>
             </div>
@@ -521,7 +530,7 @@ function displayPerformanceResults(results) {
               <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
                 ${t('reports.performance.pageSize', 'Page Size')}
               </div>
-              <div style="font-size: 1.3rem; font-weight: bold; color: #00ff41;">
+              <div style="font-size: 1.3rem; font-weight: bold; color: #22c55e;">
                 ${results.pageSize || t('reports.performance.notAvailable', 'N/A')}
               </div>
             </div>
@@ -536,7 +545,7 @@ function displayPerformanceResults(results) {
               <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
                 ${t('reports.performance.requests', 'Requests')}
               </div>
-              <div style="font-size: 1.3rem; font-weight: bold; color: #00ff41;">
+              <div style="font-size: 1.3rem; font-weight: bold; color: #22c55e;">
                 ${results.totalRequests || t('reports.performance.notAvailable', 'N/A')}
               </div>
             </div>
@@ -549,32 +558,32 @@ function displayPerformanceResults(results) {
             padding: 1rem;
             margin-bottom: 0.75rem;
           ">
-            <div style="font-size: 0.85rem; font-weight: bold; color: #00ff41; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
+            <div style="font-size: 0.85rem; font-weight: bold; color: #22c55e; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
               ${t('reports.performance.coreMetrics', 'Core Metrics')}
             </div>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
               ${results.coreWebVitals ? `
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
                   <span style="color: #a0a0a0;">LCP:</span>
-                  <span style="color: ${results.coreWebVitals.lcp && parseInt(results.coreWebVitals.lcp) < 2500 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
+                  <span style="color: ${results.coreWebVitals.lcp && parseInt(results.coreWebVitals.lcp) < 2500 ? '#22c55e' : '#ff8c00'}; font-weight: 600;">
                     ${results.coreWebVitals.lcp || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
                   <span style="color: #a0a0a0;">FID:</span>
-                  <span style="color: ${results.coreWebVitals.fid && parseInt(results.coreWebVitals.fid) < 100 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
+                  <span style="color: ${results.coreWebVitals.fid && parseInt(results.coreWebVitals.fid) < 100 ? '#22c55e' : '#ff8c00'}; font-weight: 600;">
                     ${results.coreWebVitals.fid || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
                   <span style="color: #a0a0a0;">CLS:</span>
-                  <span style="color: ${results.coreWebVitals.cls && parseFloat(results.coreWebVitals.cls) < 0.1 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
+                  <span style="color: ${results.coreWebVitals.cls && parseFloat(results.coreWebVitals.cls) < 0.1 ? '#22c55e' : '#ff8c00'}; font-weight: 600;">
                     ${results.coreWebVitals.cls || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
                   <span style="color: #a0a0a0;">TTI:</span>
-                  <span style="color: ${results.coreWebVitals.tti && parseInt(results.coreWebVitals.tti) < 3800 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
+                  <span style="color: ${results.coreWebVitals.tti && parseInt(results.coreWebVitals.tti) < 3800 ? '#22c55e' : '#ff8c00'}; font-weight: 600;">
                     ${results.coreWebVitals.tti || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
@@ -604,7 +613,7 @@ function displayPerformanceResults(results) {
           padding-top: 2rem;
           border-top: 1px solid rgba(0, 255, 65, 0.2);
         ">
-          <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.1rem;">◉ ${t('reports.performance.multiDimensionalAnalysis', 'Multi-Dimensional Analysis')}</h4>
+          <h4 style="color: #22c55e; margin: 0 0 1rem 0; font-size: 1.1rem;">◉ ${t('reports.performance.multiDimensionalAnalysis', 'Multi-Dimensional Analysis')}</h4>
           <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem;">
             ${Object.entries(results.dimensionalGrades).map(([dimension, grade]) => {
               const icons = {
@@ -662,7 +671,7 @@ function displayPerformanceResults(results) {
     comparisonSection.innerHTML = `
       <h2>${t('reports.performance.desktopVsMobileComparison', 'Desktop vs Mobile Comparison')}</h2>
       <div style="padding-left: 1rem;">
-        <p style="color: #00ff41; margin-bottom: 1.5rem;">>> ${t('reports.performance.comprehensiveAnalysis', 'Comprehensive analysis across both platforms')}</p>
+        <p style="color: #22c55e; margin-bottom: 1.5rem;">>> ${t('reports.performance.comprehensiveAnalysis', 'Comprehensive analysis across both platforms')}</p>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
           <!-- Desktop Column -->
@@ -736,15 +745,15 @@ function displayPerformanceResults(results) {
               <div style="display: grid; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: var(--r-text-muted, #6B7280);">LCP</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.lcp || t('reports.performance.notAvailable', 'N/A')}</span>
+                  <span style="color: #22c55e; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.lcp || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: var(--r-text-muted, #6B7280);">FID</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.fid || t('reports.performance.notAvailable', 'N/A')}</span>
+                  <span style="color: #22c55e; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.fid || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: var(--r-text-muted, #6B7280);">CLS</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.cls || t('reports.performance.notAvailable', 'N/A')}</span>
+                  <span style="color: #22c55e; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.cls || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
               </div>
             </div>
@@ -821,15 +830,15 @@ function displayPerformanceResults(results) {
               <div style="display: grid; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: var(--r-text-muted, #6B7280);">LCP</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.lcp || t('reports.performance.notAvailable', 'N/A')}</span>
+                  <span style="color: #22c55e; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.lcp || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: var(--r-text-muted, #6B7280);">FID</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.fid || t('reports.performance.notAvailable', 'N/A')}</span>
+                  <span style="color: #22c55e; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.fid || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: var(--r-text-muted, #6B7280);">CLS</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.cls || t('reports.performance.notAvailable', 'N/A')}</span>
+                  <span style="color: #22c55e; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.cls || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
               </div>
             </div>
@@ -858,12 +867,12 @@ function displayPerformanceResults(results) {
         ` : `
         <div style="
           background: rgba(0,255,65,0.05);
-          border: 2px solid #00ff41;
+          border: 2px solid #22c55e;
           border-radius: 8px;
           padding: 1rem;
           margin-top: 1rem;
         ">
-          <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">
+          <div style="color: #22c55e; font-weight: bold; margin-bottom: 0.5rem;">
             ✓ ${t('reports.performance.consistentPerformance', 'Consistent Performance')}
           </div>
           <p style="color: var(--r-text-muted, #6B7280); margin: 0;">
@@ -1003,22 +1012,22 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
 
     switch(type) {
       case 'LCP':
-        if (numValue <= 2500) return { color: '#00ff41', status: t('reports.performance.good', 'Good') };
+        if (numValue <= 2500) return { color: '#22c55e', status: t('reports.performance.good', 'Good') };
         if (numValue <= 4000) return { color: '#ffa500', status: t('reports.performance.needsImprovement', 'Needs Improvement') };
-        return { color: '#ff4444', status: t('reports.performance.poor', 'Poor') };
+        return { color: '#ef4444', status: t('reports.performance.poor', 'Poor') };
       case 'FID':
-        if (numValue <= 100) return { color: '#00ff41', status: t('reports.performance.good', 'Good') };
+        if (numValue <= 100) return { color: '#22c55e', status: t('reports.performance.good', 'Good') };
         if (numValue <= 300) return { color: '#ffa500', status: t('reports.performance.needsImprovement', 'Needs Improvement') };
-        return { color: '#ff4444', status: t('reports.performance.poor', 'Poor') };
+        return { color: '#ef4444', status: t('reports.performance.poor', 'Poor') };
       case 'CLS':
-        if (numValue <= 0.1) return { color: '#00ff41', status: t('reports.performance.good', 'Good') };
+        if (numValue <= 0.1) return { color: '#22c55e', status: t('reports.performance.good', 'Good') };
         if (numValue <= 0.25) return { color: '#ffa500', status: t('reports.performance.needsImprovement', 'Needs Improvement') };
-        return { color: '#ff4444', status: t('reports.performance.poor', 'Poor') };
+        return { color: '#ef4444', status: t('reports.performance.poor', 'Poor') };
       case 'TTFB':
-        if (numValue < 600) return { color: '#00ff41', status: t('reports.performance.info', 'Info') };
+        if (numValue < 600) return { color: '#22c55e', status: t('reports.performance.info', 'Info') };
         return { color: '#ffa500', status: t('reports.performance.info', 'Info') };
       case 'FCP':
-        if (numValue < 1800) return { color: '#00ff41', status: t('reports.performance.info', 'Info') };
+        if (numValue < 1800) return { color: '#22c55e', status: t('reports.performance.info', 'Info') };
         return { color: '#ffa500', status: t('reports.performance.info', 'Info') };
       default:
         return { color: '#808080', status: t('reports.performance.info', 'Info') };
@@ -1032,7 +1041,7 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
     return `
       <tr>
         <td>
-          <span style="color: #00ff41;">${icon} ${name}</span>
+          <span style="color: #22c55e;">${icon} ${name}</span>
         </td>
         <td style="color: var(--r-text-faint, #9CA3AF);">${description}</td>
         <td style="text-align: center;">
@@ -1065,7 +1074,7 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
 
   return `
     <div style="padding-left: 1rem;">
-      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.whatAreCoreWebVitals', 'What are Core Web Vitals?')}</h3>
+      <h3 style="color: #22c55e; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.whatAreCoreWebVitals', 'What are Core Web Vitals?')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1.5rem;">
         ${t('reports.performance.coreWebVitalsDescription', 'Core Web Vitals are Google\\')}
       </p>
@@ -1140,7 +1149,7 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
       </table>
 
       <div style="margin-top: 1rem; padding: 1rem; background: rgba(0,255,65,0.05); border-radius: 4px;">
-        <h4 style="color: #00ff41; margin: 0 0 0.5rem 0; font-size: 1rem;">📚 ${t('reports.performance.learnMore', 'Learn More')}</h4>
+        <h4 style="color: #22c55e; margin: 0 0 0.5rem 0; font-size: 1rem;">📚 ${t('reports.performance.learnMore', 'Learn More')}</h4>
         <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; margin: 0;">
           ${t('reports.performance.learnMoreDescription', 'Core Web Vitals are part of Google\\')}
         </p>
@@ -1185,14 +1194,14 @@ function renderResourceAnalysisContent(resources) {
         </p>
       </div>
 
-      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.resourceBreakdown', 'Resource Breakdown')}</h3>
+      <h3 style="color: #22c55e; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.resourceBreakdown', 'Resource Breakdown')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1.5rem;">
-        ${t('reports.performance.totalPageWeight', 'Total page weight')}: <strong style="color: #00ff41;">${formatBytes(totalSize)}</strong> ${t('reports.performance.across', 'across')} <strong style="color: #00ff41;">${resources.javascript?.count + resources.css?.count + resources.images?.count + resources.fonts?.count + resources.other?.count || 0}</strong> ${t('reports.performance.resources', 'resources')}
+        ${t('reports.performance.totalPageWeight', 'Total page weight')}: <strong style="color: #22c55e;">${formatBytes(totalSize)}</strong> ${t('reports.performance.across', 'across')} <strong style="color: #22c55e;">${resources.javascript?.count + resources.css?.count + resources.images?.count + resources.fonts?.count + resources.other?.count || 0}</strong> ${t('reports.performance.resources', 'resources')}
       </p>
 
       <!-- Resource Size Chart -->
       <div style="margin-bottom: 2rem;">
-        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">C ${t('reports.performance.sizeDistribution', 'Size Distribution')}</h4>
+        <h4 style="color: #22c55e; margin: 0 0 1rem 0; font-size: 1rem;">C ${t('reports.performance.sizeDistribution', 'Size Distribution')}</h4>
         <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; height: 40px; display: flex; margin-bottom: 1rem;">
           ${resourceTypes.map(r => `
             <div style="
@@ -1226,7 +1235,7 @@ function renderResourceAnalysisContent(resources) {
       </div>
       
       <!-- Resource Details Table -->
-      <h4 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1rem;">📋 ${t('reports.performance.detailedBreakdown', 'Detailed Breakdown')}</h4>
+      <h4 style="color: #22c55e; margin: 1.5rem 0 1rem 0; font-size: 1rem;">📋 ${t('reports.performance.detailedBreakdown', 'Detailed Breakdown')}</h4>
       <table class="seo-table" style="width: 100%;">
         <thead>
           <tr>
@@ -1310,8 +1319,8 @@ function generateResourceRecommendations(resources) {
 
   if (recommendations.length === 0) {
     return `
-      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,255,65,0.05); border-radius: 4px; border-left: 4px solid #00ff41;">
-        <span style="color: #00ff41;">✓ ${t('reports.performance.resourcesOptimized', 'Resource sizes are well optimized!')}</span>
+      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,255,65,0.05); border-radius: 4px; border-left: 4px solid #22c55e;">
+        <span style="color: #22c55e;">✓ ${t('reports.performance.resourcesOptimized', 'Resource sizes are well optimized!')}</span>
       </div>
     `;
   }
@@ -1352,10 +1361,10 @@ function renderNetworkPerformanceContent(network) {
 
   // Get status colors
   const getTTFBStatus = (ms) => {
-    if (ms < 200) return { color: '#00ff41', label: t('reports.performance.excellent', 'Excellent') };
-    if (ms < 400) return { color: '#00ff41', label: t('reports.performance.good', 'Good') };
+    if (ms < 200) return { color: '#22c55e', label: t('reports.performance.excellent', 'Excellent') };
+    if (ms < 400) return { color: '#22c55e', label: t('reports.performance.good', 'Good') };
     if (ms < 600) return { color: '#ffa500', label: t('reports.performance.fair', 'Fair') };
-    return { color: '#ff4444', label: t('reports.performance.poor', 'Poor') };
+    return { color: '#ef4444', label: t('reports.performance.poor', 'Poor') };
   };
 
   const ttfbStatus = getTTFBStatus(ttfb);
@@ -1368,14 +1377,14 @@ function renderNetworkPerformanceContent(network) {
         </p>
       </div>
 
-      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.networkAnalysis', 'Network Analysis')}</h3>
+      <h3 style="color: #22c55e; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.networkAnalysis', 'Network Analysis')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1.5rem;">
         ${t('reports.performance.networkAnalysisDescription', 'Network performance breakdown showing connection establishment, server response, and content delivery timing.')}
       </p>
 
       <!-- Network Timing Waterfall -->
       <div style="margin-bottom: 2rem;">
-        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">🌊 ${t('reports.performance.connectionTimeline', 'Connection Timeline')}</h4>
+        <h4 style="color: #22c55e; margin: 0 0 1rem 0; font-size: 1rem;">🌊 ${t('reports.performance.connectionTimeline', 'Connection Timeline')}</h4>
 
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1.5rem; border-radius: 8px;">
           ${dns > 0 ? `
@@ -1398,12 +1407,12 @@ function renderNetworkPerformanceContent(network) {
           ${tcp > 0 ? `
           <div style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="color: #00ff41; font-size: 0.95rem; font-weight: 600;">🔌 ${t('reports.performance.tcpConnection', 'TCP Connection')}</span>
-              <span style="color: #00ff41; font-weight: bold; font-size: 1rem;">${network.connectionTime}</span>
+              <span style="color: #22c55e; font-size: 0.95rem; font-weight: 600;">🔌 ${t('reports.performance.tcpConnection', 'TCP Connection')}</span>
+              <span style="color: #22c55e; font-weight: bold; font-size: 1rem;">${network.connectionTime}</span>
             </div>
             <div style="background: rgba(255,255,255,0.1); height: 28px; border-radius: 4px; overflow: hidden;">
               <div style="
-                background: linear-gradient(90deg, #00ff41, #00cc33);
+                background: linear-gradient(90deg, #22c55e, #00cc33);
                 height: 100%;
                 width: ${Math.min((tcp / 500) * 100, 100)}%;
                 transition: width 0.3s ease;
@@ -1447,7 +1456,7 @@ function renderNetworkPerformanceContent(network) {
       </div>
 
       <!-- Network Metrics Table -->
-      <h4 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1rem;">C ${t('reports.performance.networkMetrics', 'Network Metrics')}</h4>
+      <h4 style="color: #22c55e; margin: 1.5rem 0 1rem 0; font-size: 1rem;">C ${t('reports.performance.networkMetrics', 'Network Metrics')}</h4>
       <table class="seo-table" style="width: 100%;">
         <thead>
           <tr>
@@ -1463,9 +1472,9 @@ function renderNetworkPerformanceContent(network) {
             <td style="text-align: center;"><strong style="color: #00ccff;">${network.dns || t('reports.performance.notAvailable', 'N/A')}</strong></td>
           </tr>
           <tr>
-            <td><span style="color: #00ff41;">🔌 ${t('reports.performance.tcpConnection', 'TCP Connection')}</span></td>
+            <td><span style="color: #22c55e;">🔌 ${t('reports.performance.tcpConnection', 'TCP Connection')}</span></td>
             <td style="color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.tcpConnectionDesc', 'Time to establish connection')}</td>
-            <td style="text-align: center;"><strong style="color: #00ff41;">${network.connectionTime || t('reports.performance.notAvailable', 'N/A')}</strong></td>
+            <td style="text-align: center;"><strong style="color: #22c55e;">${network.connectionTime || t('reports.performance.notAvailable', 'N/A')}</strong></td>
           </tr>
           ${ssl > 0 ? `
           <tr>
@@ -1480,19 +1489,19 @@ function renderNetworkPerformanceContent(network) {
             <td style="text-align: center;"><strong style="color: ${ttfbStatus.color};">${network.ttfb}</strong></td>
           </tr>
           <tr>
-            <td><span style="color: #00ff41;">P ${t('reports.performance.domInteractive', 'DOM Interactive')}</span></td>
+            <td><span style="color: #22c55e;">P ${t('reports.performance.domInteractive', 'DOM Interactive')}</span></td>
             <td style="color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.domInteractiveDesc', 'Time until DOM is ready')}</td>
-            <td style="text-align: center;"><strong style="color: #00ff41;">${network.domInteractive || t('reports.performance.notAvailable', 'N/A')}</strong></td>
+            <td style="text-align: center;"><strong style="color: #22c55e;">${network.domInteractive || t('reports.performance.notAvailable', 'N/A')}</strong></td>
           </tr>
           <tr>
-            <td><span style="color: #00ff41;">D ${t('reports.performance.domContentLoaded', 'DOM Content Loaded')}</span></td>
+            <td><span style="color: #22c55e;">D ${t('reports.performance.domContentLoaded', 'DOM Content Loaded')}</span></td>
             <td style="color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.domContentLoadedDesc', 'Initial HTML parsed and ready')}</td>
-            <td style="text-align: center;"><strong style="color: #00ff41;">${network.domContentLoaded || t('reports.performance.notAvailable', 'N/A')}</strong></td>
+            <td style="text-align: center;"><strong style="color: #22c55e;">${network.domContentLoaded || t('reports.performance.notAvailable', 'N/A')}</strong></td>
           </tr>
           <tr>
-            <td><span style="color: #00ff41;">W ${t('reports.performance.totalRequests', 'Total Requests')}</span></td>
+            <td><span style="color: #22c55e;">W ${t('reports.performance.totalRequests', 'Total Requests')}</span></td>
             <td style="color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.totalRequestsDesc', 'Number of HTTP requests')}</td>
-            <td style="text-align: center;"><strong style="color: #00ff41;">${network.requests || t('reports.performance.notAvailable', 'N/A')}</strong></td>
+            <td style="text-align: center;"><strong style="color: #22c55e;">${network.requests || t('reports.performance.notAvailable', 'N/A')}</strong></td>
           </tr>
         </tbody>
       </table>
@@ -1527,10 +1536,10 @@ function renderCachingOptimizationContent(caching) {
 
   const cacheRate = parseFloat(caching.cacheHitRateNum) || 0;
   const getCacheStatus = (rate) => {
-    if (rate >= 80) return { color: '#00ff41', label: t('reports.performance.excellent', 'Excellent'), icon: '✓' };
-    if (rate >= 60) return { color: '#00ff41', label: t('reports.performance.good', 'Good'), icon: '+' };
+    if (rate >= 80) return { color: '#22c55e', label: t('reports.performance.excellent', 'Excellent'), icon: '✓' };
+    if (rate >= 60) return { color: '#22c55e', label: t('reports.performance.good', 'Good'), icon: '+' };
     if (rate >= 40) return { color: '#ffa500', label: t('reports.performance.fair', 'Fair'), icon: '~' };
-    return { color: '#ff4444', label: t('reports.performance.poor', 'Poor'), icon: '✗' };
+    return { color: '#ef4444', label: t('reports.performance.poor', 'Poor'), icon: '✗' };
   };
 
   const status = getCacheStatus(cacheRate);
@@ -1543,14 +1552,14 @@ function renderCachingOptimizationContent(caching) {
         </p>
       </div>
 
-      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.cachingStrategy', 'Caching Strategy')}</h3>
+      <h3 style="color: #22c55e; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.cachingStrategy', 'Caching Strategy')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1.5rem;">
         ${t('reports.performance.cacheEffectivenessDescription', 'Cache effectiveness determines how many resources can be loaded from browser cache on repeat visits.')}
       </p>
 
       <!-- Cache Hit Rate Visual -->
       <div style="margin-bottom: 2rem;">
-        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">U ${t('reports.performance.cacheHitRate', 'Cache Hit Rate')}</h4>
+        <h4 style="color: #22c55e; margin: 0 0 1rem 0; font-size: 1rem;">U ${t('reports.performance.cacheHitRate', 'Cache Hit Rate')}</h4>
         
         <div style="text-align: center; margin-bottom: 1.5rem;">
           <div style="
@@ -1593,7 +1602,7 @@ function renderCachingOptimizationContent(caching) {
         <!-- Cache Stats Grid -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
           <div style="background: rgba(0,255,65,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 2px solid rgba(0,255,65,0.3);">
-            <div style="font-size: 1.8rem; color: #00ff41; font-weight: bold; margin-bottom: 0.25rem;">
+            <div style="font-size: 1.8rem; color: #22c55e; font-weight: bold; margin-bottom: 0.25rem;">
               ${caching.cached || 0}
             </div>
             <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
@@ -1602,7 +1611,7 @@ function renderCachingOptimizationContent(caching) {
           </div>
 
           <div style="background: rgba(255,68,68,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 2px solid rgba(255,68,68,0.3);">
-            <div style="font-size: 1.8rem; color: #ff4444; font-weight: bold; margin-bottom: 0.25rem;">
+            <div style="font-size: 1.8rem; color: #ef4444; font-weight: bold; margin-bottom: 0.25rem;">
               ${caching.notCached || 0}
             </div>
             <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
@@ -1623,7 +1632,7 @@ function renderCachingOptimizationContent(caching) {
 
       <!-- Cache Strategies Table -->
       ${caching.strategies && Object.keys(caching.strategies).length > 0 ? `
-      <h4 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1rem;">🔧 ${t('reports.performance.cacheStrategiesDetected', 'Cache Strategies Detected')}</h4>
+      <h4 style="color: #22c55e; margin: 1.5rem 0 1rem 0; font-size: 1rem;">🔧 ${t('reports.performance.cacheStrategiesDetected', 'Cache Strategies Detected')}</h4>
       <table class="seo-table" style="width: 100%;">
         <thead>
           <tr>
@@ -1684,7 +1693,7 @@ function renderCachingOptimizationContent(caching) {
             ~ ${t('reports.performance.cacheFair', 'Fair caching with {{rate}}% hit rate. Implement proper Cache-Control headers for static assets (CSS, JS, images, fonts) with long TTL values (1 year for versioned files).', { rate: cacheRate })}
           </p>
           <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; margin: 0.5rem 0 0 0;">
-            ⓘ ${t('reports.performance.recommended', 'Recommended')}: <code style="background: var(--r-surface-2, #F8FAFC); padding: 0.25rem 0.5rem; border-radius: 3px; color: #00ff41;">Cache-Control: public, max-age=31536000, immutable</code>
+            ⓘ ${t('reports.performance.recommended', 'Recommended')}: <code style="background: var(--r-surface-2, #F8FAFC); padding: 0.25rem 0.5rem; border-radius: 3px; color: #22c55e;">Cache-Control: public, max-age=31536000, immutable</code>
           </p>
         ` : `
           <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; margin: 0;">
@@ -1751,7 +1760,7 @@ function renderRecommendationsContent(recommendations) {
 function renderPerfFixAccordion(rec, index) {
   const accordionId = `perffix-${index}`;
   const severityColors = {
-    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    high: { bg: 'rgba(255,68,68,0.1)', border: '#ef4444', color: '#ef4444', icon: '🔴' },
     medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
     low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
   };
@@ -1844,8 +1853,8 @@ function renderPerfFixTabs(rec, accordionId) {
         ${translateRecDescription(rec.title, rec.description) || t('reports.performance.optimizeArea', 'Optimize this area to improve performance.')}
       </p>
       ${rec.impact ? `
-      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.performance.expectedImpact', 'Expected Impact')}</div>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #22c55e; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.performance.expectedImpact', 'Expected Impact')}</div>
         <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${translateRecImpact(rec.title, rec.impact)}</div>
       </div>
       ` : ''}
@@ -1874,7 +1883,7 @@ function renderPerfFixTabs(rec, accordionId) {
         <!-- Fixed Code -->
         <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.performance.recommendedFix', 'Recommended Fix')}</span>
+            <span style="color: #22c55e; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.performance.recommendedFix', 'Recommended Fix')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
@@ -2174,10 +2183,10 @@ function getPerfActionItems(category, title) {
 
 // Helper functions - Traditional traffic light system
 function getPerformanceColor(score) {
-  if (score >= 90) return '#00ff41';  // A: Bright green
-  if (score >= 70) return '#ffd700';  // B: Yellow (gold)
+  if (score >= 90) return '#22c55e';  // A: Bright green
+  if (score >= 70) return '#eab308';  // B: Yellow (gold)
   if (score >= 50) return '#ff8c00';  // C: Dark orange
-  return '#ff4444';                   // D/F: Red
+  return '#ef4444';                   // D/F: Red
 }
 
 function getPerformanceGrade(score) {
@@ -2191,11 +2200,11 @@ function getPerformanceGrade(score) {
  * Get color for letter grade
  */
 function getGradeColor(grade) {
-  if (grade.startsWith('A')) return '#00ff41';  // A+, A, A-
-  if (grade.startsWith('B')) return '#ffd700';  // B+, B, B-
+  if (grade.startsWith('A')) return '#22c55e';  // A+, A, A-
+  if (grade.startsWith('B')) return '#eab308';  // B+, B, B-
   if (grade.startsWith('C')) return '#ff8c00';  // C+, C, C-
   if (grade.startsWith('D')) return '#ff6600';  // D+, D, D-
-  return '#ff4444';                              // F
+  return '#ef4444';                              // F
 }
 
 /**
@@ -2400,7 +2409,7 @@ function renderDeviceComparisonContent(browsers) {
         </h3>
 
         ${!data.success ? `
-          <p style="color: #ff4444;">✗ ${t('reports.performance.analysisFailed', 'Performance analysis failed')}: ${data.error || t('reports.performance.unknownError', 'Unknown error')}</p>
+          <p style="color: #ef4444;">✗ ${t('reports.performance.analysisFailed', 'Performance analysis failed')}: ${data.error || t('reports.performance.unknownError', 'Unknown error')}</p>
         ` : `
           <!-- Lighthouse Category Scores -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
@@ -2423,7 +2432,7 @@ function renderDeviceComparisonContent(browsers) {
           </div>
 
           <!-- Core Web Vitals -->
-          <h4 style="margin: 1rem 0 0.5rem 0; color: #00ff41;">${t('reports.performance.coreWebVitals', 'Core Web Vitals')}</h4>
+          <h4 style="margin: 1rem 0 0.5rem 0; color: #22c55e;">${t('reports.performance.coreWebVitals', 'Core Web Vitals')}</h4>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
             ${renderMetricBox('LCP', data.metrics.metrics.coreWebVitals.lcp, 'ms', 'lcp')}
             ${renderMetricBox('FID', data.metrics.metrics.coreWebVitals.fid, 'ms', 'fid')}
@@ -2431,7 +2440,7 @@ function renderDeviceComparisonContent(browsers) {
           </div>
 
           <!-- Additional Metrics -->
-          <h4 style="margin: 1rem 0 0.5rem 0; color: #00ff41;">${t('reports.performance.additionalMetrics', 'Additional Metrics')}</h4>
+          <h4 style="margin: 1rem 0 0.5rem 0; color: #22c55e;">${t('reports.performance.additionalMetrics', 'Additional Metrics')}</h4>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
             ${renderMetricBox('FCP', data.metrics.firstContentfulPaint, 'ms', 'fcp')}
             ${renderMetricBox('TBT', data.metrics.totalBlockingTime, 'ms', 'tbt')}
@@ -2512,24 +2521,24 @@ function renderComparisonRow(metric, desktopValue, mobileValue, unit, goodThresh
   if (metric === 'CLS') {
     if (avgValue <= goodThreshold) {
       status = '✓ ' + t('reports.performance.good', 'Good');
-      statusColor = '#00ff41';
+      statusColor = '#22c55e';
     } else if (avgValue <= needsImprovementThreshold) {
       status = '~ ' + t('reports.performance.needsWork', 'Needs work');
       statusColor = '#ffa500';
     } else {
       status = '✗ ' + t('reports.performance.poor', 'Poor');
-      statusColor = '#ff4444';
+      statusColor = '#ef4444';
     }
   } else {
     if (avgValue <= goodThreshold) {
       status = '✓ ' + t('reports.performance.good', 'Good');
-      statusColor = '#00ff41';
+      statusColor = '#22c55e';
     } else if (avgValue <= needsImprovementThreshold) {
       status = '~ ' + t('reports.performance.needsWork', 'Needs work');
       statusColor = '#ffa500';
     } else {
       status = '✗ ' + t('reports.performance.poor', 'Poor');
-      statusColor = '#ff4444';
+      statusColor = '#ef4444';
     }
   }
   
@@ -2553,7 +2562,7 @@ function renderComparisonRow(metric, desktopValue, mobileValue, unit, goodThresh
  */
 function renderScoreComparisonRow(category, desktopScore, mobileScore) {
   const gap = Math.abs(desktopScore - mobileScore);
-  const gapColor = gap > 20 ? '#ff6600' : gap > 10 ? '#ffa500' : '#00ff41';
+  const gapColor = gap > 20 ? '#ff6600' : gap > 10 ? '#ffa500' : '#22c55e';
   
   return `
     <div style="padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">${category}</div>
@@ -2579,34 +2588,34 @@ function renderMetricBox(label, value, unit, metricType) {
   // Determine color and status based on metric type
   switch(metricType) {
     case 'lcp':
-      if (numValue <= 2500) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      if (numValue <= 2500) { color = '#22c55e'; status = t('reports.performance.good', 'Good'); }
       else if (numValue <= 4000) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs work'); }
-      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
+      else { color = '#ef4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     case 'fid':
-      if (numValue <= 100) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      if (numValue <= 100) { color = '#22c55e'; status = t('reports.performance.good', 'Good'); }
       else if (numValue <= 300) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs work'); }
-      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
+      else { color = '#ef4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     case 'cls':
-      if (numValue <= 0.1) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      if (numValue <= 0.1) { color = '#22c55e'; status = t('reports.performance.good', 'Good'); }
       else if (numValue <= 0.25) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs work'); }
-      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
+      else { color = '#ef4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     case 'fcp':
-      if (numValue <= 1800) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      if (numValue <= 1800) { color = '#22c55e'; status = t('reports.performance.good', 'Good'); }
       else if (numValue <= 3000) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs work'); }
-      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
+      else { color = '#ef4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     case 'tbt':
-      if (numValue <= 200) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      if (numValue <= 200) { color = '#22c55e'; status = t('reports.performance.good', 'Good'); }
       else if (numValue <= 600) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs work'); }
-      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
+      else { color = '#ef4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     case 'si':
-      if (numValue <= 3400) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      if (numValue <= 3400) { color = '#22c55e'; status = t('reports.performance.good', 'Good'); }
       else if (numValue <= 5800) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs work'); }
-      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
+      else { color = '#ef4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     default:
       color = '#808080';
@@ -2629,13 +2638,13 @@ function renderMetricBox(label, value, unit, metricType) {
  */
 function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
   if (!recommendations || recommendations.length === 0) {
-    return '<p style="color: #00ff41;">>>> ' + t('reports.performance.noMajorCrossDeviceIssues', 'No major cross-device issues detected!') + '</p>';
+    return '<p style="color: #22c55e;">>>> ' + t('reports.performance.noMajorCrossDeviceIssues', 'No major cross-device issues detected!') + '</p>';
   }
 
   let html = '<div>';
 
   recommendations.forEach((rec, index) => {
-    const priorityColor = rec.priority === 'high' ? '#ff4444' : rec.priority === 'medium' ? '#ffa500' : '#00ff41';
+    const priorityColor = rec.priority === 'high' ? '#ef4444' : rec.priority === 'medium' ? '#ffa500' : '#22c55e';
     const priorityIcon = rec.priority === 'high' ? '!' : rec.priority === 'medium' ? '~' : 'ⓘ';
 
     html += `
@@ -2669,14 +2678,14 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
         <h4 style="margin: 0 0 1rem 0; color: #ffa500;">C ${t('reports.performance.detectedMetricDiscrepancies', 'Detected Metric Discrepancies')}</h4>
         ${comparison.metricsDifferences.map(diff => `
           <div style="padding: 0.75rem; margin: 0.5rem 0; background: var(--r-surface-2, #F8FAFC); border-radius: 4px;">
-            <div style="font-weight: bold; color: ${diff.severity === 'high' ? '#ff4444' : '#ffa500'};">
+            <div style="font-weight: bold; color: ${diff.severity === 'high' ? '#ef4444' : '#ffa500'};">
               ${diff.metric}
             </div>
             <div style="font-size: 0.9rem; color: var(--r-text-muted, #6B7280); margin-top: 0.25rem;">
               ${diff.message}
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem; font-size: 0.85rem;">
-              <div>D ${t('reports.performance.desktop', 'Desktop')}: <span style="color: #00ff41;">${typeof diff.desktop === 'number' ? diff.desktop.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.desktop}</span></div>
+              <div>D ${t('reports.performance.desktop', 'Desktop')}: <span style="color: #22c55e;">${typeof diff.desktop === 'number' ? diff.desktop.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.desktop}</span></div>
               <div>M ${t('reports.performance.mobile', 'Mobile')}: <span style="color: #ffa500;">${typeof diff.mobile === 'number' ? diff.mobile.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.mobile}</span></div>
             </div>
           </div>

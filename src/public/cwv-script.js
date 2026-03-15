@@ -314,28 +314,28 @@ function showCWVPaymentGate(url) {
       ">
         <div style="text-align: center; margin-bottom: 2rem;">
           <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
-          <h2 style="color: var(--color-success, #10b981); margin: 0 0 0.5rem 0; font-size: 1.75rem;">Core Web Vitals Report</h2>
-          <p style="color: var(--color-text-secondary, #6b7280); margin: 0; font-size: 1rem;">Get detailed CWV analysis including LCP, INP, and CLS metrics for mobile and desktop.</p>
+          <h2 style="color: var(--color-success, #10b981); margin: 0 0 0.5rem 0; font-size: 1.75rem;">${t('reports.cwv.reportTitle', 'Core Web Vitals Report')}</h2>
+          <p style="color: var(--color-text-secondary, #6b7280); margin: 0; font-size: 1rem;">${t('reports.cwv.reportDescription', 'Get detailed CWV analysis including LCP, INP, and CLS metrics for mobile and desktop.')}</p>
         </div>
 
         <div style="background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
-          <h3 style="color: var(--color-text, #fff); margin: 0 0 1rem 0; font-size: 1.1rem;">What's included:</h3>
+          <h3 style="color: var(--color-text, #fff); margin: 0 0 1rem 0; font-size: 1.1rem;">${t('reports.common.whatsIncluded', "What's included:")}</h3>
           <ul style="list-style: none; padding: 0; margin: 0;">
             <li style="color: var(--color-text-secondary, #6b7280); margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
               <span style="position: absolute; left: 0; color: var(--color-success, #10b981);">✓</span>
-              Mobile & Desktop CWV metrics
+              ${t('reports.cwv.includedMobileDesktop', 'Mobile & Desktop CWV metrics')}
             </li>
             <li style="color: var(--color-text-secondary, #6b7280); margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
               <span style="position: absolute; left: 0; color: var(--color-success, #10b981);">✓</span>
-              Google ranking impact analysis
+              ${t('reports.cwv.includedRankingImpact', 'Google ranking impact analysis')}
             </li>
             <li style="color: var(--color-text-secondary, #6b7280); margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
               <span style="position: absolute; left: 0; color: var(--color-success, #10b981);">✓</span>
-              Detailed metric breakdowns
+              ${t('reports.cwv.includedMetricBreakdowns', 'Detailed metric breakdowns')}
             </li>
             <li style="color: var(--color-text-secondary, #6b7280); margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
               <span style="position: absolute; left: 0; color: var(--color-success, #10b981);">✓</span>
-              Actionable recommendations
+              ${t('reports.cwv.includedRecommendations', 'Actionable recommendations')}
             </li>
           </ul>
         </div>
@@ -344,11 +344,11 @@ function showCWVPaymentGate(url) {
           <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;">
             <div style="flex: 1; background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem;">
               <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-success, #10b981);">$5</div>
-              <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">This report only</div>
+              <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">${t('reports.common.thisReportOnly', 'This report only')}</div>
             </div>
             <div style="flex: 1; background: var(--color-primary-dim); border: 1px solid var(--color-primary); border-radius: 8px; padding: 1rem;">
               <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);">$30/mo</div>
-              <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">All reports</div>
+              <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">${t('reports.common.allReports', 'All reports')}</div>
             </div>
           </div>
         </div>
@@ -648,7 +648,7 @@ analyzeButton.addEventListener('click', async () => {
       0% { color: var(--accent-primary); }
       20% { color: #00ffff; }
       40% { color: #0099ff; }
-      60% { color: #9933ff; }
+      60% { color: #8b5cf6; }
       80% { color: #ff33cc; }
       100% { color: var(--accent-primary); }
     }
@@ -743,6 +743,7 @@ analyzeButton.addEventListener('click', async () => {
       displayResults(data);
       resultsContainer.style.display = 'block';
       window.__REPORT_READY__ = true;
+      window.dispatchEvent(new CustomEvent('scan:completed'));
       window.dispatchEvent(new CustomEvent('report:ready'));
     }, 1000);
 
@@ -990,7 +991,7 @@ async function displayResults(data) {
     console.warn('[CWV] Ignoring invalid/error data:', data?.error || data);
     const errContainer = document.getElementById('resultsContent') || document.getElementById('results');
     if (errContainer) {
-      errContainer.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted,#9ca3af)"><p style="font-size:1.1rem;margin-bottom:0.5rem">Data unavailable</p><p style="font-size:0.9rem">The cached data was invalid or contained an error. Please run a new scan.</p></div>';
+      errContainer.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted,#9ca3af)"><p style="font-size:1.1rem;margin-bottom:0.5rem">' + t('reports.storage.dataUnavailable', 'Data unavailable') + '</p><p style="font-size:0.9rem">' + t('reports.storage.pleaseRescan', 'The cached data was invalid or contained an error. Please run a new scan.') + '</p></div>';
     }
     window.__REPORT_READY__ = true;
     window.dispatchEvent(new CustomEvent('report:ready'));
@@ -1019,6 +1020,15 @@ async function displayResults(data) {
     ))
   );
   console.log('[CWV] displayResults - hasProAccess:', hasProAccess, 'reportId:', reportId);
+
+  // Defensive defaults for sub-objects to prevent crashes on missing data
+  data.desktop = data.desktop || {};
+  data.mobile = data.mobile || {};
+  data.score = data.score ?? 0;
+  data.grade = data.grade || 'N/A';
+  data.recommendations = data.recommendations || [];
+  data.issues = data.issues || [];
+  data.comparison = data.comparison || {};
 
   // Build screenshot URL for report display
   const screenshotUrl = data.screenshotUrl || document.body.getAttribute('data-sm-screenshot-url') || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
@@ -1077,12 +1087,12 @@ async function displayResults(data) {
     ${issues.length > 0 ? `
     <div style="
       background: rgba(255, 68, 68, 0.1);
-      border-left: 4px solid #ff4444;
+      border-left: 4px solid #ef4444;
       padding: 1.5rem;
       margin-bottom: 2rem;
       border-radius: 8px;
     ">
-      <h3 style="color: #ff4444; margin: 0 0 1rem 0;">! ${t('reports.cwv.criticalIssues', 'Critical Issues')}</h3>
+      <h3 style="color: #ef4444; margin: 0 0 1rem 0;">! ${t('reports.cwv.criticalIssues', 'Critical Issues')}</h3>
       ${issues.map(issue => `<p style="color: var(--r-text-muted, #6B7280); margin: 0.5rem 0;">${issue}</p>`).join('')}
     </div>
     ` : ''}
@@ -1096,7 +1106,7 @@ async function displayResults(data) {
         border-radius: 12px;
         padding: 1.5rem;
       ">
-        <h3 style="color: #9600ff; margin: 0 0 1rem 0; display: flex; align-items: center; justify-content: space-between;">
+        <h3 style="color: #8b5cf6; margin: 0 0 1rem 0; display: flex; align-items: center; justify-content: space-between;">
           <span>M ${t('reports.cwv.mobile', 'Mobile')} (${t('reports.cwv.weight70', '70% weight')})</span>
           <span style="font-size: 2rem;">${mobile.score}/100</span>
         </h3>
@@ -1154,17 +1164,17 @@ async function displayResults(data) {
         ${recommendations.map(rec => `
           <div style="
             background: ${rec.priority === 'critical' ? 'rgba(255, 68, 68, 0.1)' : rec.priority === 'high' ? 'rgba(255, 140, 0, 0.1)' : 'rgba(255, 215, 0, 0.1)'};
-            border-left: 4px solid ${rec.priority === 'critical' ? '#ff4444' : rec.priority === 'high' ? '#ff8c00' : '#ffd700'};
+            border-left: 4px solid ${rec.priority === 'critical' ? '#ef4444' : rec.priority === 'high' ? '#ff8c00' : '#eab308'};
             padding: 1.5rem;
             border-radius: 8px;
           ">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
-              <h4 style="color: ${rec.priority === 'critical' ? '#ff4444' : rec.priority === 'high' ? '#ff8c00' : '#ffd700'}; margin: 0;">
+              <h4 style="color: ${rec.priority === 'critical' ? '#ef4444' : rec.priority === 'high' ? '#ff8c00' : '#eab308'}; margin: 0;">
                 ${rec.metric}
               </h4>
               <span style="
                 padding: 0.25rem 0.75rem;
-                background: ${rec.priority === 'critical' ? '#ff4444' : rec.priority === 'high' ? '#ff8c00' : '#ffd700'};
+                background: ${rec.priority === 'critical' ? '#ef4444' : rec.priority === 'high' ? '#ff8c00' : '#eab308'};
                 color: #000;
                 font-size: 0.75rem;
                 font-weight: bold;
@@ -1309,9 +1319,9 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
   const primaryRating = mobileRating;
   
   const ratingColor = {
-    'good': '#00ff41',
-    'needs-improvement': '#ffd700',
-    'poor': '#ff4444',
+    'good': '#22c55e',
+    'needs-improvement': '#eab308',
+    'poor': '#ef4444',
     'unknown': '#808080'
   }[primaryRating];
 
@@ -1356,7 +1366,7 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
           background: rgba(150, 0, 255, 0.1);
           border-radius: 6px;
         ">
-          <span style="color: #9600ff; font-size: 0.85rem; font-weight: bold;">M Mobile</span>
+          <span style="color: #8b5cf6; font-size: 0.85rem; font-weight: bold;">M Mobile</span>
           <span style="color: var(--r-text-muted, #6B7280); font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1rem;">
             ${abbr === 'CLS' ? mobileMetric.value.toFixed(3) : (mobileMetric.displayValue || 'N/A')}
           </span>
@@ -1408,7 +1418,7 @@ function renderAdditionalMetric(abbr, name, mobileMetric, desktopMetric) {
         background: rgba(150, 0, 255, 0.1);
         border-radius: 6px;
       ">
-        <span style="color: #9600ff; font-size: 0.8rem; font-weight: bold;">M Mobile</span>
+        <span style="color: #8b5cf6; font-size: 0.8rem; font-weight: bold;">M Mobile</span>
         <span style="color: var(--r-text-muted, #6B7280); font-family: 'Courier New', monospace; font-weight: bold; font-size: 1rem;">
           ${mobileMetric.displayValue}
         </span>
@@ -1454,27 +1464,27 @@ function renderBestPracticesTable(mobile, desktop) {
       ">
         <thead>
           <tr style="background: rgba(0, 255, 65, 0.1); border-bottom: 2px solid rgba(0, 255, 65, 0.4);">
-            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 12%;">${t('reports.common.metric', 'Metric')}</th>
-            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 15%;">${t('reports.cwv.googleTarget', 'Google Target')}</th>
-            <th style="padding: 1rem; text-align: center; color: #9600ff; font-weight: bold; width: 10%;">${t('reports.performance.mobile', 'Mobile')}</th>
+            <th style="padding: 1rem; text-align: left; color: #22c55e; font-weight: bold; width: 12%;">${t('reports.common.metric', 'Metric')}</th>
+            <th style="padding: 1rem; text-align: left; color: #22c55e; font-weight: bold; width: 15%;">${t('reports.cwv.googleTarget', 'Google Target')}</th>
+            <th style="padding: 1rem; text-align: center; color: #8b5cf6; font-weight: bold; width: 10%;">${t('reports.performance.mobile', 'Mobile')}</th>
             <th style="padding: 1rem; text-align: center; color: #0096ff; font-weight: bold; width: 10%;">${t('reports.performance.desktop', 'Desktop')}</th>
-            <th style="padding: 1rem; text-align: center; color: #00ff41; font-weight: bold; width: 8%;">${t('reports.common.status', 'Status')}</th>
-            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 45%;">${t('reports.cwv.optimizationRecommendations', 'Optimization Recommendations')}</th>
+            <th style="padding: 1rem; text-align: center; color: #22c55e; font-weight: bold; width: 8%;">${t('reports.common.status', 'Status')}</th>
+            <th style="padding: 1rem; text-align: left; color: #22c55e; font-weight: bold; width: 45%;">${t('reports.cwv.optimizationRecommendations', 'Optimization Recommendations')}</th>
           </tr>
         </thead>
         <tbody>
           <!-- LCP Row -->
           <tr style="border-bottom: 1px solid rgba(0, 255, 65, 0.2);">
-            <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
+            <td style="padding: 1rem; font-weight: bold; color: #eab308;">
               ${t('reports.cwv.lcp', 'LCP')}<br/>
               <span style="font-size: 0.75rem; color: var(--r-text-muted, #6B7280); font-weight: normal;">${t('reports.cwv.lcpName', 'Largest Contentful Paint')}</span>
             </td>
             <td style="padding: 1rem; color: var(--r-text-muted, #6B7280);">
-              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">${t('reports.common.good', 'Good')}:</span> ≤ 2.5s</div>
-              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">${t('reports.common.needsWork', 'Needs Work')}:</span> 2.5s - 4.0s</div>
-              <div><span style="color: #ff4444;">${t('reports.common.poor', 'Poor')}:</span> > 4.0s</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #22c55e;">${t('reports.common.good', 'Good')}:</span> ≤ 2.5s</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #eab308;">${t('reports.common.needsWork', 'Needs Work')}:</span> 2.5s - 4.0s</div>
+              <div><span style="color: #ef4444;">${t('reports.common.poor', 'Poor')}:</span> > 4.0s</div>
             </td>
-            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #9600ff; font-weight: bold;">
+            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #8b5cf6; font-weight: bold;">
               ${mobile.lcp.displayValue || 'N/A'}
             </td>
             <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #0096ff; font-weight: bold;">
@@ -1494,16 +1504,16 @@ function renderBestPracticesTable(mobile, desktop) {
           
           <!-- INP/FID Row -->
           <tr style="border-bottom: 1px solid rgba(0, 255, 65, 0.2);">
-            <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
+            <td style="padding: 1rem; font-weight: bold; color: #eab308;">
               ${t('reports.cwv.inp', 'INP/TBT')}<br/>
               <span style="font-size: 0.75rem; color: var(--r-text-muted, #6B7280); font-weight: normal;">${t('reports.cwv.inpName', 'Interaction to Next Paint')}</span>
             </td>
             <td style="padding: 1rem; color: var(--r-text-muted, #6B7280);">
-              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">${t('reports.common.good', 'Good')}:</span> ≤ 200ms</div>
-              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">${t('reports.common.needsWork', 'Needs Work')}:</span> 200ms - 500ms</div>
-              <div><span style="color: #ff4444;">${t('reports.common.poor', 'Poor')}:</span> > 500ms</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #22c55e;">${t('reports.common.good', 'Good')}:</span> ≤ 200ms</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #eab308;">${t('reports.common.needsWork', 'Needs Work')}:</span> 200ms - 500ms</div>
+              <div><span style="color: #ef4444;">${t('reports.common.poor', 'Poor')}:</span> > 500ms</div>
             </td>
-            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #9600ff; font-weight: bold;">
+            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #8b5cf6; font-weight: bold;">
               ${mobile.inp.displayValue || 'N/A'}
             </td>
             <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #0096ff; font-weight: bold;">
@@ -1523,16 +1533,16 @@ function renderBestPracticesTable(mobile, desktop) {
           
           <!-- CLS Row -->
           <tr>
-            <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
+            <td style="padding: 1rem; font-weight: bold; color: #eab308;">
               ${t('reports.cwv.cls', 'CLS')}<br/>
               <span style="font-size: 0.75rem; color: var(--r-text-muted, #6B7280); font-weight: normal;">${t('reports.cwv.clsName', 'Cumulative Layout Shift')}</span>
             </td>
             <td style="padding: 1rem; color: var(--r-text-muted, #6B7280);">
-              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">${t('reports.common.good', 'Good')}:</span> ≤ 0.1</div>
-              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">${t('reports.common.needsWork', 'Needs Work')}:</span> 0.1 - 0.25</div>
-              <div><span style="color: #ff4444;">${t('reports.common.poor', 'Poor')}:</span> > 0.25</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #22c55e;">${t('reports.common.good', 'Good')}:</span> ≤ 0.1</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #eab308;">${t('reports.common.needsWork', 'Needs Work')}:</span> 0.1 - 0.25</div>
+              <div><span style="color: #ef4444;">${t('reports.common.poor', 'Poor')}:</span> > 0.25</div>
             </td>
-            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #9600ff; font-weight: bold;">
+            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #8b5cf6; font-weight: bold;">
               ${mobile.cls.value.toFixed(3)}
             </td>
             <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #0096ff; font-weight: bold;">
@@ -1564,9 +1574,9 @@ function renderBestPracticesTable(mobile, desktop) {
         <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem; line-height: 1.6;">
           <p style="margin: 0 0 0.5rem 0;">${t('reports.cwv.googleMethodologyDesc', 'Google evaluates Core Web Vitals at the 75th percentile of all page loads. This means:')}</p>
           <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-            <li style="margin: 0.25rem 0;"><strong style="color: #00ff41;">${t('reports.common.good', 'Good')} (${t('reports.cwv.green', 'Green')}):</strong> ${t('reports.cwv.goodThresholdDesc', '75% or more of your users experience the "good" threshold')}</li>
-            <li style="margin: 0.25rem 0;"><strong style="color: #ffd700;">${t('reports.common.needsImprovement', 'Needs Improvement')} (${t('reports.cwv.yellow', 'Yellow')}):</strong> ${t('reports.cwv.needsImprovementDesc', 'Between "good" and "poor" thresholds')}</li>
-            <li style="margin: 0.25rem 0;"><strong style="color: #ff4444;">${t('reports.common.poor', 'Poor')} (${t('reports.cwv.red', 'Red')}):</strong> ${t('reports.cwv.poorThresholdDesc', '25% or more of your users experience the "poor" threshold')}</li>
+            <li style="margin: 0.25rem 0;"><strong style="color: #22c55e;">${t('reports.common.good', 'Good')} (${t('reports.cwv.green', 'Green')}):</strong> ${t('reports.cwv.goodThresholdDesc', '75% or more of your users experience the "good" threshold')}</li>
+            <li style="margin: 0.25rem 0;"><strong style="color: #eab308;">${t('reports.common.needsImprovement', 'Needs Improvement')} (${t('reports.cwv.yellow', 'Yellow')}):</strong> ${t('reports.cwv.needsImprovementDesc', 'Between "good" and "poor" thresholds')}</li>
+            <li style="margin: 0.25rem 0;"><strong style="color: #ef4444;">${t('reports.common.poor', 'Poor')} (${t('reports.cwv.red', 'Red')}):</strong> ${t('reports.cwv.poorThresholdDesc', '25% or more of your users experience the "poor" threshold')}</li>
           </ul>
           <p style="margin: 0.75rem 0 0 0; padding-top: 0.75rem; border-top: 1px solid rgba(187, 134, 252, 0.2);">
             <strong>${t('reports.cwv.mobileWeighting', 'Mobile Weighting')}:</strong> ${t('reports.cwv.mobileWeightingDesc', 'Mobile performance counts for 70% of your overall score because Google uses mobile-first indexing for search rankings.')}
@@ -1579,11 +1589,11 @@ function renderBestPracticesTable(mobile, desktop) {
 
 function getGradeColor(grade) {
   switch(grade) {
-    case 'A': return '#00ff41';
-    case 'B': return '#ffd700';
+    case 'A': return '#22c55e';
+    case 'B': return '#eab308';
     case 'C': return '#ff8c00';
     case 'D': return '#ff6b6b';
-    case 'F': return '#ff4444';
+    case 'F': return '#ef4444';
     default: return '#808080';
   }
 }
@@ -1603,7 +1613,7 @@ function createCWVAccordionSection(id, icon, title, contentHTML, score = null) {
       font-size: 0.85rem;
       font-weight: 600;
       background: ${score >= 90 ? 'rgba(0, 255, 65, 0.2)' : score >= 70 ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 68, 68, 0.2)'};
-      color: ${score >= 90 ? '#00ff41' : score >= 70 ? '#ffd700' : '#ff4444'};
+      color: ${score >= 90 ? '#22c55e' : score >= 70 ? '#eab308' : '#ef4444'};
       border: 1px solid ${score >= 90 ? 'rgba(0, 255, 65, 0.4)' : score >= 70 ? 'rgba(255, 215, 0, 0.4)' : 'rgba(255, 68, 68, 0.4)'};
     ">${score}</span>
   ` : '';

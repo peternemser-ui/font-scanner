@@ -644,6 +644,9 @@
               config.onScanComplete(results);
             }
 
+            // Notify UsagePill to refresh scan count
+            window.dispatchEvent(new CustomEvent('scan:completed'));
+
             // NOW clear the scanning flag and re-enable inputs
             isScanning = false;
             window.SM_IS_SCANNING = false;

@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showError(t('reports.common.errorDisplayingResults', 'Error displaying results: {{message}}') + ': ' + err.message);
           }
           window.__REPORT_READY__ = true;
+          window.dispatchEvent(new CustomEvent('scan:completed'));
           window.dispatchEvent(new CustomEvent('report:ready'));
         }, 800);
       } else {
@@ -165,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
           showError(t('reports.common.errorDisplayingResults', 'Error displaying results: {{message}}') + ': ' + err.message);
         }
         window.__REPORT_READY__ = true;
+        window.dispatchEvent(new CustomEvent('scan:completed'));
         window.dispatchEvent(new CustomEvent('report:ready'));
       }
 
@@ -405,19 +407,18 @@ document.addEventListener('DOMContentLoaded', () => {
       `
     });
 
-    // Issues Alert Section
-    if (data.issues.length > 0 || data.duplicates.length > 0) {
-      sections.push({
-        id: 'issues-detected',
-        title: `⚠️ ${t('reports.tagIntelligence.issuesDetected', 'Issues Detected')} (${data.issues.length + data.duplicates.length})`,
-        contentHTML: `
-          <ul style="margin: 0; padding-left: 1.5rem;">
+    // Issues Alert Section (always rendered to guarantee minimum 6 modules)
+    const issueCount = data.issues.length + data.duplicates.length;
+    sections.push({
+      id: 'issues-detected',
+      title: `⚠️ ${t('reports.tagIntelligence.issuesDetected', 'Issues Detected')} (${issueCount})`,
+      contentHTML: issueCount > 0
+        ? `<ul style="margin: 0; padding-left: 1.5rem;">
             ${data.duplicates.map(d => `<li class="severity-warning">${d.messageKey ? t('reports.' + d.messageKey, d.message) : d.message}</li>`).join('')}
             ${data.issues.map(i => `<li class="severity-${i.severity}">${i.messageKey ? t('reports.' + i.messageKey, i.message, i.messageParams) : i.message}</li>`).join('')}
-          </ul>
-        `
-      });
-    }
+          </ul>`
+        : `<p style="color: var(--r-text-muted, #6B7280); padding: 1rem 0;">${t('reports.tagIntelligence.noIssuesFound', 'No issues found. Your tag implementation looks clean.')}</p>`
+    });
 
     // Tags Detected Section
     sections.push({
@@ -478,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `
     });
 
-    // Performance Impact Section
+    // Performance Impact Section (always rendered to guarantee minimum 6 modules)
     if (data.pageResults && data.pageResults[0]?.performanceImpact) {
       sections.push({
         id: 'performance-impact',
@@ -524,6 +525,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <p style="margin-top: 1rem; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">💡 ${data.pageResults[0].performanceImpact.recommendation}</p>
           </div>
         `
+      });
+    } else {
+      sections.push({
+        id: 'performance-impact',
+        title: '⚡ ' + t('reports.tagIntelligence.scriptPerformanceImpact', 'Script Performance Impact'),
+        contentHTML: `<p style="color: var(--r-text-muted, #6B7280); padding: 1rem 0;">${t('reports.tagIntelligence.noPerformanceData', 'No script performance data available for this page.')}</p>`
       });
     }
 
@@ -1399,13 +1406,13 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     patienceEl.innerHTML = `
       <div style="overflow-x: auto; overflow-y: visible;">
-        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #22c55e; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
-      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41;">
+      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #22c55e;">
         🏷️ ${t('loader.detectingAnalyticsAndTracking', 'Detecting analytics and tracking tags...')}<br>
         <span style="font-size: 0.75rem; color: #00ffaa;">${t('loader.mayTake20To45Seconds', 'This may take 20-45 seconds')}</span>
       </div>
@@ -1417,12 +1424,12 @@ document.addEventListener('DOMContentLoaded', () => {
       style.id = 'patience-animations';
       style.textContent = `
         @keyframes color-cycle {
-          0% { color: #00ff41; }
+          0% { color: #22c55e; }
           20% { color: #00ffaa; }
           40% { color: #00aaff; }
           60% { color: #aa00ff; }
           80% { color: #ff00aa; }
-          100% { color: #00ff41; }
+          100% { color: #22c55e; }
         }
         @keyframes fade-in-out {
           0%, 100% { opacity: 0.7; }

@@ -334,7 +334,105 @@
     })();
 
     /* -----------------------------------------------------------------------
-       5. Recommendations
+       5. Reviews & Ratings
+       ----------------------------------------------------------------------- */
+    (function () {
+      const sec = document.querySelector('#section-reviews .pdf-section__content');
+      const d = analysis.reviews || {};
+      const score = scores.reviews;
+
+      sec.parentElement.insertBefore(
+        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.localSeo.report.reviews', 'Reviews & Ratings'), score)),
+        sec
+      );
+
+      let html = '';
+
+      // Section intro
+      html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.reviews', 'Online reviews and ratings are powerful local SEO signals. Search engines use review quantity, quality, and recency to determine local search rankings. This section evaluates your review presence and identifies opportunities to strengthen your online reputation.')) + '</p>';
+
+      // Review metrics
+      const metricsArr = [];
+      if (d.averageRating !== undefined && d.averageRating !== null) {
+        const ratingColor = d.averageRating >= 4.0 ? '#10b981' : d.averageRating >= 3.0 ? '#f59e0b' : '#ef4444';
+        metricsArr.push({ value: String(d.averageRating), label: t('reports.localSeo.report.reviews.averageRating', 'Average Rating'), color: ratingColor });
+      }
+      if (d.totalCount !== undefined && d.totalCount !== null) {
+        metricsArr.push({ value: d.totalCount, label: t('reports.localSeo.report.reviews.totalReviews', 'Total Reviews') });
+      }
+      if (d.hasReviews !== undefined) {
+        metricsArr.push({
+          value: d.hasReviews ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notDetected', 'Not detected'),
+          label: t('reports.localSeo.report.reviews.presenceLabel', 'Review Presence'),
+          color: d.hasReviews ? '#10b981' : '#ef4444'
+        });
+      }
+      if (metricsArr.length > 0) {
+        html += PR.renderMetrics(metricsArr);
+      }
+
+      // Review sources table
+      var sources = d.sources || d.platforms || [];
+      if (sources.length > 0) {
+        html += '<h3 class="pdf-subsection__title">' + esc(t('reports.localSeo.report.reviews.sourcesHeading', 'Review Sources')) + '</h3>';
+        var sourceRows = sources.slice(0, 15).map(function (src) {
+          var srcName = typeof src === 'string' ? src : (src.name || src.platform || '-');
+          var srcCount = typeof src === 'object' && src.count !== undefined ? String(src.count) : '-';
+          var srcRating = typeof src === 'object' && src.rating !== undefined ? String(src.rating) : '-';
+          return [
+            '<strong>' + esc(srcName) + '</strong>',
+            esc(srcCount),
+            esc(srcRating),
+            PR.renderStatus('found', t('seo.report.status.found', 'Found'))
+          ];
+        });
+
+        html += PR.renderTable(
+          [
+            { label: t('reports.localSeo.report.reviews.table.source', 'Source'), width: '35%' },
+            { label: t('reports.localSeo.report.reviews.table.count', 'Reviews'), width: '20%' },
+            { label: t('reports.localSeo.report.reviews.table.rating', 'Rating'), width: '20%' },
+            { label: t('seo.report.table.status', 'Status'), width: '25%' }
+          ],
+          sourceRows,
+          { striped: true }
+        );
+      }
+
+      // Review schema callout
+      if (d.hasSchema === false) {
+        html += PR.renderCallout(
+          t('reports.localSeo.report.reviews.noSchemaTitle', 'Add Review Schema Markup'),
+          t('reports.localSeo.report.reviews.noSchemaBody', 'Adding AggregateRating schema markup can help display star ratings in search results, increasing click-through rates from local search listings.'),
+          'warning'
+        );
+      } else if (d.hasSchema === true) {
+        html += PR.renderCallout(
+          t('reports.localSeo.report.reviews.schemaFoundTitle', 'Review Schema Detected'),
+          t('reports.localSeo.report.reviews.schemaFoundBody', 'Review schema markup was detected on your site. This helps search engines display rich review snippets in search results.'),
+          'tip'
+        );
+      }
+
+      // Fallback if no review data at all
+      if (metricsArr.length === 0 && sources.length === 0) {
+        html += PR.renderCallout(
+          t('reports.localSeo.report.reviews.noneTitle', 'No Reviews Detected'),
+          t('reports.localSeo.report.reviews.noneBody', 'No review or testimonial signals were detected on your site. Displaying customer reviews and ratings can significantly boost your local search visibility and build trust with potential customers.'),
+          'info'
+        );
+      }
+
+      // Issues
+      if (d.issues && d.issues.length > 0) {
+        html += _renderIssuesList(d.issues, t);
+      }
+
+      sec.innerHTML = html;
+    })();
+
+    /* -----------------------------------------------------------------------
+       6. Recommendations
        ----------------------------------------------------------------------- */
     (function () {
       const sec = document.querySelector('#section-recommendations .pdf-section__content');

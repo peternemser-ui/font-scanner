@@ -154,7 +154,7 @@ function initializeDashboardContactForm() {
   const setStatus = (text, isError = false) => {
     if (!statusEl) return;
     statusEl.textContent = text;
-    statusEl.style.color = isError ? 'var(--color-error, #ff4444)' : 'var(--text-secondary, #9ca3af)';
+    statusEl.style.color = isError ? 'var(--color-error, #ef4444)' : 'var(--text-secondary, #9ca3af)';
   };
 
   form.addEventListener('submit', async (e) => {
@@ -219,7 +219,7 @@ async function runComprehensiveAnalysis() {
   const url = urlInput.value.trim();
   
   if (!url) {
-    showError('Please enter a valid URL');
+    showError(t('dashboard.pleaseEnterValidUrl', 'Please enter a valid URL'));
     return;
   }
 
@@ -278,7 +278,7 @@ async function runComprehensiveAnalysis() {
           0% { color: var(--accent-primary); }
           20% { color: #00ffff; }
           40% { color: #0099ff; }
-          60% { color: #9933ff; }
+          60% { color: #8b5cf6; }
           80% { color: #ff33cc; }
           100% { color: var(--accent-primary); }
         }
@@ -425,7 +425,10 @@ async function runComprehensiveAnalysis() {
 
     // Display results
     displayDashboard(dashboardResults);
-    
+
+    // Notify UsagePill to refresh scan count
+    window.dispatchEvent(new CustomEvent('scan:completed'));
+
     // Hide loading
     window.AnalyzerLoader.hide();
     
@@ -594,12 +597,12 @@ function displayDashboard(data) {
                 gap: 0.75rem;
                 padding: 0.75rem 1rem;
                 background: ${issue.severity === 'critical' ? 'rgba(255,68,68,0.1)' : 'rgba(255,165,0,0.1)'};
-                border-left: 3px solid ${issue.severity === 'critical' ? '#ff4444' : '#ffa500'};
+                border-left: 3px solid ${issue.severity === 'critical' ? '#ef4444' : '#ffa500'};
                 border-radius: 0 6px 6px 0;
               ">
                 <span style="
                   width: 20px; height: 20px; border-radius: 50%;
-                  background: ${issue.severity === 'critical' ? '#ff4444' : '#ffa500'};
+                  background: ${issue.severity === 'critical' ? '#ef4444' : '#ffa500'};
                   color: white; font-size: 0.75rem; font-weight: 600;
                   display: flex; align-items: center; justify-content: center;
                 ">${idx + 1}</span>
@@ -607,7 +610,7 @@ function displayDashboard(data) {
                   <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">${issue.title}</div>
                   <div style="font-size: 0.8rem; color: var(--text-secondary);">${issue.impact}</div>
                 </div>
-                <a href="${issue.link}" style="color: ${issue.severity === 'critical' ? '#ff4444' : '#ffa500'}; font-size: 0.8rem; text-decoration: none; font-weight: 600;">${t('dashboard.results.viewFix', 'View fix')}</a>
+                <a href="${issue.link}" style="color: ${issue.severity === 'critical' ? '#ef4444' : '#ffa500'}; font-size: 0.8rem; text-decoration: none; font-weight: 600;">${t('dashboard.results.viewFix', 'View fix')}</a>
               </div>
             `).join('')}
           </div>
@@ -660,21 +663,21 @@ function displayDashboard(data) {
         <div class="accordion__body" style="padding: 1.25rem; border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-top: none; border-radius: 0 0 8px 8px; background: var(--bg-card, rgba(255,255,255,0.02));">
           
           <!-- Detailed Category Links -->
-          <h4 style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Explore by Category</h4>
+          <h4 style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">${t('dashboard.exploreByCategory', 'Explore by Category')}</h4>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-            ${createCategoryLink('Performance & UX', 'Speed, Core Web Vitals, Mobile', '/performance-hub.html', scores.performance, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>')}
-            ${createCategoryLink('SEO & Indexing', 'Metadata, Structure, Crawlability', '/seo-analyzer.html', scores.seo, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>')}
-            ${createCategoryLink('Accessibility', 'WCAG Compliance, Violations', '/accessibility-analyzer.html', scores.accessibility, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M10.5 8.5h3M8 13h8M8 13v7M16 13v7"/></svg>')}
-            ${createCategoryLink('Security & Trust', 'SSL, Headers, Vulnerabilities', '/security-analyzer.html', scores.security, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>')}
-            ${createCategoryLink('Fonts', 'Font Loading, Optimization', '/enhanced-fonts.html', scores.font, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>')}
+            ${createCategoryLink(t('dashboard.categories.performanceUx', 'Performance & UX'), t('dashboard.categories.performanceUxDesc', 'Speed, Core Web Vitals, Mobile'), '/performance-hub.html', scores.performance, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>')}
+            ${createCategoryLink(t('dashboard.categories.seoIndexing', 'SEO & Indexing'), t('dashboard.categories.seoIndexingDesc', 'Metadata, Structure, Crawlability'), '/seo-analyzer.html', scores.seo, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>')}
+            ${createCategoryLink(t('dashboard.categories.accessibility', 'Accessibility'), t('dashboard.categories.accessibilityDesc', 'WCAG Compliance, Violations'), '/accessibility-analyzer.html', scores.accessibility, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M10.5 8.5h3M8 13h8M8 13v7M16 13v7"/></svg>')}
+            ${createCategoryLink(t('dashboard.categories.securityTrust', 'Security & Trust'), t('dashboard.categories.securityTrustDesc', 'SSL, Headers, Vulnerabilities'), '/security-analyzer.html', scores.security, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>')}
+            ${createCategoryLink(t('dashboard.categories.fonts', 'Fonts'), t('dashboard.categories.fontsDesc', 'Font Loading, Optimization'), '/enhanced-fonts.html', scores.font, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>')}
           </div>
           
           <!-- Export Options -->
-          <h4 style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Client-Ready Reports</h4>
+          <h4 style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">${t('dashboard.clientReadyReports', 'Client-Ready Reports')}</h4>
           <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
             <button data-action="copy-share-link" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 8px; color: var(--accent-primary); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-              Copy Link
+              ${t('dashboard.copyLink', 'Copy Link')}
             </button>
           </div>
         </div>
@@ -700,12 +703,12 @@ function displayDashboard(data) {
                 gap: 0.75rem;
                 padding: 1rem;
                 background: ${issue.severity === 'critical' ? 'rgba(255,68,68,0.08)' : 'rgba(255,165,0,0.08)'};
-                border-left: 3px solid ${issue.severity === 'critical' ? '#ff4444' : '#ffa500'};
+                border-left: 3px solid ${issue.severity === 'critical' ? '#ef4444' : '#ffa500'};
                 border-radius: 0 8px 8px 0;
               ">
                 <span style="
                   width: 22px; height: 22px; border-radius: 50%;
-                  background: ${issue.severity === 'critical' ? '#ff4444' : '#ffa500'};
+                  background: ${issue.severity === 'critical' ? '#ef4444' : '#ffa500'};
                   color: white; font-size: 0.75rem; font-weight: 600;
                   display: flex; align-items: center; justify-content: center;
                   flex-shrink: 0;
@@ -713,15 +716,15 @@ function displayDashboard(data) {
                 <div style="flex: 1; min-width: 0;">
                   <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem; margin-bottom: 0.25rem;">${issue.title}</div>
                   <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">${issue.impact}</div>
-                  <a href="${issue.link}" style="display: inline-block; margin-top: 0.5rem; color: ${issue.severity === 'critical' ? '#ff4444' : '#ffa500'}; font-size: 0.8rem; text-decoration: none; font-weight: 600;">View fix →</a>
+                  <a href="${issue.link}" style="display: inline-block; margin-top: 0.5rem; color: ${issue.severity === 'critical' ? '#ef4444' : '#ffa500'}; font-size: 0.8rem; text-decoration: none; font-weight: 600;">${t('dashboard.viewFix', 'View fix')} →</a>
                 </div>
               </div>
             `).join('')}
           </div>
         ` : `
           <div style="padding: 1.5rem; background: rgba(var(--accent-primary-rgb), 0.08); border-radius: 8px; text-align: center;">
-            <span style="color: var(--accent-primary); font-weight: 600;">✓ No critical issues found</span>
-            <p style="margin: 0.5rem 0 0; font-size: 0.85rem; color: var(--text-secondary);">Your site is in good shape!</p>
+            <span style="color: var(--accent-primary); font-weight: 600;">✓ ${t('dashboard.noCriticalIssuesFound', 'No critical issues found')}</span>
+            <p style="margin: 0.5rem 0 0; font-size: 0.85rem; color: var(--text-secondary);">${t('dashboard.siteInGoodShape', 'Your site is in good shape!')}</p>
           </div>
         `}
         
@@ -733,9 +736,9 @@ function displayDashboard(data) {
           border: 1px solid rgba(var(--accent-primary-rgb), 0.25);
           border-radius: 8px;
         ">
-          <div style="font-weight: 600; color: var(--accent-primary); font-size: 0.8rem; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.03em;">Recommended next fix</div>
+          <div style="font-weight: 600; color: var(--accent-primary); font-size: 0.8rem; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.03em;">${t('dashboard.results.recommendedNextFix', 'Recommended next fix')}</div>
           <div style="color: var(--text-primary); font-size: 0.9rem; line-height: 1.4;">${nextStep.text}</div>
-          ${nextStep.link ? `<a href="${nextStep.link}" style="display: inline-block; margin-top: 0.75rem; padding: 0.5rem 1rem; background: var(--accent-primary); color: var(--accent-primary-contrast); font-weight: 600; font-size: 0.85rem; border-radius: 6px; text-decoration: none;">Start</a>` : ''}
+          ${nextStep.link ? `<a href="${nextStep.link}" style="display: inline-block; margin-top: 0.75rem; padding: 0.5rem 1rem; background: var(--accent-primary); color: var(--accent-primary-contrast); font-weight: 600; font-size: 0.85rem; border-radius: 6px; text-decoration: none;">${t('dashboard.results.start', 'Start')}</a>` : ''}
         </div>
       </div>
     `;
@@ -778,9 +781,9 @@ function createAnalyzerDial(name, scores, icon, link) {
           background: var(--r-surface-2, #F8FAFC); border: 2px dashed rgba(255,255,255,0.2);
           display: flex; align-items: center; justify-content: center;
         ">
-          <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">N/A</span>
+          <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">${t('dashboard.na', 'N/A')}</span>
         </div>
-        <div style="margin-top: 0.35rem; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">Error</div>
+        <div style="margin-top: 0.35rem; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('dashboard.error', 'Error')}</div>
       </div>
     `;
   }
@@ -790,8 +793,8 @@ function createAnalyzerDial(name, scores, icon, link) {
     ? Math.round((scores.desktop + scores.mobile) / 2)
     : (scores.desktop || scores.mobile);
 
-  const desktopDisplay = scores.desktop !== null ? scores.desktop : 'N/A';
-  const mobileDisplay = scores.mobile !== null ? scores.mobile : 'N/A';
+  const desktopDisplay = scores.desktop !== null ? scores.desktop : t('dashboard.na', 'N/A');
+  const mobileDisplay = scores.mobile !== null ? scores.mobile : t('dashboard.na', 'N/A');
 
   return `
     <div style="text-align: center;">
@@ -813,8 +816,8 @@ function createAnalyzerDial(name, scores, icon, link) {
             ${avgScore}
           </text>
           <!-- Desktop and Mobile labels below -->
-          <text x="35" y="145" text-anchor="middle" font-size="0.7rem" fill="#888">Desktop</text>
-          <text x="105" y="145" text-anchor="middle" font-size="0.7rem" fill="#888">Mobile</text>
+          <text x="35" y="145" text-anchor="middle" font-size="0.7rem" fill="#888">${t('common.desktop', 'Desktop')}</text>
+          <text x="105" y="145" text-anchor="middle" font-size="0.7rem" fill="#888">${t('common.mobile', 'Mobile')}</text>
           <!-- Desktop and Mobile scores -->
           <text x="35" y="158" text-anchor="middle" font-size="0.9rem" font-weight="600" fill="${scores.desktop !== null ? getScoreColor(scores.desktop) : '#666'}">
             ${desktopDisplay}
@@ -842,7 +845,7 @@ function createCategoryLink(title, description, link, scores, icon) {
     : (scores?.desktop || scores?.mobile || null);
   
   const hasError = avgScore === null;
-  const statusLabel = hasError ? 'N/A' : getStatus(avgScore);
+  const statusLabel = hasError ? t('dashboard.na', 'N/A') : getStatus(avgScore);
   const statusColor = hasError ? '#666' : getScoreColor(avgScore || 0);
 
   // Detect light mode
@@ -1251,7 +1254,7 @@ function createActionCard(title, key, scores, data, link, icon) {
     : (scores.desktop || scores.mobile || 0);
 
   const status = hasError ? 'Error' : getStatus(avgScore);
-  const statusColor = hasError ? '#ff4444' : getScoreColor(avgScore || 0);
+  const statusColor = hasError ? '#ef4444' : getScoreColor(avgScore || 0);
 
   // Detect light mode
   const isLightMode = document.body.classList.contains('white-theme');
@@ -1289,11 +1292,11 @@ function createActionCard(title, key, scores, data, link, icon) {
         </div>
         <div style="font-size: 1.1rem; font-weight: 600; color: ${cardTitleColor}; margin-bottom: 0.5rem;">${title}</div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: ${cardTextColor}; font-size: 0.9rem;">Score</span>
-          <span style="font-size: 1.5rem; font-weight: bold; color: ${statusColor};">${avgScore !== null ? avgScore : 'N/A'}</span>
+          <span style="color: ${cardTextColor}; font-size: 0.9rem;">${t('dashboard.score', 'Score')}</span>
+          <span style="font-size: 1.5rem; font-weight: bold; color: ${statusColor};">${avgScore !== null ? avgScore : t('dashboard.na', 'N/A')}</span>
         </div>
         <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid ${borderTopColor};">
-          <span style="color: ${detailsColor}; font-size: 0.9rem;">View Details →</span>
+          <span style="color: ${detailsColor}; font-size: 0.9rem;">${t('dashboard.viewDetails', 'View Details')} →</span>
         </div>
         ${limitedNote}
       </div>
@@ -1309,23 +1312,23 @@ function generateRecommendations(data) {
   
   // Check each analyzer for issues
   if (data.seo && data.seo.results && data.seo.results.score.overall < 70) {
-    recommendations.push('~ <strong>SEO:</strong> Improve meta tags, headings, and content optimization');
+    recommendations.push(`~ <strong>${t('dashboard.recommendations.seoLabel', 'SEO')}:</strong> ${t('dashboard.recommendations.seoAdvice', 'Improve meta tags, headings, and content optimization')}`);
   }
   if (data.performance && data.performance.results && data.performance.results.overallScore < 70) {
-    recommendations.push('~ <strong>Performance:</strong> Optimize images, minify resources, and leverage caching');
+    recommendations.push(`~ <strong>${t('dashboard.recommendations.performanceLabel', 'Performance')}:</strong> ${t('dashboard.recommendations.performanceAdvice', 'Optimize images, minify resources, and leverage caching')}`);
   }
   if (data.accessibility && data.accessibility.results && data.accessibility.results.overallScore < 70) {
-    recommendations.push('~ <strong>Accessibility:</strong> Fix color contrast, add ARIA labels, and improve keyboard navigation');
+    recommendations.push(`~ <strong>${t('dashboard.recommendations.accessibilityLabel', 'Accessibility')}:</strong> ${t('dashboard.recommendations.accessibilityAdvice', 'Fix color contrast, add ARIA labels, and improve keyboard navigation')}`);
   }
   if (data.security && data.security.overallScore < 70) {
-    recommendations.push('~ <strong>Security:</strong> Add security headers, enable HTTPS, and fix vulnerabilities');
+    recommendations.push(`~ <strong>${t('dashboard.recommendations.securityLabel', 'Security')}:</strong> ${t('dashboard.recommendations.securityAdvice', 'Add security headers, enable HTTPS, and fix vulnerabilities')}`);
   }
   if (data.font && data.font.overallScore && data.font.overallScore < 70) {
-    recommendations.push('~ <strong>Typography:</strong> Optimize font loading and improve typography hierarchy');
+    recommendations.push(`~ <strong>${t('dashboard.recommendations.typographyLabel', 'Typography')}:</strong> ${t('dashboard.recommendations.typographyAdvice', 'Optimize font loading and improve typography hierarchy')}`);
   }
 
   if (recommendations.length === 0) {
-    return '<p style="color: var(--accent-primary); margin: 0;">✓ Excellent! All areas are performing well. Keep up the good work!</p>';
+    return `<p style="color: var(--accent-primary); margin: 0;">✓ ${t('dashboard.recommendations.allGood', 'Excellent! All areas are performing well. Keep up the good work!')}</p>`;
   }
 
   return `
@@ -1349,46 +1352,46 @@ function generatePrioritizedIssues(data) {
   // Collect issues from all analyzers
   // SEO issues
   if (data.seo?.results?.score?.overall < 50) {
-    issues.critical.push({ category: 'SEO', issue: 'Overall SEO health is critical', score: data.seo.results.score.overall });
+    issues.critical.push({ category: t('dashboard.recommendations.seoLabel', 'SEO'), issue: t('dashboard.issues.seoCritical', 'Overall SEO health is critical'), score: data.seo.results.score.overall });
   } else if (data.seo?.results?.score?.overall < 70) {
-    issues.warning.push({ category: 'SEO', issue: 'SEO needs improvement', score: data.seo.results.score.overall });
+    issues.warning.push({ category: t('dashboard.recommendations.seoLabel', 'SEO'), issue: t('dashboard.issues.seoNeedsImprovement', 'SEO needs improvement'), score: data.seo.results.score.overall });
   }
 
   // Performance issues  
   if (data.performance?.results?.overallScore < 50 || data.performance?.results?.performanceScore < 50) {
     const score = data.performance?.results?.overallScore || data.performance?.results?.performanceScore;
-    issues.critical.push({ category: 'Performance', issue: 'Page load speed is critically slow', score });
+    issues.critical.push({ category: t('dashboard.recommendations.performanceLabel', 'Performance'), issue: t('dashboard.issues.performanceCritical', 'Page load speed is critically slow'), score });
   } else if (data.performance?.results?.overallScore < 70 || data.performance?.results?.performanceScore < 70) {
     const score = data.performance?.results?.overallScore || data.performance?.results?.performanceScore;
-    issues.warning.push({ category: 'Performance', issue: 'Page performance could be improved', score });
+    issues.warning.push({ category: t('dashboard.recommendations.performanceLabel', 'Performance'), issue: t('dashboard.issues.performanceNeedsImprovement', 'Page performance could be improved'), score });
   }
 
   // Accessibility issues
   if (data.accessibility?.results?.overallScore < 50 || data.accessibility?.results?.accessibilityScore < 50) {
     const score = data.accessibility?.results?.overallScore || data.accessibility?.results?.accessibilityScore;
-    issues.critical.push({ category: 'Accessibility', issue: 'Major accessibility barriers detected', score });
+    issues.critical.push({ category: t('dashboard.recommendations.accessibilityLabel', 'Accessibility'), issue: t('dashboard.issues.accessibilityCritical', 'Major accessibility barriers detected'), score });
   } else if (data.accessibility?.results?.overallScore < 70 || data.accessibility?.results?.accessibilityScore < 70) {
     const score = data.accessibility?.results?.overallScore || data.accessibility?.results?.accessibilityScore;
-    issues.warning.push({ category: 'Accessibility', issue: 'Accessibility improvements needed', score });
+    issues.warning.push({ category: t('dashboard.recommendations.accessibilityLabel', 'Accessibility'), issue: t('dashboard.issues.accessibilityNeedsImprovement', 'Accessibility improvements needed'), score });
   }
 
   // Security issues
   if (data.security?.overallScore < 50) {
-    issues.critical.push({ category: 'Security', issue: 'Security vulnerabilities detected', score: data.security.overallScore });
+    issues.critical.push({ category: t('dashboard.recommendations.securityLabel', 'Security'), issue: t('dashboard.issues.securityCritical', 'Security vulnerabilities detected'), score: data.security.overallScore });
   } else if (data.security?.overallScore < 70) {
-    issues.warning.push({ category: 'Security', issue: 'Security headers could be strengthened', score: data.security.overallScore });
+    issues.warning.push({ category: t('dashboard.recommendations.securityLabel', 'Security'), issue: t('dashboard.issues.securityNeedsImprovement', 'Security headers could be strengthened'), score: data.security.overallScore });
   }
 
   // Typography issues
   if (data.font?.overallScore && data.font.overallScore < 50) {
-    issues.warning.push({ category: 'Typography', issue: 'Font loading may impact performance', score: data.font.overallScore });
+    issues.warning.push({ category: t('dashboard.recommendations.typographyLabel', 'Typography'), issue: t('dashboard.issues.typographyNeedsImprovement', 'Font loading may impact performance'), score: data.font.overallScore });
   }
 
   // Generate HTML
   const totalIssues = issues.critical.length + issues.warning.length + issues.info.length;
   
   if (totalIssues === 0) {
-    return '<p style="color: var(--accent-primary); margin: 0;">✓ No critical or warning issues found. Your site is in good shape!</p>';
+    return `<p style="color: var(--accent-primary); margin: 0;">✓ ${t('dashboard.noIssuesFoundGoodShape', 'No critical or warning issues found. Your site is in good shape!')}</p>`;
   }
 
   let html = '';
@@ -1397,13 +1400,13 @@ function generatePrioritizedIssues(data) {
     html += `
       <div style="margin-bottom: 1rem;">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-          <span style="background: #ff4444; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">CRITICAL</span>
-          <span style="color: var(--text-secondary); font-size: 0.85rem;">${issues.critical.length} issue${issues.critical.length > 1 ? 's' : ''}</span>
+          <span style="background: #ef4444; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${t('dashboard.severityCritical', 'CRITICAL')}</span>
+          <span style="color: var(--text-secondary); font-size: 0.85rem;">${t('dashboard.issueCount', '{{count}} issue(s)', { count: issues.critical.length })}</span>
         </div>
         ${issues.critical.map(i => `
           <div style="display: flex; align-items: center; padding: 0.5rem; background: rgba(255,68,68,0.1); border-radius: 4px; margin-bottom: 0.5rem;">
             <span style="flex: 1;"><strong>${i.category}:</strong> ${i.issue}</span>
-            <span style="color: #ff4444; font-size: 0.75rem; font-weight: 600;">FIX NOW →</span>
+            <span style="color: #ef4444; font-size: 0.75rem; font-weight: 600;">${t('dashboard.fixNow', 'FIX NOW')} →</span>
           </div>
         `).join('')}
       </div>
@@ -1414,20 +1417,20 @@ function generatePrioritizedIssues(data) {
     html += `
       <div style="margin-bottom: 1rem;">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-          <span style="background: #ffa500; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">WARNING</span>
-          <span style="color: var(--text-secondary); font-size: 0.85rem;">${issues.warning.length} issue${issues.warning.length > 1 ? 's' : ''}</span>
+          <span style="background: #ffa500; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${t('dashboard.severityWarning', 'WARNING')}</span>
+          <span style="color: var(--text-secondary); font-size: 0.85rem;">${t('dashboard.issueCount', '{{count}} issue(s)', { count: issues.warning.length })}</span>
         </div>
         ${issues.warning.map(i => `
           <div style="display: flex; align-items: center; padding: 0.5rem; background: rgba(255,165,0,0.1); border-radius: 4px; margin-bottom: 0.5rem;">
             <span style="flex: 1;"><strong>${i.category}:</strong> ${i.issue}</span>
-            <span style="color: #ffa500; font-size: 0.75rem; font-weight: 600;">REVIEW →</span>
+            <span style="color: #ffa500; font-size: 0.75rem; font-weight: 600;">${t('dashboard.review', 'REVIEW')} →</span>
           </div>
         `).join('')}
       </div>
     `;
   }
 
-  return html || '<p style="color: var(--text-secondary); margin: 0;">No priority issues to display.</p>';
+  return html || `<p style="color: var(--text-secondary); margin: 0;">${t('dashboard.noPriorityIssues', 'No priority issues to display.')}</p>`;
 }
 
 /**
@@ -1441,14 +1444,14 @@ function generateImprovementGuide(data) {
   // SEO improvements (threshold: 75 for "Good")
   if (data.seo?.results?.score?.overall < 75) {
     improvements.push({
-      category: 'SEO',
+      category: t('dashboard.recommendations.seoLabel', 'SEO'),
       icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
-      why: 'Search engines need clear signals to rank your pages. Poor SEO means less organic traffic.',
+      why: t('dashboard.guide.seoWhy', 'Search engines need clear signals to rank your pages. Poor SEO means less organic traffic.'),
       actions: [
-        'Add unique title tags (50-60 chars) to each page',
-        'Write compelling meta descriptions (150-160 chars)',
-        'Use proper heading hierarchy (H1 → H2 → H3)',
-        'Add alt text to all images'
+        t('dashboard.guide.seoAction1', 'Add unique title tags (50-60 chars) to each page'),
+        t('dashboard.guide.seoAction2', 'Write compelling meta descriptions (150-160 chars)'),
+        t('dashboard.guide.seoAction3', 'Use proper heading hierarchy (H1 → H2 → H3)'),
+        t('dashboard.guide.seoAction4', 'Add alt text to all images')
       ],
       link: '/seo-analyzer.html'
     });
@@ -1457,14 +1460,14 @@ function generateImprovementGuide(data) {
   // Performance improvements (threshold: 75 for "Good")
   if (data.performance?.results?.overallScore < 75 || data.performance?.results?.performanceScore < 75) {
     improvements.push({
-      category: 'Performance',
+      category: t('dashboard.recommendations.performanceLabel', 'Performance'),
       icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
-      why: 'Slow pages lose visitors. Each second of delay reduces conversions by 7%.',
+      why: t('dashboard.guide.performanceWhy', 'Slow pages lose visitors. Each second of delay reduces conversions by 7%.'),
       actions: [
-        'Compress and serve images in WebP format',
-        'Enable browser caching with proper headers',
-        'Minify CSS, JavaScript, and HTML',
-        'Implement lazy loading for images below the fold'
+        t('dashboard.guide.performanceAction1', 'Compress and serve images in WebP format'),
+        t('dashboard.guide.performanceAction2', 'Enable browser caching with proper headers'),
+        t('dashboard.guide.performanceAction3', 'Minify CSS, JavaScript, and HTML'),
+        t('dashboard.guide.performanceAction4', 'Implement lazy loading for images below the fold')
       ],
       link: '/performance-hub.html'
     });
@@ -1473,14 +1476,14 @@ function generateImprovementGuide(data) {
   // Accessibility improvements (threshold: 75 for "Good")
   if (data.accessibility?.results?.overallScore < 75 || data.accessibility?.results?.accessibilityScore < 75) {
     improvements.push({
-      category: 'Accessibility',
+      category: t('dashboard.recommendations.accessibilityLabel', 'Accessibility'),
       icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M10.5 8.5h3M8 13h8M8 13v7M16 13v7"/></svg>',
-      why: 'Accessibility issues exclude 15% of users and create legal liability (ADA/WCAG).',
+      why: t('dashboard.guide.accessibilityWhy', 'Accessibility issues exclude 15% of users and create legal liability (ADA/WCAG).'),
       actions: [
-        'Ensure color contrast ratio of at least 4.5:1',
-        'Add ARIA labels to interactive elements',
-        'Make all functionality keyboard accessible',
-        'Add skip-to-content links for screen readers'
+        t('dashboard.guide.accessibilityAction1', 'Ensure color contrast ratio of at least 4.5:1'),
+        t('dashboard.guide.accessibilityAction2', 'Add ARIA labels to interactive elements'),
+        t('dashboard.guide.accessibilityAction3', 'Make all functionality keyboard accessible'),
+        t('dashboard.guide.accessibilityAction4', 'Add skip-to-content links for screen readers')
       ],
       link: '/accessibility-analyzer.html'
     });
@@ -1489,14 +1492,14 @@ function generateImprovementGuide(data) {
   // Security improvements (threshold: 75 for "Good")
   if (data.security?.overallScore < 75) {
     improvements.push({
-      category: 'Security',
+      category: t('dashboard.recommendations.securityLabel', 'Security'),
       icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-      why: 'Missing security headers leave your site vulnerable to XSS, clickjacking, and data theft.',
+      why: t('dashboard.guide.securityWhy', 'Missing security headers leave your site vulnerable to XSS, clickjacking, and data theft.'),
       actions: [
-        'Add Content-Security-Policy header',
-        'Enable HSTS (Strict-Transport-Security)',
-        'Set X-Content-Type-Options: nosniff',
-        'Configure X-Frame-Options to prevent clickjacking'
+        t('dashboard.guide.securityAction1', 'Add Content-Security-Policy header'),
+        t('dashboard.guide.securityAction2', 'Enable HSTS (Strict-Transport-Security)'),
+        t('dashboard.guide.securityAction3', 'Set X-Content-Type-Options: nosniff'),
+        t('dashboard.guide.securityAction4', 'Configure X-Frame-Options to prevent clickjacking')
       ],
       link: '/security-analyzer.html'
     });
@@ -1505,14 +1508,14 @@ function generateImprovementGuide(data) {
   // Typography improvements (threshold: 75 for "Good")
   if (data.font?.overallScore && data.font.overallScore < 75) {
     improvements.push({
-      category: 'Typography',
+      category: t('dashboard.recommendations.typographyLabel', 'Typography'),
       icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>',
-      why: 'Poor font loading causes layout shifts and slow rendering, hurting Core Web Vitals.',
+      why: t('dashboard.guide.typographyWhy', 'Poor font loading causes layout shifts and slow rendering, hurting Core Web Vitals.'),
       actions: [
-        'Use font-display: swap for web fonts',
-        'Preload critical fonts in the <head>',
-        'Limit font families to 2-3 maximum',
-        'Subset fonts to include only needed characters'
+        t('dashboard.guide.typographyAction1', 'Use font-display: swap for web fonts'),
+        t('dashboard.guide.typographyAction2', 'Preload critical fonts in the <head>'),
+        t('dashboard.guide.typographyAction3', 'Limit font families to 2-3 maximum'),
+        t('dashboard.guide.typographyAction4', 'Subset fonts to include only needed characters')
       ],
       link: '/enhanced-fonts.html'
     });
@@ -1524,31 +1527,31 @@ function generateImprovementGuide(data) {
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" style="margin-bottom: 0.5rem;">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
-        <p style="color: var(--accent-primary); margin: 0; font-weight: 600;">Excellent work!</p>
-        <p style="color: var(--text-secondary); margin: 0.5rem 0 0 0;">Your site is performing well across all categories. Run detailed scans for deeper insights.</p>
+        <p style="color: var(--accent-primary); margin: 0; font-weight: 600;">${t('dashboard.guide.excellentWork', 'Excellent work!')}</p>
+        <p style="color: var(--text-secondary); margin: 0.5rem 0 0 0;">${t('dashboard.guide.allCategoriesGood', 'Your site is performing well across all categories. Run detailed scans for deeper insights.')}</p>
       </div>
     `;
   }
 
   return `
-    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0;">Click each category to see what to fix and why it matters.</p>
+    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0;">${t('dashboard.guide.clickEachCategory', 'Click each category to see what to fix and why it matters.')}</p>
     ${improvements.map((imp, idx) => `
     <details style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; margin-bottom: 0.5rem;" ${idx === 0 ? 'open' : ''}>
       <summary style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; cursor: pointer; list-style: none;">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
           <span style="color: var(--color-warning, #ffa500);">${imp.icon}</span>
           <strong style="color: var(--text-primary);">${imp.category}</strong>
-          <span style="font-size: 0.75rem; color: var(--text-secondary);">(${imp.actions.length} fixes)</span>
+          <span style="font-size: 0.75rem; color: var(--text-secondary);">(${t('dashboard.guide.fixesCount', '{{count}} fixes', { count: imp.actions.length })})</span>
         </div>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s;"><path d="M6 9l6 6 6-6"/></svg>
       </summary>
       <div style="padding: 0 1rem 1rem 1rem; border-top: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
-        <p style="margin: 0.75rem 0 0.5rem 0; font-size: 0.85rem; color: var(--text-secondary); font-style: italic;">Why it matters: ${imp.why}</p>
+        <p style="margin: 0.75rem 0 0.5rem 0; font-size: 0.85rem; color: var(--text-secondary); font-style: italic;">${t('dashboard.guide.whyItMatters', 'Why it matters:')} ${imp.why}</p>
         <ul style="margin: 0.5rem 0 0 0; padding-left: 1.25rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
           ${imp.actions.map(action => `<li>${action}</li>`).join('')}
         </ul>
         </ul>
-        <a href="${imp.link}" style="display: inline-block; margin-top: 0.75rem; color: var(--accent-primary); font-size: 0.85rem; text-decoration: none;">View Full Report →</a>
+        <a href="${imp.link}" style="display: inline-block; margin-top: 0.75rem; color: var(--accent-primary); font-size: 0.85rem; text-decoration: none;">${t('dashboard.guide.viewFullReport', 'View Full Report')} →</a>
       </div>
     </details>
   `).join('')}`;
@@ -1583,7 +1586,7 @@ function copyShareLink() {
     // Show temporary success message
     const btn = event.target.closest('button');
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ' + t('dashboard.copied', 'Copied!');
     btn.style.borderColor = 'var(--accent-primary)';
     btn.style.color = 'var(--accent-primary)';
     setTimeout(() => {
@@ -1828,7 +1831,7 @@ function initDashboardPDFExport() {
     initPDFExport({
       contentSelector: '#results',
       buttonSelector: '#exportPdfBtn, .export-pdf-btn',
-      reportSubtitle: 'Comprehensive Website Analysis',
+      reportSubtitle: t('dashboard.reportSubtitle', 'Comprehensive Website Analysis'),
       urlInputSelector: '#urlInput',
       filename: `site-mechanic-dashboard-${new Date().toISOString().split('T')[0]}.pdf`
     });

@@ -250,11 +250,13 @@ document.addEventListener('DOMContentLoaded', () => {
           loadingContainer.style.display = 'none';
           displayResults(data);
           window.__REPORT_READY__ = true;
+          window.dispatchEvent(new CustomEvent('scan:completed'));
           window.dispatchEvent(new CustomEvent('report:ready'));
         }, 800);
       } else {
         displayResults(data);
         window.__REPORT_READY__ = true;
+        window.dispatchEvent(new CustomEvent('scan:completed'));
         window.dispatchEvent(new CustomEvent('report:ready'));
       }
 
@@ -434,8 +436,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // No summary donuts for crawler (not score-based)
     const summary = [];
 
-    // No screenshot for crawler page (single page doesn't need it)
-    const screenshots = [];
+    // Page Screenshot - use screenshot URL from API response or body attribute
+    const screenshotUrlResolved = data.results?.screenshotUrl || data.screenshotUrl
+      || document.body.getAttribute('data-sm-screenshot-url')
+      || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+    if (screenshotUrlResolved) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrlResolved);
+    }
+    const screenshots = screenshotUrlResolved
+      ? [{ src: screenshotUrlResolved, alt: t('reports.common.screenshotAlt', 'Screenshot of') + ' ' + (data.url || ''), device: '' }]
+      : [];
 
     // Use ReportContainer (SEO pattern)
     const reportHTML = (window.ReportContainer && typeof window.ReportContainer.create === 'function')
@@ -898,7 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCrawlerFixAccordion(fix, index) {
     const accordionId = `crawlerfix-${fix.id || index}`;
     const severityColors = {
-      High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+      High: { bg: 'rgba(255,68,68,0.1)', border: '#ef4444', color: '#ef4444', icon: '🔴' },
       Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
       Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
     };
@@ -986,8 +996,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
           ${fix.description}
         </p>
-        <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
+        <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
+          <div style="color: #22c55e; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
           <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${fix.impact}</div>
         </div>
       </div>
@@ -1012,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-              <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
+              <span style="color: #22c55e; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
               <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
                 padding: 0.25rem 0.75rem;
                 border-radius: 4px;
@@ -1466,7 +1476,7 @@ Sitemap: https://example.com/sitemap.xml`,
           </div>
           <div class="report-shell__summary-card">
             <div class="report-shell__summary-label">${t('reports.crawler.crawlTime', 'Crawl Time')}</div>
-            <div style="font-size: 2.5rem; font-weight: bold; color: #00d9ff;">${data.duration || 'N/A'}</div>
+            <div style="font-size: 2.5rem; font-weight: bold; color: #06b6d4;">${data.duration || 'N/A'}</div>
           </div>
         </div>
       </div>
@@ -1831,7 +1841,7 @@ Sitemap: https://example.com/sitemap.xml`,
   }
 
   function getColorForSection(name) {
-    const colors = ['#00ff41', '#00d9ff', '#bb77ff', '#ffd700', '#ff6b6b', '#4ecdc4'];
+    const colors = ['#22c55e', '#06b6d4', '#bb77ff', '#eab308', '#ff6b6b', '#4ecdc4'];
     const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return colors[hash % colors.length];
   }
@@ -1924,7 +1934,7 @@ Sitemap: https://example.com/sitemap.xml`,
       <div style="display: flex; align-items: center; gap: 0.75rem;">
         <span style="font-size: 1.5rem;">🔒</span>
         <div>
-          <div style="color: #00ff41; font-weight: 600;">${t('reports.crawler.sslHttpsActive', 'SSL/HTTPS Active')}</div>
+          <div style="color: #22c55e; font-weight: 600;">${t('reports.crawler.sslHttpsActive', 'SSL/HTTPS Active')}</div>
           <div style="color: var(--text-tertiary); font-size: 0.8rem;">${t('reports.crawler.secureConnection', 'Secure connection')}</div>
         </div>
       </div>
@@ -1955,11 +1965,11 @@ Sitemap: https://example.com/sitemap.xml`,
       <div style="display: flex; flex-direction: column; gap: 0.75rem;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.crawler.totalPages', 'Total Pages')}</span>
-          <span style="color: #00ff41; font-weight: bold; font-size: 1.25rem;">${pages.length}</span>
+          <span style="color: #22c55e; font-weight: bold; font-size: 1.25rem;">${pages.length}</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.crawler.topLevelSections', 'Top-level Sections')}</span>
-          <span style="color: #00d9ff; font-weight: bold;">${sections}</span>
+          <span style="color: #06b6d4; font-weight: bold;">${sections}</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.crawler.avgPathDepth', 'Avg Path Depth')}</span>
@@ -1970,7 +1980,7 @@ Sitemap: https://example.com/sitemap.xml`,
             <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-bottom: 0.5rem;">${t('reports.crawler.fileTypes', 'File Types:')}</div>
             <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
               ${Object.entries(extensions).map(([ext, count]) => `
-                <span style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #ffd700;">.${ext}: ${count}</span>
+                <span style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #eab308;">.${ext}: ${count}</span>
               `).join('')}
             </div>
           </div>
@@ -2088,7 +2098,7 @@ Sitemap: https://example.com/sitemap.xml`,
       insights.push({ icon: '✅', text: t('reports.crawler.insights.wellOrganizedStructure', 'Well-organized site structure'), type: 'success' });
     }
     
-    const typeColors = { success: '#00ff41', warning: '#ffc107', info: '#00d9ff' };
+    const typeColors = { success: '#22c55e', warning: '#ffc107', info: '#06b6d4' };
     
     return `
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem;">
@@ -2115,10 +2125,10 @@ Sitemap: https://example.com/sitemap.xml`,
       <details style="margin-bottom: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
         <summary style="padding: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
           <span style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="color: #00d9ff;">📁</span>
+            <span style="color: #06b6d4;">📁</span>
             <strong>/${section}/</strong>
           </span>
-          <span style="background: rgba(0, 217, 255, 0.2); color: #00d9ff; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">
+          <span style="background: rgba(0, 217, 255, 0.2); color: #06b6d4; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">
             ${sectionPages.length} ${sectionPages.length !== 1 ? t('reports.crawler.pages', 'pages') : t('reports.crawler.page', 'page')}
           </span>
         </summary>
@@ -2585,13 +2595,13 @@ Sitemap: https://example.com/sitemap.xml`,
     `;
     patienceEl.innerHTML = `
       <div style="overflow-x: auto; overflow-y: visible;">
-        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #22c55e; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
-      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41;">
+      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #22c55e;">
         ${t('reports.crawler.crawlingPagesWithPuppeteer', 'Crawling pages with Puppeteer...')}<br>
         <span style="font-size: 0.75rem; color: #00ffaa;">${t('reports.crawler.thisMayTakeTime', 'This may take 30-60 seconds for large sites')}</span>
       </div>
@@ -2603,12 +2613,12 @@ Sitemap: https://example.com/sitemap.xml`,
       style.id = 'patience-animations';
       style.textContent = `
         @keyframes color-cycle {
-          0% { color: #00ff41; }
+          0% { color: #22c55e; }
           20% { color: #00ffaa; }
           40% { color: #00aaff; }
           60% { color: #aa00ff; }
           80% { color: #ff00aa; }
-          100% { color: #00ff41; }
+          100% { color: #22c55e; }
         }
         @keyframes fade-in-out {
           0%, 100% { opacity: 0.7; }

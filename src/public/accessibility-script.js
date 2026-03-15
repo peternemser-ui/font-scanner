@@ -454,7 +454,7 @@ async function analyzeAccessibility(options = {}) {
         0% { color: var(--accent-primary); }
         20% { color: #00ffff; }
         40% { color: #0099ff; }
-        60% { color: #9933ff; }
+        60% { color: #8b5cf6; }
         80% { color: #ff33cc; }
         100% { color: var(--accent-primary); }
       }
@@ -540,6 +540,7 @@ async function analyzeAccessibility(options = {}) {
       displayAccessibilityResults(data);
       results.classList.remove('hidden');
       window.__REPORT_READY__ = true;
+      window.dispatchEvent(new CustomEvent('scan:completed'));
       window.dispatchEvent(new CustomEvent('report:ready'));
     }, 1000);
 
@@ -850,7 +851,7 @@ async function displayAccessibilityResults(resultData) {
     console.warn('[Accessibility] Ignoring invalid/error data:', resultData?.error || resultData);
     const errContainer = document.getElementById('resultsContent') || document.getElementById('results');
     if (errContainer) {
-      errContainer.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted,#9ca3af)"><p style="font-size:1.1rem;margin-bottom:0.5rem">Data unavailable</p><p style="font-size:0.9rem">The cached data was invalid or contained an error. Please run a new scan.</p></div>';
+      errContainer.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted,#9ca3af)"><p style="font-size:1.1rem;margin-bottom:0.5rem">' + t('reports.storage.dataUnavailable', 'Data unavailable') + '</p><p style="font-size:0.9rem">' + t('reports.storage.pleaseRescan', 'The cached data was invalid or contained an error. Please run a new scan.') + '</p></div>';
     }
     window.__REPORT_READY__ = true;
     window.dispatchEvent(new CustomEvent('report:ready'));
@@ -1488,12 +1489,12 @@ function createDesktopMobileComparison(results) {
       ` : !anyFailed ? `
         <div style="
           background: rgba(0,255,65,0.1);
-          border: 2px solid #00ff41;
+          border: 2px solid #22c55e;
           border-radius: 8px;
           padding: 1rem;
           text-align: center;
         ">
-          <p style="color: #00ff41; margin: 0;">
+          <p style="color: #22c55e; margin: 0;">
             ✓ ${t('reports.accessibility.consistentAccessibility', 'Consistent Accessibility')} - ${t('reports.accessibility.platformsWithin', 'Both platforms scored within {{diff}} points of each other', {diff: scoreDiff})}
           </p>
         </div>
@@ -1695,7 +1696,7 @@ function ensureProStyles() {
       border-radius: 999px;
       border: 1px solid rgba(0, 255, 65, 0.4);
       background: rgba(0, 255, 65, 0.1);
-      color: #00ff41;
+      color: #22c55e;
       font-size: 0.7rem;
       font-weight: 700;
       letter-spacing: 0.05em;
@@ -1776,8 +1777,8 @@ function renderWCAGContent(desktopWcag, mobileWcag) {
   const renderCriterionRow = (criterion, desktopStatus, mobileStatus) => {
     const getStatusBadge = (status) => {
       const styles = {
-        pass: { color: '#00ff41', icon: '✓', label: t('reports.accessibility.pass', 'Pass') },
-        fail: { color: '#ff4444', icon: '✗', label: t('reports.accessibility.fail', 'Fail') },
+        pass: { color: '#22c55e', icon: '✓', label: t('reports.accessibility.pass', 'Pass') },
+        fail: { color: '#ef4444', icon: '✗', label: t('reports.accessibility.fail', 'Fail') },
         warning: { color: '#ffa500', icon: '~', label: t('reports.accessibility.warning', 'Warning') },
         na: { color: '#808080', icon: '–', label: t('reports.common.notAvailable', 'N/A') }
       };
@@ -1887,7 +1888,7 @@ function renderContrastContent(contrast) {
       <h3 style="color: #bb86fc; margin: 1rem 0 0.5rem 0;">>> ${t('reports.accessibility.contrastRatioAnalysis', 'Contrast Ratio Analysis')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1.5rem;">
         ${t('reports.accessibility.wcagContrastRequirement', 'WCAG requires a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text.')}
-        ${t('reports.accessibility.foundIssues', 'Found')} <strong style="color: ${contrast.issuesCount > 0 ? '#ff4444' : '#00ff41'};">${contrast.issuesCount || 0} ${t('reports.accessibility.issues', 'Issues')}</strong>.
+        ${t('reports.accessibility.foundIssues', 'Found')} <strong style="color: ${contrast.issuesCount > 0 ? '#ef4444' : '#22c55e'};">${contrast.issuesCount || 0} ${t('reports.accessibility.issues', 'Issues')}</strong>.
       </p>
       
       ${contrast.issues && contrast.issues.length > 0 ? `
@@ -1905,18 +1906,18 @@ function renderContrastContent(contrast) {
               <tr>
                 <td style="color: var(--r-text-muted, #6B7280); font-family: monospace; font-size: 0.85rem;">${issue.selector || t('reports.accessibility.unknownElement', 'Unknown element')}</td>
                 <td style="text-align: center;">
-                  <span style="color: ${issue.ratio < 4.5 ? '#ff4444' : '#ffa500'}; font-weight: bold;">
+                  <span style="color: ${issue.ratio < 4.5 ? '#ef4444' : '#ffa500'}; font-weight: bold;">
                     ${issue.ratio?.toFixed(2) || t('reports.common.notAvailable', 'N/A')}:1
                   </span>
                 </td>
                 <td style="text-align: center; color: var(--r-text-faint, #9CA3AF);">${issue.required || '4.5:1'}</td>
                 <td style="text-align: center;">
                   <span style="
-                    color: ${issue.ratio >= 4.5 ? '#00ff41' : '#ff4444'};
+                    color: ${issue.ratio >= 4.5 ? '#22c55e' : '#ef4444'};
                     font-size: 0.85rem;
                     padding: 0.25rem 0.5rem;
                     border-radius: 3px;
-                    background: ${issue.ratio >= 4.5 ? '#00ff4120' : '#ff444420'};
+                    background: ${issue.ratio >= 4.5 ? '#22c55e20' : '#ef444420'};
                   ">${issue.ratio >= 4.5 ? t('reports.accessibility.pass', 'Pass') : t('reports.accessibility.fail', 'Fail')}</span>
                 </td>
               </tr>
@@ -1929,8 +1930,8 @@ function renderContrastContent(contrast) {
           </p>
         ` : ''}
       ` : `
-        <div style="background: rgba(0,255,65,0.1); border: 2px solid #00ff41; border-radius: 8px; padding: 1.5rem; text-align: center;">
-          <p style="color: #00ff41; margin: 0; font-size: 1.1rem;">
+        <div style="background: rgba(0,255,65,0.1); border: 2px solid #22c55e; border-radius: 8px; padding: 1.5rem; text-align: center;">
+          <p style="color: #22c55e; margin: 0; font-size: 1.1rem;">
             ✓ <strong>${t('reports.accessibility.excellentContrast', 'Excellent Contrast!')}</strong><br>
             ${t('reports.accessibility.allTextMeetsContrast', 'All text elements meet WCAG contrast requirements.')}
           </p>
@@ -1969,17 +1970,17 @@ function renderKeyboardContent(keyboard) {
           </div>
         </div>
 
-        <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; border-left: 4px solid ${keyboard.tabTraps > 0 ? '#ff4444' : '#00ff41'};">
+        <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; border-left: 4px solid ${keyboard.tabTraps > 0 ? '#ef4444' : '#22c55e'};">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="color: var(--r-text-muted, #6B7280);">🚫 ${t('reports.accessibility.tabTrapsDetected', 'Tab Traps Detected')}</span>
-            <span style="color: ${keyboard.tabTraps > 0 ? '#ff4444' : '#00ff41'}; font-weight: bold; font-size: 1.2rem;">${keyboard.tabTraps || 0}</span>
+            <span style="color: ${keyboard.tabTraps > 0 ? '#ef4444' : '#22c55e'}; font-weight: bold; font-size: 1.2rem;">${keyboard.tabTraps || 0}</span>
           </div>
         </div>
 
-        <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; border-left: 4px solid ${keyboard.missingFocusIndicators > 0 ? '#ffa500' : '#00ff41'};">
+        <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; border-left: 4px solid ${keyboard.missingFocusIndicators > 0 ? '#ffa500' : '#22c55e'};">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="color: var(--r-text-muted, #6B7280);">👁️ ${t('reports.accessibility.missingFocusIndicators', 'Missing Focus Indicators')}</span>
-            <span style="color: ${keyboard.missingFocusIndicators > 0 ? '#ffa500' : '#00ff41'}; font-weight: bold; font-size: 1.2rem;">${keyboard.missingFocusIndicators || 0}</span>
+            <span style="color: ${keyboard.missingFocusIndicators > 0 ? '#ffa500' : '#22c55e'}; font-weight: bold; font-size: 1.2rem;">${keyboard.missingFocusIndicators || 0}</span>
           </div>
         </div>
       </div>
@@ -1988,8 +1989,8 @@ function renderKeyboardContent(keyboard) {
         <h4 style="color: #bb86fc; margin: 1.5rem 0 0.75rem 0;">${t('reports.accessibility.keyboardIssuesFound', 'Keyboard Issues Found')}</h4>
         <div style="display: grid; gap: 0.75rem;">
           ${keyboard.issues.map(issue => `
-            <div style="background: rgba(255,68,68,0.1); border-left: 3px solid #ff4444; padding: 1rem; border-radius: 4px;">
-              <div style="color: #ff4444; font-weight: bold; margin-bottom: 0.25rem;">${issue.type || t('reports.accessibility.keyboardIssue', 'Keyboard Issue')}</div>
+            <div style="background: rgba(255,68,68,0.1); border-left: 3px solid #ef4444; padding: 1rem; border-radius: 4px;">
+              <div style="color: #ef4444; font-weight: bold; margin-bottom: 0.25rem;">${issue.type || t('reports.accessibility.keyboardIssue', 'Keyboard Issue')}</div>
               <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${issue.description || t('reports.common.noDescriptionAvailable', 'No description available')}</div>
               ${issue.element ? `<div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-top: 0.25rem; font-family: monospace;">${issue.element}</div>` : ''}
             </div>
@@ -2028,12 +2029,12 @@ function renderARIAContent(aria) {
         </div>
 
         <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; text-align: center;">
-          <div style="font-size: 2rem; color: ${aria.missingLabels > 0 ? '#ff4444' : '#00ff41'}; margin-bottom: 0.5rem;">${aria.missingLabels || 0}</div>
+          <div style="font-size: 2rem; color: ${aria.missingLabels > 0 ? '#ef4444' : '#22c55e'}; margin-bottom: 0.5rem;">${aria.missingLabels || 0}</div>
           <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.accessibility.missingLabels', 'Missing Labels')}</div>
         </div>
 
         <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; text-align: center;">
-          <div style="font-size: 2rem; color: ${aria.invalidRoles > 0 ? '#ffa500' : '#00ff41'}; margin-bottom: 0.5rem;">${aria.invalidRoles || 0}</div>
+          <div style="font-size: 2rem; color: ${aria.invalidRoles > 0 ? '#ffa500' : '#22c55e'}; margin-bottom: 0.5rem;">${aria.invalidRoles || 0}</div>
           <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.accessibility.invalidRoles', 'Invalid Roles')}</div>
         </div>
 
@@ -2060,11 +2061,11 @@ function renderARIAContent(aria) {
                 <td style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${issue.description || t('reports.common.noDescription', 'No description')}</td>
                 <td style="text-align: center;">
                   <span style="
-                    color: ${issue.impact === 'critical' ? '#ff4444' : issue.impact === 'serious' ? '#ffa500' : '#00ccff'};
+                    color: ${issue.impact === 'critical' ? '#ef4444' : issue.impact === 'serious' ? '#ffa500' : '#00ccff'};
                     font-size: 0.85rem;
                     padding: 0.25rem 0.5rem;
                     border-radius: 3px;
-                    background: ${issue.impact === 'critical' ? '#ff444420' : issue.impact === 'serious' ? '#ffa50020' : '#00ccff20'};
+                    background: ${issue.impact === 'critical' ? '#ef444420' : issue.impact === 'serious' ? '#ffa50020' : '#00ccff20'};
                     text-transform: uppercase;
                   ">${issue.impact === 'critical' ? t('reports.accessibility.critical', 'Critical') : issue.impact === 'serious' ? t('reports.accessibility.serious', 'Serious') : t('reports.accessibility.moderate', 'Moderate')}</span>
                 </td>
@@ -2134,7 +2135,7 @@ function renderRecommendationsContent(recommendations, fullResults) {
 function renderA11yFixAccordion(rec, index, fullResults) {
   const accordionId = `a11yfix-${index}`;
   const priorityStyles = {
-    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴', label: t('reports.common.high', 'High') },
+    high: { bg: 'rgba(255,68,68,0.1)', border: '#ef4444', color: '#ef4444', icon: '🔴', label: t('reports.common.high', 'High') },
     medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠', label: t('reports.common.medium', 'Medium') },
     low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢', label: t('reports.common.low', 'Low') }
   };
@@ -2223,8 +2224,8 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
       <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
         ${(typeof translateA11yFixDescription === 'function' ? translateA11yFixDescription(rec.title, rec.description) : rec.description) || t('reports.common.noDescriptionAvailable', 'No description available')}
       </p>
-      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.expectedImpact', 'Expected Impact')}</div>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #22c55e; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.expectedImpact', 'Expected Impact')}</div>
         <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${(typeof translateA11yFixImpact === 'function' ? translateA11yFixImpact(rec.title, rec.impact) : rec.impact) || t('reports.accessibility.defaultImpact', 'Improved accessibility and user experience for all users')}</div>
       </div>
     </div>
@@ -2252,7 +2253,7 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
         <!-- Fixed Code -->
         <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.recommendedFix', 'Recommended Fix')}</span>
+            <span style="color: #22c55e; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.recommendedFix', 'Recommended Fix')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
@@ -2518,7 +2519,7 @@ function getA11yExternalTools(rec) {
     border-radius: 6px;
     border: 1px solid rgba(0, 255, 65, 0.3);
     background: rgba(0, 255, 65, 0.1);
-    color: #00ff41;
+    color: #22c55e;
     text-decoration: none;
     font-size: 0.85rem;
     cursor: pointer;
@@ -3036,10 +3037,10 @@ function showError(message) {
  * Get accessibility color based on score - Traditional traffic light system
  */
 function getAccessibilityColor(score) {
-  if (score >= 90) return '#00ff41';  // A: Bright green
-  if (score >= 70) return '#ffd700';  // B: Yellow (gold)
+  if (score >= 90) return '#22c55e';  // A: Bright green
+  if (score >= 70) return '#eab308';  // B: Yellow (gold)
   if (score >= 50) return '#ff8c00';  // C: Dark orange
-  return '#ff4444';                   // D/F: Red
+  return '#ef4444';                   // D/F: Red
 }
 
 /**
@@ -3057,10 +3058,10 @@ function getAccessibilityGrade(score) {
  */
 function getWCAGLevelColor(level) {
   switch(level) {
-    case 'AAA': return '#00d9ff';  // Cyan (highest accessibility)
-    case 'AA':  return '#00ff41';  // Green (industry standard)
-    case 'A':   return '#ffd700';  // Yellow (minimum)
-    default:    return '#ff4444';  // Red (non-compliant)
+    case 'AAA': return '#06b6d4';  // Cyan (highest accessibility)
+    case 'AA':  return '#22c55e';  // Green (industry standard)
+    case 'A':   return '#eab308';  // Yellow (minimum)
+    default:    return '#ef4444';  // Red (non-compliant)
   }
 }
 

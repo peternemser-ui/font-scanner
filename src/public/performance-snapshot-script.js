@@ -85,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingMessage.classList.add('hidden');
         displayResults(data);
         window.__REPORT_READY__ = true;
+        window.dispatchEvent(new CustomEvent('scan:completed'));
         window.dispatchEvent(new CustomEvent('report:ready'));
       }, 500);
 

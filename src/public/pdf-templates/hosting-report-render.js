@@ -347,7 +347,117 @@
     })();
 
     /* -----------------------------------------------------------------------
-       5. Recommendations
+       5. Pricing Overview
+       ----------------------------------------------------------------------- */
+    (function () {
+      const sec = document.querySelector('#section-pricing .pdf-section__content');
+      const priceComparison = data.priceComparison || {};
+      const recommendedHosts = data.recommendedHosts || [];
+      const savingsOpportunities = data.savingsOpportunities || [];
+
+      sec.parentElement.insertBefore(
+        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.hosting.report.pricing', 'Pricing Overview'))),
+        sec
+      );
+
+      let html = '';
+
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.pricing', 'This section provides a pricing overview of hosting providers that match your site\'s requirements, including price ranges, recommended hosts, and potential savings opportunities.')) + '</p>';
+
+      // Price comparison metrics
+      const priceMetrics = [];
+      if (priceComparison.lowestPrice !== undefined && priceComparison.lowestPrice !== null) {
+        priceMetrics.push({ value: '$' + priceComparison.lowestPrice + '/mo', label: t('reports.hosting.lowestPrice', 'Lowest Price'), color: '#10b981' });
+      }
+      if (priceComparison.averagePrice !== undefined && priceComparison.averagePrice !== null) {
+        priceMetrics.push({ value: '$' + priceComparison.averagePrice + '/mo', label: t('reports.hosting.averagePrice', 'Average Price'), color: '#f59e0b' });
+      }
+      if (priceComparison.highestPrice !== undefined && priceComparison.highestPrice !== null) {
+        priceMetrics.push({ value: '$' + priceComparison.highestPrice + '/mo', label: t('reports.hosting.premiumPrice', 'Premium Price'), color: '#8b5cf6' });
+      }
+      if (priceComparison.budgetOptions !== undefined && priceComparison.budgetOptions !== null) {
+        priceMetrics.push({ value: String(priceComparison.budgetOptions), label: t('reports.hosting.budgetOptions', 'Budget Options') });
+      }
+      if (priceMetrics.length > 0) {
+        html += PR.renderMetrics(priceMetrics);
+      }
+
+      // Recommended hosts table
+      if (recommendedHosts.length > 0) {
+        html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.topRecommendedHosts', 'Top Recommended Hosts')) + '</h3>';
+        var hostRows = recommendedHosts.slice(0, 10).map(function (host) {
+          var price = host.cheapestPlan && host.cheapestPlan.price !== undefined ? '$' + host.cheapestPlan.price + '/mo' : '-';
+          var rating = host.rating !== undefined ? String(host.rating) : '-';
+          var uptime = host.uptime || '-';
+          var matchScore = host.matchScore ? Math.round(host.matchScore) + '%' : '-';
+          return [
+            '<strong>' + esc(host.name || '-') + '</strong>',
+            esc(host.category || '-'),
+            esc(rating),
+            esc(uptime),
+            esc(price),
+            esc(matchScore)
+          ];
+        });
+
+        html += PR.renderTable(
+          [
+            { label: t('reports.hosting.table.provider', 'Provider'), width: '22%' },
+            { label: t('reports.hosting.table.category', 'Category'), width: '16%' },
+            { label: t('reports.hosting.table.rating', 'Rating'), width: '12%' },
+            { label: t('reports.hosting.table.uptime', 'Uptime'), width: '14%' },
+            { label: t('reports.hosting.table.priceRange', 'Price'), width: '16%' },
+            { label: t('reports.hosting.table.match', 'Match'), width: '12%' }
+          ],
+          hostRows,
+          { striped: true }
+        );
+
+        if (recommendedHosts.length > 10) {
+          html += '<p class="pdf-text-muted pdf-text-small">' + t('seo.report.common.moreCount', '... {{count}} more', { count: recommendedHosts.length - 10 }) + '</p>';
+        }
+      }
+
+      // Savings opportunities
+      if (savingsOpportunities.length > 0) {
+        html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.potentialSavings', 'Potential Savings Opportunities')) + '</h3>';
+        var savingsRows = savingsOpportunities.slice(0, 10).map(function (opp) {
+          return [
+            '<strong>' + esc(opp.provider || '-') + '</strong>',
+            esc(opp.currentPrice !== undefined ? '$' + opp.currentPrice + '/mo' : '-'),
+            esc(opp.newPrice !== undefined ? '$' + opp.newPrice + '/mo' : '-'),
+            '<strong style="color:#10b981;">' + esc(opp.savingsPercent !== undefined ? '-' + opp.savingsPercent + '%' : '-') + '</strong>',
+            esc(opp.annualSavings !== undefined ? '$' + opp.annualSavings + '/yr' : '-')
+          ];
+        });
+
+        html += PR.renderTable(
+          [
+            { label: t('reports.hosting.table.provider', 'Provider'), width: '25%' },
+            { label: t('reports.hosting.report.pricing.currentPrice', 'Current'), width: '15%' },
+            { label: t('reports.hosting.report.pricing.newPrice', 'New Price'), width: '15%' },
+            { label: t('reports.hosting.report.pricing.savings', 'Savings'), width: '15%' },
+            { label: t('reports.hosting.report.pricing.annualSavings', 'Annual'), width: '15%' }
+          ],
+          savingsRows,
+          { striped: true }
+        );
+      }
+
+      // Fallback if no pricing data at all
+      if (priceMetrics.length === 0 && recommendedHosts.length === 0 && savingsOpportunities.length === 0) {
+        html += PR.renderCallout(
+          t('reports.hosting.report.pricing.noneTitle', 'No Pricing Data Available'),
+          t('reports.hosting.report.pricing.noneBody', 'Pricing comparison data was not available for this analysis. This may occur if the hosting provider or CMS could not be reliably detected.'),
+          'info'
+        );
+      }
+
+      sec.innerHTML = html;
+    })();
+
+    /* -----------------------------------------------------------------------
+       6. Recommendations
        ----------------------------------------------------------------------- */
     (function () {
       const sec = document.querySelector('#section-recommendations .pdf-section__content');

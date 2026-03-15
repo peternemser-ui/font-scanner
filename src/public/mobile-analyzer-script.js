@@ -363,11 +363,13 @@ document.addEventListener('DOMContentLoaded', () => {
           loadingContainer.style.display = 'none';
           displayResults(data.results, { reportId });
           window.__REPORT_READY__ = true;
+          window.dispatchEvent(new CustomEvent('scan:completed'));
           window.dispatchEvent(new CustomEvent('report:ready'));
         }, 800);
       } else {
         displayResults(data.results, { reportId });
         window.__REPORT_READY__ = true;
+        window.dispatchEvent(new CustomEvent('scan:completed'));
         window.dispatchEvent(new CustomEvent('report:ready'));
       }
 
@@ -422,6 +424,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get first device data for advanced features
     const firstDevice = Object.values(data.devices).find(d => !d.error) || {};
     
+    // Page Screenshot section - consistent with other analyzers (invariant: every report MUST have .screenshot-section)
+    const screenshotUrl = data.screenshotUrl
+      || document.body.getAttribute('data-sm-screenshot-url')
+      || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+
+    if (screenshotUrl) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+    }
+
+    const pageScreenshotLabel = t('reports.common.pageScreenshot', 'Page Screenshot');
+    const screenshotUnavailableLabel = t('reports.common.screenshotUnavailable', 'Screenshot unavailable');
+    const screenshotHtml = screenshotUrl ? `
+      <div class="screenshot-section" style="margin-bottom: 1.5rem;">
+        <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
+          ${pageScreenshotLabel}
+        </h3>
+        <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
+          <img
+            src="${screenshotUrl}"
+            alt="${t('reports.common.screenshotAlt', 'Screenshot of')} ${url}"
+            class="screenshot-item__img"
+            style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
+            data-action="open-lightbox"
+            data-screenshot-url="${screenshotUrl}"
+            data-screenshot-title="${pageScreenshotLabel}"
+          />
+        </div>
+      </div>
+    ` : '';
+
     // Summary donuts — derive overall from the 3 visible component donuts so scores stay consistent.
     // The API mobileScore also includes touchTargets (a 4th hidden component), which can pull the
     // overall away from what the visible donuts suggest.
@@ -597,6 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const html = `
       ${ReportShell.renderReportHeader({ title: t('reports.mobile.title', 'Mobile Testing Report'), url, timestamp, badgeText: t('reports.mobile.badge', 'Mobile'), mode: 'mobile' })}
+      ${screenshotHtml}
       ${summaryDonuts}
       ${accordions}
       ${renderMobileSummarySection(summaryStats)}
@@ -606,6 +639,21 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsContent.innerHTML = `<div class="report-scope">${html}</div>`;
     window.mobileData = data;
     window.currentMobileResults = data;  // For billing return restoration
+
+    // Attach screenshot onerror and lightbox handlers (CSP-safe, no inline handlers)
+    const ssImg = resultsContent.querySelector('.screenshot-section .screenshot-item__img');
+    if (ssImg) {
+      ssImg.addEventListener('error', function () {
+        this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + screenshotUnavailableLabel + '</div>';
+      });
+      ssImg.addEventListener('click', function () {
+        const ssUrl = this.getAttribute('data-screenshot-url');
+        const ssTitle = this.getAttribute('data-screenshot-title');
+        if (ssUrl && window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
+          window.ScreenshotLightbox.open(ssUrl, ssTitle || t('reports.common.screenshot', 'Screenshot'));
+        }
+      });
+    }
 
     // Fetch AI strategic analysis content
     if (window.AIRecommendations) {
@@ -1439,7 +1487,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (device.error || !device.performance) return '';
                 return `
                   <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
-                    <strong style="color: #00ff41;">${device.device}</strong>
+                    <strong style="color: #22c55e;">${device.device}</strong>
                     <div class="metric-row">
                       <span class="metric-label">${t('reports.mobile.firstPaintLabel', 'First Paint')}:</span>
                       <span class="metric-value">${device.performance.firstPaint}ms</span>
@@ -1735,7 +1783,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderMobileFixAccordion(fix, index) {
     const accordionId = `mobilefix-${fix.id || index}`;
     const severityColors = {
-      High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+      High: { bg: 'rgba(255,68,68,0.1)', border: '#ef4444', color: '#ef4444', icon: '🔴' },
       Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
       Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
     };
@@ -1826,8 +1874,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
           ${fix.suggestion || fix.description || t('reports.mobile.reviewAndAddress', 'Review and address this mobile optimization issue.')}
         </p>
-        <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
+        <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
+          <div style="color: #22c55e; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
           <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${getMobileFixImpact(fix)}</div>
         </div>
       </div>
@@ -1855,7 +1903,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <!-- Fixed Code -->
           <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-              <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
+              <span style="color: #22c55e; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
               <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
                 padding: 0.25rem 0.75rem;
                 border-radius: 4px;

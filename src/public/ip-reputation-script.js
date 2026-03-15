@@ -366,7 +366,7 @@ async function analyzeReputation(options = {}) {
         0% { color: var(--accent-primary); }
         20% { color: #00ffff; }
         40% { color: #0099ff; }
-        60% { color: #9933ff; }
+        60% { color: #8b5cf6; }
         80% { color: #ff33cc; }
         100% { color: var(--accent-primary); }
       }
@@ -468,6 +468,7 @@ async function analyzeReputation(options = {}) {
       displayReputationResults(results);
       resultsDiv.classList.remove('hidden');
       window.__REPORT_READY__ = true;
+      window.dispatchEvent(new CustomEvent('scan:completed'));
       window.dispatchEvent(new CustomEvent('report:ready'));
     }, 1000);
 
@@ -735,12 +736,12 @@ function createBlacklistSection(blacklists) {
     <p style="color: var(--r-text-faint, #9CA3AF); margin-bottom: 1.5rem;">${t('reports.ipReputation.checkedAgainstDatabases', 'Checked against {{count}} major DNSBL databases', { count: blacklists.length })}</p>
 
     ${listed.length > 0 ? `
-      <div style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ff4444; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
-        <h3 style="color: #ff4444; margin-top: 0;">⚠️ ${t('reports.ipReputation.listedOnBlacklists', 'Listed on {{count}} Blacklist(s)', { count: listed.length })}</h3>
+      <div style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ef4444; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+        <h3 style="color: #ef4444; margin-top: 0;">⚠️ ${t('reports.ipReputation.listedOnBlacklists', 'Listed on {{count}} Blacklist(s)', { count: listed.length })}</h3>
         <div style="display: grid; gap: 1rem;">
           ${listed.map(bl => `
             <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 4px;">
-              <div style="font-weight: 600; color: #ff4444; margin-bottom: 0.5rem;">${bl.name}</div>
+              <div style="font-weight: 600; color: #ef4444; margin-bottom: 0.5rem;">${bl.name}</div>
               <div style="color: var(--r-text, #111827); font-size: 0.9rem;">${bl.description || t('reports.ipReputation.ipDomainListed', 'This IP/domain is listed on this blacklist')}</div>
               ${bl.details ? `<div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-top: 0.5rem;">${bl.details}</div>` : ''}
             </div>
@@ -750,10 +751,10 @@ function createBlacklistSection(blacklists) {
     ` : ''}
 
     <div style="background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 8px; padding: 1.5rem;">
-      <h3 style="color: #00ff41; margin-top: 0;">✓ ${t('reports.ipReputation.cleanOnBlacklists', 'Clean on {{count}} Blacklist(s)', { count: clean.length })}</h3>
+      <h3 style="color: #22c55e; margin-top: 0;">✓ ${t('reports.ipReputation.cleanOnBlacklists', 'Clean on {{count}} Blacklist(s)', { count: clean.length })}</h3>
       <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
         ${clean.map(bl => `
-          <span style="background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.85rem; color: #00ff41;">
+          <span style="background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.85rem; color: #22c55e;">
             ${bl.name}
           </span>
         `).join('')}
@@ -774,10 +775,10 @@ function createEmailSection(emailConfig) {
   const content = `
     <div style="display: grid; gap: 1.5rem; margin-top: 1.5rem;">
         <!-- SPF Record -->
-        <div style="background: var(--r-surface-2, #F8FAFC); border-left: 4px solid ${emailConfig.spf?.valid ? '#00ff41' : '#ff4444'}; padding: 1rem; border-radius: 4px;">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-left: 4px solid ${emailConfig.spf?.valid ? '#22c55e' : '#ef4444'}; padding: 1rem; border-radius: 4px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <h3 style="margin: 0; color: var(--r-text, #111827);">${t('reports.ipReputation.spf', 'SPF (Sender Policy Framework)')}</h3>
-            <span style="background: ${emailConfig.spf?.valid ? 'rgba(0, 255, 65, 0.2)' : 'rgba(255, 68, 68, 0.2)'}; color: ${emailConfig.spf?.valid ? '#00ff41' : '#ff4444'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+            <span style="background: ${emailConfig.spf?.valid ? 'rgba(0, 255, 65, 0.2)' : 'rgba(255, 68, 68, 0.2)'}; color: ${emailConfig.spf?.valid ? '#22c55e' : '#ef4444'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
               ${emailConfig.spf?.valid ? t('reports.common.valid', '✓ Valid') : t('reports.common.missingInvalid', '✗ Missing/Invalid')}
             </span>
           </div>
@@ -788,10 +789,10 @@ function createEmailSection(emailConfig) {
         </div>
 
         <!-- DKIM Record -->
-        <div style="background: var(--r-surface-2, #F8FAFC); border-left: 4px solid ${emailConfig.dkim?.valid ? '#00ff41' : '#ffa500'}; padding: 1rem; border-radius: 4px;">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-left: 4px solid ${emailConfig.dkim?.valid ? '#22c55e' : '#ffa500'}; padding: 1rem; border-radius: 4px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <h3 style="margin: 0; color: var(--r-text, #111827);">${t('reports.ipReputation.dkim', 'DKIM (DomainKeys Identified Mail)')}</h3>
-            <span style="background: ${emailConfig.dkim?.valid ? 'rgba(0, 255, 65, 0.2)' : 'rgba(255, 165, 0, 0.2)'}; color: ${emailConfig.dkim?.valid ? '#00ff41' : '#ffa500'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+            <span style="background: ${emailConfig.dkim?.valid ? 'rgba(0, 255, 65, 0.2)' : 'rgba(255, 165, 0, 0.2)'}; color: ${emailConfig.dkim?.valid ? '#22c55e' : '#ffa500'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
               ${emailConfig.dkim?.valid ? t('reports.common.configured', '✓ Configured') : t('reports.common.checkRequired', 'ℹ️ Check Required')}
             </span>
           </div>
@@ -801,17 +802,17 @@ function createEmailSection(emailConfig) {
         </div>
 
         <!-- DMARC Record -->
-        <div style="background: var(--r-surface-2, #F8FAFC); border-left: 4px solid ${emailConfig.dmarc?.valid ? '#00ff41' : '#ff4444'}; padding: 1rem; border-radius: 4px;">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-left: 4px solid ${emailConfig.dmarc?.valid ? '#22c55e' : '#ef4444'}; padding: 1rem; border-radius: 4px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <h3 style="margin: 0; color: var(--r-text, #111827);">${t('reports.ipReputation.dmarc', 'DMARC (Domain-based Message Authentication)')}</h3>
-            <span style="background: ${emailConfig.dmarc?.valid ? 'rgba(0, 255, 65, 0.2)' : 'rgba(255, 68, 68, 0.2)'}; color: ${emailConfig.dmarc?.valid ? '#00ff41' : '#ff4444'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+            <span style="background: ${emailConfig.dmarc?.valid ? 'rgba(0, 255, 65, 0.2)' : 'rgba(255, 68, 68, 0.2)'}; color: ${emailConfig.dmarc?.valid ? '#22c55e' : '#ef4444'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
               ${emailConfig.dmarc?.valid ? t('reports.common.valid', '✓ Valid') : t('reports.common.missingInvalid', '✗ Missing/Invalid')}
             </span>
           </div>
           <div style="color: #cccccc; font-size: 0.9rem; font-family: 'JetBrains Mono', monospace; word-break: break-all;">
             ${emailConfig.dmarc?.record || t('reports.ipReputation.noDmarcRecord', 'No DMARC record found')}
           </div>
-          ${emailConfig.dmarc?.policy ? `<div style="color: #00d9ff; margin-top: 0.5rem; font-size: 0.85rem;">${t('reports.ipReputation.policy', 'Policy')}: ${emailConfig.dmarc.policy}</div>` : ''}
+          ${emailConfig.dmarc?.policy ? `<div style="color: #06b6d4; margin-top: 0.5rem; font-size: 0.85rem;">${t('reports.ipReputation.policy', 'Policy')}: ${emailConfig.dmarc.policy}</div>` : ''}
         </div>
       </div>
   `;
@@ -836,7 +837,7 @@ function createHostingSection(hostingInfo) {
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
         <!-- Location Info -->
         <div style="background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 8px; padding: 1.5rem;">
-          <h3 style="color: #00ff41; margin-top: 0;">📍 ${t('reports.ipReputation.location', 'Location')}</h3>
+          <h3 style="color: #22c55e; margin-top: 0;">📍 ${t('reports.ipReputation.location', 'Location')}</h3>
           <div style="display: grid; gap: 0.5rem;">
             <div style="color: var(--r-text, #111827);"><span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.country', 'Country')}:</span> ${hostingInfo.country || t('reports.common.unknown', 'Unknown')} ${hostingInfo.countryCode ? `(${hostingInfo.countryCode})` : ''}</div>
             ${hostingInfo.city ? `<div style="color: var(--r-text, #111827);"><span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.city', 'City')}:</span> ${hostingInfo.city}</div>` : ''}
@@ -847,7 +848,7 @@ function createHostingSection(hostingInfo) {
 
         <!-- ISP Info -->
         <div style="background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
-          <h3 style="color: #00d9ff; margin-top: 0;">🔌 ${t('reports.ipReputation.ispHosting', 'ISP/Hosting')}</h3>
+          <h3 style="color: #06b6d4; margin-top: 0;">🔌 ${t('reports.ipReputation.ispHosting', 'ISP/Hosting')}</h3>
           <div style="display: grid; gap: 0.5rem;">
             <div style="color: var(--r-text, #111827);"><span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.provider', 'Provider')}:</span> ${hostingInfo.isp || t('reports.common.unknown', 'Unknown')}</div>
             ${hostingInfo.org ? `<div style="color: var(--r-text, #111827);"><span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.organization', 'Organization')}:</span> ${hostingInfo.org}</div>` : ''}
@@ -881,8 +882,8 @@ function createHostingSection(hostingInfo) {
 // Create Threat Intelligence Section
 function createThreatSection(threatIntel) {
   const content = `
-    <div style="background: ${threatIntel.hasThreats ? 'rgba(255, 68, 68, 0.1)' : 'rgba(0, 255, 65, 0.05)'}; border: 2px solid ${threatIntel.hasThreats ? '#ff4444' : 'rgba(0, 255, 65, 0.2)'}; border-radius: 8px; padding: 1.5rem;">
-        <h3 style="color: ${threatIntel.hasThreats ? '#ff4444' : '#00ff41'}; margin-top: 0;">
+    <div style="background: ${threatIntel.hasThreats ? 'rgba(255, 68, 68, 0.1)' : 'rgba(0, 255, 65, 0.05)'}; border: 2px solid ${threatIntel.hasThreats ? '#ef4444' : 'rgba(0, 255, 65, 0.2)'}; border-radius: 8px; padding: 1.5rem;">
+        <h3 style="color: ${threatIntel.hasThreats ? '#ef4444' : '#22c55e'}; margin-top: 0;">
           ${threatIntel.hasThreats ? '⚠️ ' + t('reports.ipReputation.threatsDetected', 'Threats Detected') : '✓ ' + t('reports.ipReputation.noKnownThreats', 'No Known Threats')}
         </h3>
 
@@ -902,7 +903,7 @@ function createThreatSection(threatIntel) {
             `).join('')}
           </div>
         ` : `
-          <p style="color: #00ff41; margin-top: 1rem;">
+          <p style="color: #22c55e; margin-top: 1rem;">
             ${t('reports.ipReputation.noMaliciousActivity', 'No known malicious activity or security threats associated with this IP/domain.')}
           </p>
         `}
@@ -957,7 +958,7 @@ function createRecommendationsSection(recommendations, options = {}) {
             <div style="color: #cccccc; margin-bottom: 1rem;">${rec.description}</div>
             ${rec.action ? `
               <div style="background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
-                <div style="color: #00ff41; font-weight: 600; margin-bottom: 0.5rem;">${t('reports.common.actionRequired', 'Action Required')}:</div>
+                <div style="color: #22c55e; font-weight: 600; margin-bottom: 0.5rem;">${t('reports.common.actionRequired', 'Action Required')}:</div>
                 <div style="color: var(--r-text, #111827); font-size: 0.9rem;">${rec.action}</div>
               </div>
             ` : ''}
@@ -1030,9 +1031,9 @@ function getStatus(score) {
 
 function getPriorityColor(priority) {
   switch (priority.toLowerCase()) {
-    case 'high': return '#ff4444';
+    case 'high': return '#ef4444';
     case 'medium': return '#ffa500';
-    case 'low': return '#00d9ff';
+    case 'low': return '#06b6d4';
     default: return '#808080';
   }
 }
@@ -1040,7 +1041,7 @@ function getPriorityColor(priority) {
 function getSeverityColor(severity) {
   switch (severity.toLowerCase()) {
     case 'critical': return '#ff0000';
-    case 'high': return '#ff4444';
+    case 'high': return '#ef4444';
     case 'medium': return '#ffa500';
     case 'low': return '#ffff00';
     default: return '#808080';
@@ -1050,7 +1051,7 @@ function getSeverityColor(severity) {
 function getRiskColor(risk) {
   switch (risk.toLowerCase()) {
     case 'critical': return '#ff0000';
-    case 'high': return '#ff4444';
+    case 'high': return '#ef4444';
     case 'medium': return '#ffa500';
     case 'low': return getAccentPrimaryHex();
     case 'minimal': return getAccentPrimaryHex();
@@ -1067,12 +1068,12 @@ function createBlacklistContent(blacklists) {
     <p style="color: var(--text-secondary, #808080); margin-bottom: 1.5rem;">${t('reports.ipReputation.checkedAgainstDatabases', 'Checked against {{count}} major DNSBL databases', { count: blacklists.length })}</p>
 
     ${listed.length > 0 ? `
-      <div style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ff4444; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
-        <h3 style="color: #ff4444; margin-top: 0;">⚠️ ${t('reports.ipReputation.listedOnBlacklists', 'Listed on {{count}} Blacklist(s)', { count: listed.length })}</h3>
+      <div style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ef4444; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+        <h3 style="color: #ef4444; margin-top: 0;">⚠️ ${t('reports.ipReputation.listedOnBlacklists', 'Listed on {{count}} Blacklist(s)', { count: listed.length })}</h3>
         <div style="display: grid; gap: 1rem;">
           ${listed.map(bl => `
             <div style="background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); padding: 1rem; border-radius: 4px;">
-              <div style="font-weight: 600; color: #ff4444; margin-bottom: 0.5rem;">${bl.name}</div>
+              <div style="font-weight: 600; color: #ef4444; margin-bottom: 0.5rem;">${bl.name}</div>
               <div style="color: var(--text-primary, #ffffff); font-size: 0.9rem;">${bl.description || t('reports.ipReputation.ipDomainListed', 'This IP/domain is listed on this blacklist')}</div>
               ${bl.details ? `<div style="color: var(--text-secondary, #808080); font-size: 0.85rem; margin-top: 0.5rem;">${bl.details}</div>` : ''}
             </div>
@@ -1102,35 +1103,35 @@ function createSSLContent(sslCert, sslScore) {
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
       <div style="background: ${isValid ? 'rgba(var(--accent-primary-rgb), 0.05)' : 'rgba(255, 68, 68, 0.05)'}; border: 1px solid ${isValid ? 'rgba(var(--accent-primary-rgb), 0.25)' : 'rgba(255, 68, 68, 0.25)'}; border-radius: 8px; padding: 1.5rem; text-align: center;">
         <div style="font-size: 3rem; margin-bottom: 0.5rem;">${isValid ? '✅' : '❌'}</div>
-        <div style="color: ${isValid ? 'var(--accent-primary)' : '#ff4444'}; font-weight: 600; font-size: 1.2rem;">${isValid ? t('reports.ipReputation.validCertificate', 'Valid Certificate') : t('reports.ipReputation.invalidMissing', 'Invalid/Missing')}</div>
+        <div style="color: ${isValid ? 'var(--accent-primary)' : '#ef4444'}; font-weight: 600; font-size: 1.2rem;">${isValid ? t('reports.ipReputation.validCertificate', 'Valid Certificate') : t('reports.ipReputation.invalidMissing', 'Invalid/Missing')}</div>
         <div style="color: var(--text-secondary, #808080); font-size: 0.9rem; margin-top: 0.5rem;">${t('reports.common.score', 'Score')}: ${sslScore || 0}/100</div>
       </div>
 
       ${isValid ? `
       <div style="background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
-        <h3 style="color: #00d9ff; margin-top: 0;">📋 ${t('reports.ipReputation.certificateDetails', 'Certificate Details')}</h3>
+        <h3 style="color: #06b6d4; margin-top: 0;">📋 ${t('reports.ipReputation.certificateDetails', 'Certificate Details')}</h3>
         <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
           <div><span style="color: var(--text-secondary, #808080);">${t('reports.ipReputation.issuer', 'Issuer')}:</span> <span style="color: var(--text-primary, #fff);">${sslCert.issuer}</span></div>
           <div><span style="color: var(--text-secondary, #808080);">${t('reports.ipReputation.subject', 'Subject')}:</span> <span style="color: var(--text-primary, #fff);">${sslCert.subject}</span></div>
-          <div><span style="color: var(--text-secondary, #808080);">${t('reports.ipReputation.protocol', 'Protocol')}:</span> <span style="color: ${sslCert.protocol === 'TLSv1.3' ? 'var(--accent-primary)' : sslCert.protocol === 'TLSv1.2' ? '#00d9ff' : '#ffa500'};">${sslCert.protocol}</span></div>
+          <div><span style="color: var(--text-secondary, #808080);">${t('reports.ipReputation.protocol', 'Protocol')}:</span> <span style="color: ${sslCert.protocol === 'TLSv1.3' ? 'var(--accent-primary)' : sslCert.protocol === 'TLSv1.2' ? '#06b6d4' : '#ffa500'};">${sslCert.protocol}</span></div>
           <div><span style="color: var(--text-secondary, #808080);">${t('reports.ipReputation.cipher', 'Cipher')}:</span> <span style="color: var(--text-primary, #fff);">${sslCert.cipher || 'N/A'}</span></div>
         </div>
       </div>
 
       <div style="background: ${sslCert.daysUntilExpiry > 30 ? 'rgba(var(--accent-primary-rgb), 0.05)' : sslCert.daysUntilExpiry > 14 ? 'rgba(255, 165, 0, 0.05)' : 'rgba(255, 68, 68, 0.05)'}; border: 1px solid ${sslCert.daysUntilExpiry > 30 ? 'rgba(var(--accent-primary-rgb), 0.2)' : sslCert.daysUntilExpiry > 14 ? 'rgba(255, 165, 0, 0.2)' : 'rgba(255, 68, 68, 0.2)'}; border-radius: 8px; padding: 1.5rem;">
-        <h3 style="color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ff4444'}; margin-top: 0;">⏰ ${t('reports.ipReputation.validityPeriod', 'Validity Period')}</h3>
+        <h3 style="color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ef4444'}; margin-top: 0;">⏰ ${t('reports.ipReputation.validityPeriod', 'Validity Period')}</h3>
         <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
           <div><span style="color: var(--text-secondary, #808080);">${t('reports.ipReputation.validFrom', 'Valid From')}:</span> <span style="color: var(--text-primary, #fff);">${new Date(sslCert.validFrom).toLocaleDateString()}</span></div>
           <div><span style="color: var(--text-secondary, #808080);">${t('reports.ipReputation.validUntil', 'Valid Until')}:</span> <span style="color: var(--text-primary, #fff);">${new Date(sslCert.validTo).toLocaleDateString()}</span></div>
           <div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-tertiary, rgba(0,0,0,0.3)); border-radius: 4px; text-align: center;">
-            <span style="font-size: 1.5rem; font-weight: bold; color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ff4444'};">${sslCert.daysUntilExpiry}</span>
+            <span style="font-size: 1.5rem; font-weight: bold; color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ef4444'};">${sslCert.daysUntilExpiry}</span>
             <span style="color: var(--text-secondary, #808080);"> ${t('reports.ipReputation.daysRemaining', 'days remaining')}</span>
           </div>
         </div>
       </div>
       ` : `
       <div style="background: rgba(255, 68, 68, 0.05); border: 1px solid rgba(255, 68, 68, 0.2); border-radius: 8px; padding: 1.5rem; grid-column: span 2;">
-        <h3 style="color: #ff4444; margin-top: 0;">⚠️ ${t('reports.ipReputation.certificateIssue', 'Certificate Issue')}</h3>
+        <h3 style="color: #ef4444; margin-top: 0;">⚠️ ${t('reports.ipReputation.certificateIssue', 'Certificate Issue')}</h3>
         <p style="color: var(--text-secondary, #cccccc);">${sslCert.error || t('reports.ipReputation.sslCouldNotBeVerified', 'SSL certificate could not be verified')}</p>
       </div>
       `}
@@ -1167,13 +1168,13 @@ function createDNSHealthContent(dnsHealth, dnsScore) {
       </div>
 
       <div style="background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
-        <h3 style="color: #00d9ff; margin-top: 0;">📧 ${t('reports.ipReputation.mailServers', 'Mail Servers (MX)')}</h3>
+        <h3 style="color: #06b6d4; margin-top: 0;">📧 ${t('reports.ipReputation.mailServers', 'Mail Servers (MX)')}</h3>
         ${dnsHealth.mxRecords && dnsHealth.mxRecords.length > 0 ? `
           <div style="display: grid; gap: 0.5rem;">
             ${dnsHealth.mxRecords.slice(0, 5).map(mx => `
               <div style="display: flex; justify-content: space-between; background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); padding: 0.5rem; border-radius: 4px; font-size: 0.85rem;">
                 <span style="color: var(--text-primary, #fff); font-family: monospace;">${mx.exchange}</span>
-                <span style="color: #00d9ff;">${t('reports.ipReputation.priority', 'Priority')}: ${mx.priority}</span>
+                <span style="color: #06b6d4;">${t('reports.ipReputation.priority', 'Priority')}: ${mx.priority}</span>
               </div>
             `).join('')}
           </div>
@@ -1181,7 +1182,7 @@ function createDNSHealthContent(dnsHealth, dnsScore) {
       </div>
 
       <div style="background: rgba(153, 51, 255, 0.05); border: 1px solid rgba(153, 51, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
-        <h3 style="color: #9933ff; margin-top: 0;">🔐 ${t('reports.ipReputation.caaRecords', 'CAA Records')}</h3>
+        <h3 style="color: #8b5cf6; margin-top: 0;">🔐 ${t('reports.ipReputation.caaRecords', 'CAA Records')}</h3>
         ${dnsHealth.hasCAA ? `
           <div style="display: grid; gap: 0.5rem;">
             ${dnsHealth.caaRecords.map(caa => `
@@ -1212,10 +1213,10 @@ function createDNSHealthContent(dnsHealth, dnsScore) {
 function createEmailContent(emailConfig) {
   return `
     <div style="display: grid; gap: 1.5rem;">
-      <div style="background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); border-left: 4px solid ${emailConfig.spf?.valid ? 'var(--accent-primary)' : '#ff4444'}; padding: 1rem; border-radius: 4px;">
+      <div style="background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); border-left: 4px solid ${emailConfig.spf?.valid ? 'var(--accent-primary)' : '#ef4444'}; padding: 1rem; border-radius: 4px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <h3 style="margin: 0; color: var(--text-primary, #ffffff);">${t('reports.ipReputation.spf', 'SPF (Sender Policy Framework)')}</h3>
-          <span style="background: ${emailConfig.spf?.valid ? 'rgba(var(--accent-primary-rgb), 0.2)' : 'rgba(255, 68, 68, 0.2)'}; color: ${emailConfig.spf?.valid ? 'var(--accent-primary)' : '#ff4444'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+          <span style="background: ${emailConfig.spf?.valid ? 'rgba(var(--accent-primary-rgb), 0.2)' : 'rgba(255, 68, 68, 0.2)'}; color: ${emailConfig.spf?.valid ? 'var(--accent-primary)' : '#ef4444'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
             ${emailConfig.spf?.valid ? t('reports.common.valid', '✓ Valid') : t('reports.common.missingInvalid', '✗ Missing/Invalid')}
           </span>
         </div>
@@ -1237,17 +1238,17 @@ function createEmailContent(emailConfig) {
         </div>
       </div>
 
-      <div style="background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); border-left: 4px solid ${emailConfig.dmarc?.valid ? 'var(--accent-primary)' : '#ff4444'}; padding: 1rem; border-radius: 4px;">
+      <div style="background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); border-left: 4px solid ${emailConfig.dmarc?.valid ? 'var(--accent-primary)' : '#ef4444'}; padding: 1rem; border-radius: 4px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <h3 style="margin: 0; color: var(--text-primary, #ffffff);">${t('reports.ipReputation.dmarc', 'DMARC (Domain-based Message Authentication)')}</h3>
-          <span style="background: ${emailConfig.dmarc?.valid ? 'rgba(var(--accent-primary-rgb), 0.2)' : 'rgba(255, 68, 68, 0.2)'}; color: ${emailConfig.dmarc?.valid ? 'var(--accent-primary)' : '#ff4444'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+          <span style="background: ${emailConfig.dmarc?.valid ? 'rgba(var(--accent-primary-rgb), 0.2)' : 'rgba(255, 68, 68, 0.2)'}; color: ${emailConfig.dmarc?.valid ? 'var(--accent-primary)' : '#ef4444'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
             ${emailConfig.dmarc?.valid ? t('reports.common.valid', '✓ Valid') : t('reports.common.missingInvalid', '✗ Missing/Invalid')}
           </span>
         </div>
         <div style="color: var(--text-secondary, #cccccc); font-size: 0.9rem; font-family: 'JetBrains Mono', monospace; word-break: break-all;">
           ${emailConfig.dmarc?.record || t('reports.ipReputation.noDmarcRecord', 'No DMARC record found')}
         </div>
-        ${emailConfig.dmarc?.policy ? `<div style="color: #00d9ff; margin-top: 0.5rem; font-size: 0.85rem;">${t('reports.ipReputation.policy', 'Policy')}: ${emailConfig.dmarc.policy}</div>` : ''}
+        ${emailConfig.dmarc?.policy ? `<div style="color: #06b6d4; margin-top: 0.5rem; font-size: 0.85rem;">${t('reports.ipReputation.policy', 'Policy')}: ${emailConfig.dmarc.policy}</div>` : ''}
       </div>
     </div>
   `;
@@ -1267,7 +1268,7 @@ function createHostingContent(hostingInfo) {
       </div>
 
       <div style="background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
-        <h3 style="color: #00d9ff; margin-top: 0;">🔌 ${t('reports.ipReputation.ispHosting', 'ISP/Hosting')}</h3>
+        <h3 style="color: #06b6d4; margin-top: 0;">🔌 ${t('reports.ipReputation.ispHosting', 'ISP/Hosting')}</h3>
         <div style="display: grid; gap: 0.5rem;">
           <div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">${t('reports.ipReputation.provider', 'Provider')}:</span> ${hostingInfo.isp || t('reports.common.unknown', 'Unknown')}</div>
           ${hostingInfo.org ? `<div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">${t('reports.ipReputation.organization', 'Organization')}:</span> ${hostingInfo.org}</div>` : ''}
@@ -1293,8 +1294,8 @@ function createHostingContent(hostingInfo) {
 
 function createThreatContent(threatIntel) {
   return `
-    <div style="background: ${threatIntel.hasThreats ? 'rgba(255, 68, 68, 0.1)' : 'rgba(var(--accent-primary-rgb), 0.05)'}; border: 2px solid ${threatIntel.hasThreats ? '#ff4444' : 'rgba(var(--accent-primary-rgb), 0.2)'}; border-radius: 8px; padding: 1.5rem;">
-      <h3 style="color: ${threatIntel.hasThreats ? '#ff4444' : 'var(--accent-primary)'}; margin-top: 0;">
+    <div style="background: ${threatIntel.hasThreats ? 'rgba(255, 68, 68, 0.1)' : 'rgba(var(--accent-primary-rgb), 0.05)'}; border: 2px solid ${threatIntel.hasThreats ? '#ef4444' : 'rgba(var(--accent-primary-rgb), 0.2)'}; border-radius: 8px; padding: 1.5rem;">
+      <h3 style="color: ${threatIntel.hasThreats ? '#ef4444' : 'var(--accent-primary)'}; margin-top: 0;">
         ${threatIntel.hasThreats ? '⚠️ ' + t('reports.ipReputation.threatsDetected', 'Threats Detected') : '✓ ' + t('reports.ipReputation.noKnownThreats', 'No Known Threats')}
       </h3>
 
@@ -1383,7 +1384,7 @@ function createRecommendationsContent(recommendations) {
 function renderIpRepFixAccordion(rec, index) {
   const accordionId = `iprepfix-${rec.id || index}`;
   const severityColors = {
-    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    high: { bg: 'rgba(255,68,68,0.1)', border: '#ef4444', color: '#ef4444', icon: '🔴' },
     medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
     low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
   };
@@ -1495,8 +1496,8 @@ function renderIpRepFixTabs(rec, accordionId) {
       ` : ''}
 
       ${rec.impact ? `
-      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #22c55e; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
         <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${rec.impact}</div>
       </div>
       ` : ''}
@@ -1509,7 +1510,7 @@ function renderIpRepFixTabs(rec, accordionId) {
         <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid ${example.type === 'recommended' ? 'rgba(0,255,65,0.3)' : example.type === 'warning' ? 'rgba(255,165,0,0.3)' : 'rgba(0,204,255,0.3)'};">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: ${example.type === 'recommended' ? 'rgba(0,255,65,0.1)' : example.type === 'warning' ? 'rgba(255,165,0,0.1)' : 'rgba(0,204,255,0.1)'}; border-bottom: 1px solid ${example.type === 'recommended' ? 'rgba(0,255,65,0.2)' : example.type === 'warning' ? 'rgba(255,165,0,0.2)' : 'rgba(0,204,255,0.2)'};">
             <div>
-              <span style="color: ${example.type === 'recommended' ? '#00ff41' : example.type === 'warning' ? '#ffa500' : '#00ccff'}; font-weight: 600; font-size: 0.85rem;">${example.type === 'recommended' ? '✅' : example.type === 'warning' ? '⚠️' : '💡'} ${example.title}</span>
+              <span style="color: ${example.type === 'recommended' ? '#22c55e' : example.type === 'warning' ? '#ffa500' : '#00ccff'}; font-weight: 600; font-size: 0.85rem;">${example.type === 'recommended' ? '✅' : example.type === 'warning' ? '⚠️' : '💡'} ${example.title}</span>
               ${example.subtitle ? `<div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; margin-top: 0.25rem;">${example.subtitle}</div>` : ''}
             </div>
             <button data-action="copy-iprep-code" data-code-id="${accordionId}-code-${idx}" style="
@@ -1528,7 +1529,7 @@ function renderIpRepFixTabs(rec, accordionId) {
 
         ${codeExamples.length > 0 && codeExamples[0].notes ? `
         <div style="background: rgba(153,51,255,0.1); border-radius: 8px; padding: 1rem; border: 1px solid rgba(153,51,255,0.3);">
-          <div style="color: #9933ff; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">📝 ${t('reports.common.implementationNotes', 'Implementation Notes')}</div>
+          <div style="color: #8b5cf6; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">📝 ${t('reports.common.implementationNotes', 'Implementation Notes')}</div>
           <ul style="margin: 0; padding-left: 1.25rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; line-height: 1.6;">
             ${codeExamples[0].notes.map(note => `<li style="margin-bottom: 0.25rem;">${note}</li>`).join('')}
           </ul>
@@ -1558,7 +1559,7 @@ function renderIpRepFixTabs(rec, accordionId) {
       <div style="display: grid; gap: 1rem;">
         ${guideData.steps.map((step, idx) => `
         <div style="display: flex; gap: 1rem; align-items: flex-start;">
-          <div style="flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #00ccff, #9933ff); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; color: var(--r-text, #111827);">${idx + 1}</div>
+          <div style="flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #00ccff, #8b5cf6); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; color: var(--r-text, #111827);">${idx + 1}</div>
           <div style="flex: 1;">
             <div style="color: var(--r-text, #111827); font-weight: 600; margin-bottom: 0.25rem;">${step.title}</div>
             <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem; line-height: 1.6;">${step.description}</div>
@@ -1570,7 +1571,7 @@ function renderIpRepFixTabs(rec, accordionId) {
 
       ${guideData.verificationSteps ? `
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,255,65,0.1); border-radius: 8px; border: 1px solid rgba(0,255,65,0.2);">
-        <div style="color: #00ff41; font-weight: 600; margin-bottom: 0.75rem;">✓ ${t('reports.common.verificationSteps', 'Verification Steps')}</div>
+        <div style="color: #22c55e; font-weight: 600; margin-bottom: 0.75rem;">✓ ${t('reports.common.verificationSteps', 'Verification Steps')}</div>
         <ol style="margin: 0; padding-left: 1.5rem; color: var(--r-text-muted, #6B7280); font-size: 0.9rem; line-height: 1.6;">
           ${guideData.verificationSteps.map(v => `<li style="margin-bottom: 0.25rem;">${v}</li>`).join('')}
         </ol>
@@ -2592,7 +2593,7 @@ function createSSLSection(sslCert, sslScore) {
   if (!sslCert) return '';
 
   const isValid = sslCert.valid;
-  const statusColor = isValid ? 'var(--accent-primary)' : '#ff4444';
+  const statusColor = isValid ? 'var(--accent-primary)' : '#ef4444';
 
   const content = `
 
@@ -2607,30 +2608,30 @@ function createSSLSection(sslCert, sslScore) {
         ${isValid ? `
         <!-- Certificate Details -->
         <div style="background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
-          <h3 style="color: #00d9ff; margin-top: 0;">📋 ${t('reports.ipReputation.certificateDetails', 'Certificate Details')}</h3>
+          <h3 style="color: #06b6d4; margin-top: 0;">📋 ${t('reports.ipReputation.certificateDetails', 'Certificate Details')}</h3>
           <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
             <div><span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.issuer', 'Issuer')}:</span> <span style="color: var(--r-text, #111827);">${sslCert.issuer}</span></div>
             <div><span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.subject', 'Subject')}:</span> <span style="color: var(--r-text, #111827);">${sslCert.subject}</span></div>
-            <div><span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.protocol', 'Protocol')}:</span> <span style="color: ${sslCert.protocol === 'TLSv1.3' ? 'var(--accent-primary)' : sslCert.protocol === 'TLSv1.2' ? '#00d9ff' : '#ffa500'};">${sslCert.protocol}</span></div>
+            <div><span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.protocol', 'Protocol')}:</span> <span style="color: ${sslCert.protocol === 'TLSv1.3' ? 'var(--accent-primary)' : sslCert.protocol === 'TLSv1.2' ? '#06b6d4' : '#ffa500'};">${sslCert.protocol}</span></div>
             <div><span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.cipher', 'Cipher')}:</span> <span style="color: var(--r-text, #111827);">${sslCert.cipher || 'N/A'}</span></div>
           </div>
         </div>
 
         <!-- Expiry Info -->
         <div style="background: ${sslCert.daysUntilExpiry > 30 ? 'rgba(var(--accent-primary-rgb), 0.05)' : sslCert.daysUntilExpiry > 14 ? 'rgba(255, 165, 0, 0.05)' : 'rgba(255, 68, 68, 0.05)'}; border: 1px solid ${sslCert.daysUntilExpiry > 30 ? 'rgba(var(--accent-primary-rgb), 0.2)' : sslCert.daysUntilExpiry > 14 ? 'rgba(255, 165, 0, 0.2)' : 'rgba(255, 68, 68, 0.2)'}; border-radius: 8px; padding: 1.5rem;">
-          <h3 style="color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ff4444'}; margin-top: 0;">⏰ ${t('reports.ipReputation.validityPeriod', 'Validity Period')}</h3>
+          <h3 style="color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ef4444'}; margin-top: 0;">⏰ ${t('reports.ipReputation.validityPeriod', 'Validity Period')}</h3>
           <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
             <div><span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.validFrom', 'Valid From')}:</span> <span style="color: var(--r-text, #111827);">${new Date(sslCert.validFrom).toLocaleDateString()}</span></div>
             <div><span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.validUntil', 'Valid Until')}:</span> <span style="color: var(--r-text, #111827);">${new Date(sslCert.validTo).toLocaleDateString()}</span></div>
             <div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; text-align: center;">
-              <span style="font-size: 1.5rem; font-weight: bold; color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ff4444'};">${sslCert.daysUntilExpiry}</span>
+              <span style="font-size: 1.5rem; font-weight: bold; color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ef4444'};">${sslCert.daysUntilExpiry}</span>
               <span style="color: var(--r-text-faint, #9CA3AF);"> ${t('reports.ipReputation.daysRemaining', 'days remaining')}</span>
             </div>
           </div>
         </div>
         ` : `
         <div style="background: rgba(255, 68, 68, 0.05); border: 1px solid rgba(255, 68, 68, 0.2); border-radius: 8px; padding: 1.5rem; grid-column: span 2;">
-          <h3 style="color: #ff4444; margin-top: 0;">⚠️ ${t('reports.ipReputation.certificateIssue', 'Certificate Issue')}</h3>
+          <h3 style="color: #ef4444; margin-top: 0;">⚠️ ${t('reports.ipReputation.certificateIssue', 'Certificate Issue')}</h3>
           <p style="color: #cccccc;">${sslCert.error || t('reports.ipReputation.sslCouldNotBeVerified', 'SSL certificate could not be verified')}</p>
         </div>
         `}
@@ -2661,16 +2662,16 @@ function createDNSHealthSection(dnsHealth, dnsScore) {
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
         <!-- NS Records -->
         <div style="background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 8px; padding: 1.5rem;">
-          <h3 style="color: #00ff41; margin-top: 0;">📡 ${t('reports.ipReputation.nameservers', 'Nameservers')}</h3>
+          <h3 style="color: #22c55e; margin-top: 0;">📡 ${t('reports.ipReputation.nameservers', 'Nameservers')}</h3>
           ${dnsHealth.nsRecords && dnsHealth.nsRecords.length > 0 ? `
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
               ${dnsHealth.nsRecords.map(ns => `
-                <span style="background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.85rem; color: #00ff41; font-family: monospace;">
+                <span style="background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.85rem; color: #22c55e; font-family: monospace;">
                   ${ns}
                 </span>
               `).join('')}
             </div>
-            <div style="margin-top: 0.75rem; color: ${dnsHealth.nsRecords.length >= 2 ? '#00ff41' : '#ffa500'}; font-size: 0.85rem;">
+            <div style="margin-top: 0.75rem; color: ${dnsHealth.nsRecords.length >= 2 ? '#22c55e' : '#ffa500'}; font-size: 0.85rem;">
               ${dnsHealth.nsRecords.length >= 2 ? '✓ ' + t('reports.ipReputation.redundancyOk', 'Redundancy: OK') : '⚠️ ' + t('reports.ipReputation.addMoreNameservers', 'Add more nameservers for redundancy')}
             </div>
           ` : '<p style="color: var(--r-text-faint, #9CA3AF);">' + t('reports.ipReputation.noNsRecords', 'No NS records found') + '</p>'}
@@ -2678,13 +2679,13 @@ function createDNSHealthSection(dnsHealth, dnsScore) {
 
         <!-- MX Records -->
         <div style="background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
-          <h3 style="color: #00d9ff; margin-top: 0;">📧 ${t('reports.ipReputation.mailServers', 'Mail Servers (MX)')}</h3>
+          <h3 style="color: #06b6d4; margin-top: 0;">📧 ${t('reports.ipReputation.mailServers', 'Mail Servers (MX)')}</h3>
           ${dnsHealth.mxRecords && dnsHealth.mxRecords.length > 0 ? `
             <div style="display: grid; gap: 0.5rem;">
               ${dnsHealth.mxRecords.slice(0, 5).map(mx => `
                 <div style="display: flex; justify-content: space-between; background: var(--r-surface-2, #F8FAFC); padding: 0.5rem; border-radius: 4px; font-size: 0.85rem;">
                   <span style="color: var(--r-text, #111827); font-family: monospace;">${mx.exchange}</span>
-                  <span style="color: #00d9ff;">${t('reports.ipReputation.priority', 'Priority')}: ${mx.priority}</span>
+                  <span style="color: #06b6d4;">${t('reports.ipReputation.priority', 'Priority')}: ${mx.priority}</span>
                 </div>
               `).join('')}
             </div>
@@ -2693,7 +2694,7 @@ function createDNSHealthSection(dnsHealth, dnsScore) {
 
         <!-- CAA Records -->
         <div style="background: rgba(153, 51, 255, 0.05); border: 1px solid rgba(153, 51, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
-          <h3 style="color: #9933ff; margin-top: 0;">🔐 ${t('reports.ipReputation.caaRecords', 'CAA Records')}</h3>
+          <h3 style="color: #8b5cf6; margin-top: 0;">🔐 ${t('reports.ipReputation.caaRecords', 'CAA Records')}</h3>
           ${dnsHealth.hasCAA ? `
             <div style="display: grid; gap: 0.5rem;">
               ${dnsHealth.caaRecords.map(caa => `
@@ -2702,7 +2703,7 @@ function createDNSHealthSection(dnsHealth, dnsScore) {
                 </div>
               `).join('')}
             </div>
-            <div style="margin-top: 0.75rem; color: #00ff41; font-size: 0.85rem;">✓ ${t('reports.ipReputation.caaConfigured', 'CAA configured')}</div>
+            <div style="margin-top: 0.75rem; color: #22c55e; font-size: 0.85rem;">✓ ${t('reports.ipReputation.caaConfigured', 'CAA configured')}</div>
           ` : `
             <p style="color: var(--r-text-faint, #9CA3AF);">${t('reports.ipReputation.noCaaRecords', 'No CAA records found')}</p>
             <div style="margin-top: 0.75rem; color: #ffa500; font-size: 0.85rem;">⚠️ ${t('reports.ipReputation.considerAddingCaa', 'Consider adding CAA to restrict certificate issuance')}</div>
@@ -2739,14 +2740,14 @@ function createPortSecuritySection(portScan) {
     <p style="color: var(--r-text-faint, #9CA3AF); margin-bottom: 1.5rem;">${t('reports.ipReputation.scanningPorts', 'Scanning common security-sensitive ports for exposure')}</p>
 
     ${hasIssues ? `
-      <div style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ff4444; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
-        <h3 style="color: #ff4444; margin-top: 0;">⚠️ ${t('reports.ipReputation.securityIssuesFound', 'Security Issues Found')}</h3>
+      <div style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ef4444; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+        <h3 style="color: #ef4444; margin-top: 0;">⚠️ ${t('reports.ipReputation.securityIssuesFound', 'Security Issues Found')}</h3>
         <div style="display: grid; gap: 1rem;">
           ${portScan.securityIssues.map(issue => `
-            <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 4px; border-left: 4px solid ${issue.severity === 'critical' ? '#ff0000' : issue.severity === 'high' ? '#ff4444' : '#ffa500'};">
+            <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 4px; border-left: 4px solid ${issue.severity === 'critical' ? '#ff0000' : issue.severity === 'high' ? '#ef4444' : '#ffa500'};">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                 <span style="font-weight: 600; color: var(--r-text, #111827);">${t('reports.ipReputation.port', 'Port')} ${issue.port} (${issue.service})</span>
-                <span style="background: ${issue.severity === 'critical' ? '#ff0000' : issue.severity === 'high' ? '#ff4444' : '#ffa500'}; color: #000; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                <span style="background: ${issue.severity === 'critical' ? '#ff0000' : issue.severity === 'high' ? '#ef4444' : '#ffa500'}; color: #000; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
                   ${translateSeverity(issue.severity)}
                 </span>
               </div>
@@ -2758,7 +2759,7 @@ function createPortSecuritySection(portScan) {
     ` : `
       <div style="background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center;">
         <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
-        <div style="color: #00ff41; font-weight: 600;">${t('reports.ipReputation.noCriticalExposedServices', 'No Critical Exposed Services')}</div>
+        <div style="color: #22c55e; font-weight: 600;">${t('reports.ipReputation.noCriticalExposedServices', 'No Critical Exposed Services')}</div>
         <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem; margin-top: 0.5rem;">${t('reports.ipReputation.noHighRiskPorts', 'No high-risk ports detected as publicly accessible')}</div>
       </div>
     `}
@@ -2768,7 +2769,7 @@ function createPortSecuritySection(portScan) {
         <div style="background: rgba(${port.risk === 'critical' ? '255, 0, 0' : port.risk === 'high' ? '255, 68, 68' : port.risk === 'medium' ? '255, 165, 0' : '0, 217, 255'}, 0.1); border: 1px solid rgba(${port.risk === 'critical' ? '255, 0, 0' : port.risk === 'high' ? '255, 68, 68' : port.risk === 'medium' ? '255, 165, 0' : '0, 217, 255'}, 0.3); padding: 0.75rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 1.25rem; font-weight: bold; color: var(--r-text, #111827);">${port.port}</div>
           <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">${port.name}</div>
-          <div style="font-size: 0.7rem; color: #00ff41; margin-top: 0.25rem;">${t('reports.ipReputation.open', 'OPEN')}</div>
+          <div style="font-size: 0.7rem; color: #22c55e; margin-top: 0.25rem;">${t('reports.ipReputation.open', 'OPEN')}</div>
         </div>
       `).join('') : `
         <div style="grid-column: span 6; text-align: center; color: var(--r-text-faint, #9CA3AF); padding: 1rem;">

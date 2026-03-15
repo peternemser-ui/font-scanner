@@ -436,6 +436,7 @@ async function analyze(options = {}) {
     displayResults(data);
     results.style.display = 'block';
     window.__REPORT_READY__ = true;
+    window.dispatchEvent(new CustomEvent('scan:completed'));
     window.dispatchEvent(new CustomEvent('report:ready'));
 
   } catch (error) {
@@ -855,7 +856,7 @@ function renderGdprProFixes(recommendations) {
 function renderGdprFixAccordion(rec, index) {
   const accordionId = `gdprfix-${rec.id || index}`;
   const severityColors = {
-    critical: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    critical: { bg: 'rgba(255,68,68,0.1)', border: '#ef4444', color: '#ef4444', icon: '🔴' },
     high: { bg: 'rgba(255,140,0,0.1)', border: '#ff8c00', color: '#ff8c00', icon: '🟠' },
     medium: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟡' },
     low: { bg: 'rgba(128,128,128,0.1)', border: '#808080', color: '#808080', icon: '🟢' }
@@ -947,8 +948,8 @@ function renderGdprFixTabs(rec, accordionId) {
         ${rec.detail || rec.description || rec.message}
       </p>
       ${rec.impact ? `
-      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #22c55e; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
         <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${rec.impact}</div>
       </div>
       ` : ''}
@@ -960,7 +961,7 @@ function renderGdprFixTabs(rec, accordionId) {
         <!-- Recommended Action -->
         <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">${t('reports.common.recommendedImplementation', 'Recommended Implementation')}</span>
+            <span style="color: #22c55e; font-weight: 600; font-size: 0.85rem;">${t('reports.common.recommendedImplementation', 'Recommended Implementation')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-action" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
@@ -1557,7 +1558,7 @@ function renderConsentQualityContent(data) {
           <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.common.grade', 'Grade')}</div>
         </div>
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.2rem; font-weight: bold; color: #00d9ff;">${consent.detectedLibrary || t('reports.common.none', 'None')}</div>
+          <div style="font-size: 1.2rem; font-weight: bold; color: #06b6d4;">${consent.detectedLibrary || t('reports.common.none', 'None')}</div>
           <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.gdpr.consentLibrary', 'Consent Library')}</div>
         </div>
       </div>
@@ -1565,11 +1566,11 @@ function renderConsentQualityContent(data) {
       <h4 style="color: var(--r-text-muted, #6B7280); margin: 1rem 0 0.75rem 0;">${t('reports.gdpr.qualityFactors', 'Quality Factors')}</h4>
       <div style="display: grid; gap: 0.5rem;">
         ${(quality.factors || []).map(f => `
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; border-left: 3px solid ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ff4444'};">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; border-left: 3px solid ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ef4444'};">
             <span style="color: var(--r-text, #111827);">${f.name}</span>
             <span style="display: flex; align-items: center; gap: 0.5rem;">
-              <span style="color: ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ff4444'}; font-weight: bold;">${f.points}/${f.name.includes('reject') ? 25 : f.name.includes('library') ? 15 : 20}</span>
-              <span style="color: ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ff4444'};">${f.status === 'pass' ? '✓' : f.status === 'warn' ? '~' : '✗'}</span>
+              <span style="color: ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ef4444'}; font-weight: bold;">${f.points}/${f.name.includes('reject') ? 25 : f.name.includes('library') ? 15 : 20}</span>
+              <span style="color: ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ef4444'};">${f.status === 'pass' ? '✓' : f.status === 'warn' ? '~' : '✗'}</span>
             </span>
           </div>
         `).join('')}
@@ -1577,7 +1578,7 @@ function renderConsentQualityContent(data) {
 
       ${!consent.hasRejectOption && consent.detected ? `
         <div style="margin-top: 1rem; padding: 1rem; background: rgba(255, 68, 68, 0.1); border: 1px solid rgba(255, 68, 68, 0.3); border-radius: 8px;">
-          <strong style="color: #ff4444;">${t('reports.gdpr.missingRejectOption', 'Missing Reject Option')}</strong>
+          <strong style="color: #ef4444;">${t('reports.gdpr.missingRejectOption', 'Missing Reject Option')}</strong>
           <p style="margin: 0.5rem 0 0 0; color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.gdpr.missingRejectOptionDesc', 'GDPR requires an equally prominent "Reject" or "Decline" button. Users must be able to refuse cookies as easily as accepting them.')}</p>
         </div>
       ` : ''}
@@ -1591,10 +1592,10 @@ function renderCookieAnalysisContent(cookies) {
   const classified = cookies.classified || {};
   const categories = [
     { key: 'necessary', label: t('reports.gdpr.cookies.necessary', 'Necessary'), color: 'var(--accent-primary)', desc: t('reports.gdpr.cookies.necessaryDesc', 'Required for basic site functionality') },
-    { key: 'functional', label: t('reports.gdpr.cookies.functional', 'Functional'), color: '#00d9ff', desc: t('reports.gdpr.cookies.functionalDesc', 'Preferences and settings') },
+    { key: 'functional', label: t('reports.gdpr.cookies.functional', 'Functional'), color: '#06b6d4', desc: t('reports.gdpr.cookies.functionalDesc', 'Preferences and settings') },
     { key: 'analytics', label: t('reports.gdpr.cookies.analytics', 'Analytics'), color: '#ffa500', desc: t('reports.gdpr.cookies.analyticsDesc', 'Usage tracking and statistics') },
-    { key: 'marketing', label: t('reports.gdpr.cookies.marketing', 'Marketing'), color: '#ff4444', desc: t('reports.gdpr.cookies.marketingDesc', 'Advertising and targeting') },
-    { key: 'social', label: t('reports.gdpr.cookies.social', 'Social'), color: '#9933ff', desc: t('reports.gdpr.cookies.socialDesc', 'Social media integrations') },
+    { key: 'marketing', label: t('reports.gdpr.cookies.marketing', 'Marketing'), color: '#ef4444', desc: t('reports.gdpr.cookies.marketingDesc', 'Advertising and targeting') },
+    { key: 'social', label: t('reports.gdpr.cookies.social', 'Social'), color: '#8b5cf6', desc: t('reports.gdpr.cookies.socialDesc', 'Social media integrations') },
     { key: 'unknown', label: t('reports.gdpr.cookies.unknown', 'Unknown'), color: '#808080', desc: t('reports.gdpr.cookies.unknownDesc', 'Unclassified cookies') }
   ];
 
@@ -1617,7 +1618,7 @@ function renderCookieAnalysisContent(cookies) {
 
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.5rem; font-weight: bold; color: #00d9ff;">${cookies.sessionCount || 0}</div>
+          <div style="font-size: 1.5rem; font-weight: bold; color: #06b6d4;">${cookies.sessionCount || 0}</div>
           <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.gdpr.sessionCookies', 'Session Cookies')}</div>
         </div>
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
@@ -1625,7 +1626,7 @@ function renderCookieAnalysisContent(cookies) {
           <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.gdpr.persistentCookies', 'Persistent Cookies')}</div>
         </div>
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.5rem; font-weight: bold; color: #ff4444;">${cookies.longLivedCount || 0}</div>
+          <div style="font-size: 1.5rem; font-weight: bold; color: #ef4444;">${cookies.longLivedCount || 0}</div>
           <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.gdpr.longLivedCookies', 'Long-lived (>1yr)')}</div>
         </div>
       </div>
@@ -1645,9 +1646,9 @@ function renderTrackerAnalysisContent(trackers) {
 
   const classified = trackers.classified || {};
   const categories = [
-    { key: 'analytics', label: t('reports.gdpr.trackers.analytics', 'Analytics'), color: '#00d9ff' },
-    { key: 'advertising', label: t('reports.gdpr.trackers.advertising', 'Advertising'), color: '#ff4444' },
-    { key: 'social', label: t('reports.gdpr.trackers.socialMedia', 'Social Media'), color: '#9933ff' },
+    { key: 'analytics', label: t('reports.gdpr.trackers.analytics', 'Analytics'), color: '#06b6d4' },
+    { key: 'advertising', label: t('reports.gdpr.trackers.advertising', 'Advertising'), color: '#ef4444' },
+    { key: 'social', label: t('reports.gdpr.trackers.socialMedia', 'Social Media'), color: '#8b5cf6' },
     { key: 'customer', label: t('reports.gdpr.trackers.customerSupport', 'Customer Support'), color: 'var(--accent-primary)' },
     { key: 'heatmap', label: t('reports.gdpr.trackers.heatmaps', 'Heatmaps/Session Recording'), color: '#ffa500' }
   ];
@@ -1696,12 +1697,12 @@ function renderLegalPagesContent(compliance) {
           const data = compliance?.[p.key] || {};
           const hasLink = data.hasLink;
           return `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px; border-left: 3px solid ${hasLink ? 'var(--accent-primary)' : p.required ? '#ff4444' : '#ffa500'};">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px; border-left: 3px solid ${hasLink ? 'var(--accent-primary)' : p.required ? '#ef4444' : '#ffa500'};">
               <div>
                 <span style="color: var(--r-text, #111827); font-weight: 600;">${p.label}</span>
-                ${p.required ? `<span style="color: #ff4444; font-size: 0.75rem; margin-left: 0.5rem;">${t('reports.gdpr.required', 'Required')}</span>` : ''}
+                ${p.required ? `<span style="color: #ef4444; font-size: 0.75rem; margin-left: 0.5rem;">${t('reports.gdpr.required', 'Required')}</span>` : ''}
               </div>
-              <span style="color: ${hasLink ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${hasLink ? t('reports.gdpr.found', 'Found') : t('reports.gdpr.missing', 'Missing')}</span>
+              <span style="color: ${hasLink ? 'var(--accent-primary)' : '#ef4444'}; font-weight: bold;">${hasLink ? t('reports.gdpr.found', 'Found') : t('reports.gdpr.missing', 'Missing')}</span>
             </div>
           `;
         }).join('')}
@@ -1719,9 +1720,9 @@ function renderDataRightsContent(compliance) {
       <h3 style="color: var(--accent-primary); margin: 0 0 1rem 0; font-size: 1rem;">&gt;&gt; ${t('reports.gdpr.dataSubjectRightsTitle', 'Data Subject Rights (GDPR Articles 12-23)')}</h3>
 
       <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px; border-left: 3px solid ${rights.hasInfo ? 'var(--accent-primary)' : '#ff4444'};">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px; border-left: 3px solid ${rights.hasInfo ? 'var(--accent-primary)' : '#ef4444'};">
           <span style="color: var(--r-text, #111827);">${t('reports.gdpr.dataRightsInformation', 'Data Rights Information')}</span>
-          <span style="color: ${rights.hasInfo ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${rights.hasInfo ? t('reports.gdpr.found', 'Found') : t('reports.gdpr.missing', 'Missing')}</span>
+          <span style="color: ${rights.hasInfo ? 'var(--accent-primary)' : '#ef4444'}; font-weight: bold;">${rights.hasInfo ? t('reports.gdpr.found', 'Found') : t('reports.gdpr.missing', 'Missing')}</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px; border-left: 3px solid ${rights.hasDPOContact ? 'var(--accent-primary)' : '#ffa500'};">
           <span style="color: var(--r-text, #111827);">${t('reports.gdpr.dpoPrivacyContact', 'DPO/Privacy Contact')}</span>
@@ -1732,7 +1733,7 @@ function renderDataRightsContent(compliance) {
       <h4 style="color: var(--r-text-muted, #6B7280); margin: 1rem 0 0.75rem 0;">${t('reports.gdpr.internationalCompliance', 'International Compliance')}</h4>
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.5rem; color: ${international.gdpr ? 'var(--accent-primary)' : '#ff4444'};">${international.gdpr ? '✓' : '✗'}</div>
+          <div style="font-size: 1.5rem; color: ${international.gdpr ? 'var(--accent-primary)' : '#ef4444'};">${international.gdpr ? '✓' : '✗'}</div>
           <div style="color: var(--r-text, #111827); font-weight: 600;">${t('reports.gdpr.gdprEU', 'GDPR (EU)')}</div>
         </div>
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
@@ -1760,14 +1761,14 @@ function renderRisksContent(risks) {
 
   return `
     <div>
-      <h3 style="color: #ff4444; margin: 0 0 1rem 0; font-size: 1rem;">&gt;&gt; ${t('reports.gdpr.complianceRisksTitle', 'Compliance Risks')}</h3>
+      <h3 style="color: #ef4444; margin: 0 0 1rem 0; font-size: 1rem;">&gt;&gt; ${t('reports.gdpr.complianceRisksTitle', 'Compliance Risks')}</h3>
 
       <div style="display: grid; gap: 1rem;">
         ${sorted.map(risk => `
-          <div style="padding: 1.25rem; background: ${risk.severity === 'critical' ? 'rgba(255,68,68,0.15)' : risk.severity === 'high' ? 'rgba(255,140,0,0.15)' : 'rgba(255,215,0,0.1)'}; border-left: 4px solid ${risk.severity === 'critical' ? '#ff4444' : risk.severity === 'high' ? '#ff8c00' : '#ffd700'}; border-radius: 4px;">
+          <div style="padding: 1.25rem; background: ${risk.severity === 'critical' ? 'rgba(255,68,68,0.15)' : risk.severity === 'high' ? 'rgba(255,140,0,0.15)' : 'rgba(255,215,0,0.1)'}; border-left: 4px solid ${risk.severity === 'critical' ? '#ef4444' : risk.severity === 'high' ? '#ff8c00' : '#eab308'}; border-radius: 4px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-              <h4 style="margin: 0; color: ${risk.severity === 'critical' ? '#ff4444' : risk.severity === 'high' ? '#ff8c00' : '#ffd700'};">${risk.risk}</h4>
-              <span style="background: ${risk.severity === 'critical' ? '#ff4444' : risk.severity === 'high' ? '#ff8c00' : '#ffd700'}; color: #000; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">${getSeverityLabel(risk.severity)}</span>
+              <h4 style="margin: 0; color: ${risk.severity === 'critical' ? '#ef4444' : risk.severity === 'high' ? '#ff8c00' : '#eab308'};">${risk.risk}</h4>
+              <span style="background: ${risk.severity === 'critical' ? '#ef4444' : risk.severity === 'high' ? '#ff8c00' : '#eab308'}; color: #000; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">${getSeverityLabel(risk.severity)}</span>
             </div>
             <p style="margin: 0 0 0.5rem 0; color: var(--r-text-muted, #6B7280);">${risk.detail}</p>
             <p style="margin: 0; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; font-style: italic;">${t('reports.gdpr.potentialFine', 'Potential Fine:')} ${risk.fine}</p>
@@ -1782,11 +1783,11 @@ function renderItem(label, hasIt) {
   return `
     <div style="padding: 0.75rem; background: rgba(255, 255, 255, 0.03); border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
       <span>${label}</span>
-      <span style="color: ${hasIt ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${hasIt ? '' : ''}</span>
+      <span style="color: ${hasIt ? 'var(--accent-primary)' : '#ef4444'}; font-weight: bold;">${hasIt ? '' : ''}</span>
     </div>
   `;
 }
 
 function getColor(grade) {
-  return { 'A': getAccentPrimaryHex(), 'B': '#ffd700', 'C': '#ff8c00', 'F': '#ff4444' }[grade] || '#888';
+  return { 'A': getAccentPrimaryHex(), 'B': '#eab308', 'C': '#ff8c00', 'F': '#ef4444' }[grade] || '#888';
 }

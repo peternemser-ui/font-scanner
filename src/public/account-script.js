@@ -7,16 +7,21 @@
 // i18n HELPER
 // ============================================
 
-function t(key, fallback) {
+function t(key, fallback, params) {
+  let str = fallback;
   if (window.i18n && typeof window.i18n.t === 'function') {
     const result = window.i18n.t(key);
     // If the result equals the key, the translation wasn't found - use fallback
-    if (result === key || !result) {
-      return fallback;
+    if (result !== key && result) {
+      str = result;
     }
-    return result;
   }
-  return fallback;
+  if (params && typeof params === 'object') {
+    Object.keys(params).forEach(k => {
+      str = str.replace(new RegExp('\\{\\{' + k + '\\}\\}', 'g'), params[k]);
+    });
+  }
+  return str;
 }
 
 // ============================================
@@ -232,13 +237,13 @@ async function handleBillingReturn() {
       }
     }
 
-    showSuccess('Payment successful! Your plan has been updated.');
+    showSuccess(t('account.billing.paymentSuccess', 'Payment successful! Your plan has been updated.'));
     cleanUrl(['billing_success', 'session_id']);
   } else if (urlParams.get('billing_canceled') === 'true') {
-    showError('Checkout was canceled. No charges were made.');
+    showError(t('account.billing.checkoutCanceled', 'Checkout was canceled. No charges were made.'));
     cleanUrl(['billing_canceled']);
   } else if (urlParams.get('success') === 'true') {
-    showSuccess('Payment successful! Your Pro features are now active.');
+    showSuccess(t('account.billing.proActivated', 'Payment successful! Your Pro features are now active.'));
     cleanUrl(['success']);
   }
 }
@@ -483,7 +488,7 @@ function initCompareMode() {
       const [id1, id2] = Array.from(selectedForCompare);
       // Navigate to compare page (placeholder - implement when compare feature exists)
       console.log('Compare reports:', id1, id2);
-      showSuccess('Compare feature coming soon!');
+      showSuccess(t('account.compareComingSoon', 'Compare feature coming soon!'));
     }
   });
 }
@@ -528,10 +533,10 @@ async function loadUserData() {
       window.location.href = '/auth.html';
       return;
     }
-    document.getElementById('userEmail').textContent = user.email || 'N/A';
+    document.getElementById('userEmail').textContent = user.email || t('account.notAvailable', 'N/A');
   } catch (error) {
     console.error('Failed to load user data:', error);
-    showError('Failed to load account data.');
+    showError(t('account.errors.loadFailed', 'Failed to load account data.'));
   }
 }
 
@@ -696,7 +701,7 @@ async function updateBillingUI(status) {
   const triggerBadge = document.getElementById('accountTriggerBadge');
 
   if (isPro) {
-    const intervalLabel = isDay ? 'Day Pass' : isYearly ? 'Yearly' : 'Monthly';
+    const intervalLabel = isDay ? t('account.billing.dayPass', 'Day Pass') : isYearly ? t('account.billing.yearly', 'Yearly') : t('account.billing.monthly', 'Monthly');
     planEl.innerHTML = `<span class="plan-badge plan-badge--pro">${intervalLabel}</span>`;
     if (triggerBadge) {
       triggerBadge.className = 'plan-badge plan-badge--pro';
@@ -705,11 +710,11 @@ async function updateBillingUI(status) {
 
     if (status.cancelAtPeriodEnd && status.currentPeriodEnd) {
       const cancelDate = new Date(status.currentPeriodEnd).toLocaleDateString();
-      planEl.innerHTML += ` <span style="font-size: 10px; color: var(--color-text-muted);">Cancels on ${cancelDate}</span>`;
+      planEl.innerHTML += ` <span style="font-size: 10px; color: var(--color-text-muted);">${t('account.billing.cancelsOn', 'Cancels on {{date}}', { date: cancelDate })}</span>`;
     } else if (status.currentPeriodEnd && isDay) {
       const endDate = new Date(status.currentPeriodEnd);
       const hoursRemaining = Math.max(0, Math.ceil((endDate - new Date()) / (1000 * 60 * 60)));
-      planEl.innerHTML += ` <span style="font-size: 10px; color: var(--color-text-muted);">${hoursRemaining}h left</span>`;
+      planEl.innerHTML += ` <span style="font-size: 10px; color: var(--color-text-muted);">${t('account.billing.hoursLeft', '{{hours}}h left', { hours: hoursRemaining })}</span>`;
     }
   } else {
     planEl.innerHTML = '<span class="plan-badge plan-badge--free">' + t('account.payAsYouGo', 'Pay As You Go') + '</span>';
@@ -746,20 +751,20 @@ async function updateBillingUI(status) {
     if (usageFill && usageCount && usageReset) {
       const percentage = Math.min((scansUsed / scanLimit) * 100, 100);
       usageFill.style.width = `${percentage}%`;
-      usageCount.textContent = `${scansUsed} / ${scanLimit} scans`;
+      usageCount.textContent = t('account.usage.scansCount', '{{used}} / {{limit}} scans', { used: scansUsed, limit: scanLimit });
 
       // Calculate time until reset
       if (resetAt) {
         const resetTime = new Date(resetAt);
         const now = new Date();
         const hoursUntilReset = Math.max(0, Math.ceil((resetTime - now) / (1000 * 60 * 60)));
-        usageReset.textContent = `Resets in ${hoursUntilReset}h`;
+        usageReset.textContent = t('account.resetsIn', 'Resets in {{hours}}h', { hours: hoursUntilReset });
       } else {
         const now = new Date();
         const midnight = new Date(now);
         midnight.setHours(24, 0, 0, 0);
         const hoursUntilReset = Math.ceil((midnight - now) / (1000 * 60 * 60));
-        usageReset.textContent = `Resets in ${hoursUntilReset}h`;
+        usageReset.textContent = t('account.resetsIn', 'Resets in {{hours}}h', { hours: hoursUntilReset });
       }
     }
 
@@ -1112,7 +1117,7 @@ function createSiteGroupElement(group, index) {
           ${t('reportsPage.buttons.runAgain', 'Run Again')}
         </a>
       </div>
-      <button class="site-group__expand" aria-label="Expand">
+      <button class="site-group__expand" aria-label="${t('account.expand', 'Expand')}">
         <span class="expand-chevron">&#9660;</span>
       </button>
     </div>
@@ -1187,7 +1192,7 @@ function buildRerunUrl(report) {
 // ============================================
 
 function normalizeDomain(url) {
-  if (!url) return 'Unknown';
+  if (!url) return t('account.unknownSite', 'Unknown');
   try {
     return url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '').toLowerCase();
   } catch {
@@ -1195,13 +1200,37 @@ function normalizeDomain(url) {
   }
 }
 
+// Maps REPORT_TYPE_MAP categories to existing reports.modeLabels.* i18n keys
+const CATEGORY_I18N_KEY_MAP = {
+  'full': 'reports.modeLabels.full',
+  'seo': 'reports.modeLabels.seo',
+  'accessibility': 'reports.modeLabels.accessibility',
+  'performance': 'reports.modeLabels.performance',
+  'security': 'reports.modeLabels.security',
+  'tag-intelligence': 'reports.modeLabels.tagIntelligence',
+  'cwv': 'reports.modeLabels.cwv',
+  'fonts': 'reports.modeLabels.fonts',
+  'brand': 'reports.modeLabels.brand',
+  'cro': 'reports.modeLabels.cro',
+  'mobile': 'reports.modeLabels.mobile',
+  'ip-reputation': 'reports.modeLabels.ipReputation',
+  'gdpr': 'reports.modeLabels.gdpr',
+  'competitive': 'reports.modeLabels.competitive',
+  'geo-seo': 'reports.modeLabels.geoSeo',
+  'broken-links': 'reports.modeLabels.brokenLinks',
+  'site-crawler': 'reports.modeLabels.crawler'
+};
+
 function getReportTypeLabel(type) {
   const typeInfo = REPORT_TYPE_MAP[type];
   if (!typeInfo) return type || t('reportsPage.reportTypes.report', 'Report');
 
-  // Try to get translated label
-  const translationKey = `reportsPage.reportTypes.${typeInfo.category}`;
-  return t(translationKey, typeInfo.label);
+  // Use existing reports.modeLabels.* i18n keys
+  const i18nKey = CATEGORY_I18N_KEY_MAP[typeInfo.category];
+  if (i18nKey) {
+    return t(i18nKey, typeInfo.label);
+  }
+  return typeInfo.label;
 }
 
 function getReportTypeCategory(type) {
@@ -1285,7 +1314,7 @@ async function handleRefresh() {
   try {
     const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
     if (!token) {
-      showError('Please log in to refresh');
+      showError(t('account.errors.loginToRefresh', 'Please log in to refresh'));
       return;
     }
 
@@ -1300,7 +1329,7 @@ async function handleRefresh() {
     const syncResult = await syncResponse.json();
 
     if (syncResult.synced > 0) {
-      showSuccess(`Synced ${syncResult.synced} new purchase(s)`);
+      showSuccess(t('account.billing.syncedPurchases', 'Synced {{count}} new purchase(s)', { count: syncResult.synced }));
     }
 
     await loadBillingStatus();
@@ -1308,7 +1337,7 @@ async function handleRefresh() {
 
   } catch (e) {
     console.error('Refresh error:', e);
-    showError('Failed to refresh: ' + e.message);
+    showError(t('account.errors.refreshFailed', 'Failed to refresh: {{message}}', { message: e.message }));
   } finally {
     btn.classList.remove('syncing');
     btn.disabled = false;
@@ -1350,7 +1379,7 @@ async function handleManageBilling() {
 
     await proManager.openCustomerPortal();
   } catch (error) {
-    showError(error.message || 'Failed to open billing portal');
+    showError(error.message || t('account.errors.billingPortalFailed', 'Failed to open billing portal'));
     btn.disabled = false;
     btn.textContent = originalText;
   }
@@ -1419,24 +1448,24 @@ function initPasswordModal() {
     const confirmPassword = document.getElementById('confirmPassword').value;
 
     if (newPassword !== confirmPassword) {
-      showError('New passwords do not match');
+      showError(t('account.errors.passwordsNoMatch', 'New passwords do not match'));
       return;
     }
 
     if (newPassword.length < 8) {
-      showError('Password must be at least 8 characters');
+      showError(t('account.errors.passwordMinLength', 'Password must be at least 8 characters'));
       return;
     }
     if (!/[A-Z]/.test(newPassword)) {
-      showError('Password must contain an uppercase letter');
+      showError(t('account.errors.passwordUppercase', 'Password must contain an uppercase letter'));
       return;
     }
     if (!/[a-z]/.test(newPassword)) {
-      showError('Password must contain a lowercase letter');
+      showError(t('account.errors.passwordLowercase', 'Password must contain a lowercase letter'));
       return;
     }
     if (!/[0-9]/.test(newPassword)) {
-      showError('Password must contain a number');
+      showError(t('account.errors.passwordNumber', 'Password must contain a number'));
       return;
     }
 
@@ -1453,13 +1482,13 @@ function initPasswordModal() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to change password');
+        throw new Error(data.error || t('account.errors.changePasswordFailed', 'Failed to change password'));
       }
 
-      showSuccess('Password changed successfully!');
+      showSuccess(t('account.passwordChanged', 'Password changed successfully!'));
       closeModal();
     } catch (error) {
-      showError(error.message || 'Failed to change password');
+      showError(error.message || t('account.errors.changePasswordFailed', 'Failed to change password'));
     }
   });
 }
