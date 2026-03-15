@@ -72,12 +72,24 @@ class LighthouseAnalyzer {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await this._runLighthouse(url, options, attempt);
+        const result = await this._runLighthouse(url, options, attempt);
+        // Success - reset circuit breaker
+        if (appConfig.lighthouse?.circuitBreaker?.enabled && this.failureCount > 0) {
+          logger.info('Lighthouse success - resetting circuit breaker');
+          this.failureCount = 0;
+          this.circuitOpen = false;
+        }
+        return result;
       } catch (error) {
         const isRetriableError = error.message.includes('NO_FCP') ||
                                  error.message.includes('Chrome internal error') ||
                                  error.message.includes('performance mark') ||
-                                 error.message.includes('timed out');
+                                 error.message.includes('timed out') ||
+                                 error.message.includes('Chrome launch failed') ||
+                                 error.message.includes('net::') ||
+                                 error.message.includes('Navigation') ||
+                                 error.message.includes('disconnected') ||
+                                 error.message.includes('ECONNREFUSED');
 
         if (attempt < maxRetries && isRetriableError) {
           logger.warn(`Lighthouse attempt ${attempt}/${maxRetries} failed (${error.message}), retrying in ${retryDelay}ms...`);
@@ -86,31 +98,70 @@ class LighthouseAnalyzer {
           continue;
         }
 
-        // Last attempt or non-retriable error - return fallback
+        // Last attempt or non-retriable error - create fallback
         logger.error(`Lighthouse failed after ${attempt} attempts:`, error.message);
-        
+
         // Circuit breaker: track failures
-        const cbConfig = appConfig.lighthouse?.circuitBreaker || {};
-        if (cbConfig.enabled) {
+        const cbConfig2 = appConfig.lighthouse?.circuitBreaker || {};
+        if (cbConfig2.enabled) {
           this.failureCount++;
-          logger.debug(`Circuit breaker failure count: ${this.failureCount}/${cbConfig.failureThreshold || 3}`);
-          if (this.failureCount >= (cbConfig.failureThreshold || 3)) {
+          logger.debug(`Circuit breaker failure count: ${this.failureCount}/${cbConfig2.failureThreshold || 3}`);
+          if (this.failureCount >= (cbConfig2.failureThreshold || 3)) {
             this.circuitOpen = true;
             this.circuitOpenTime = Date.now();
             logger.warn(`Circuit breaker OPENED after ${this.failureCount} failures - Lighthouse disabled temporarily`);
           }
         }
-        
-        throw error;
+
+        // Return fallback result with estimated scores
+        const formFactor = options.formFactor || 'desktop';
+        const useFallbackScoring = appConfig.lighthouse?.errorTolerance?.useFallbackScoring ?? true;
+        const fallbackScores = useFallbackScoring ? {
+          performance: formFactor === 'desktop' ? 75 : 60,
+          accessibility: 85,
+          bestPractices: 80,
+          seo: 85,
+        } : {
+          performance: 0,
+          accessibility: 0,
+          bestPractices: 0,
+          seo: 0,
+        };
+
+        logger.warn(`Returning ${useFallbackScoring ? 'estimated' : 'zero'} scores for ${formFactor} after ${attempt} attempts`);
+
+        return {
+          formFactor,
+          score: fallbackScores.performance,
+          performance: fallbackScores.performance,
+          metrics: {
+            firstContentfulPaint: formFactor === 'desktop' ? 1500 : 2500,
+            largestContentfulPaint: formFactor === 'desktop' ? 2500 : 4000,
+            cumulativeLayoutShift: 0.1,
+            totalBlockingTime: formFactor === 'desktop' ? 150 : 300,
+            coreWebVitals: {
+              lcp: formFactor === 'desktop' ? 2500 : 4000,
+              fid: 100,
+              cls: 0.1
+            }
+          },
+          fontAudits: {
+            fontDisplay: { score: 0.7, description: 'Estimated (Lighthouse unavailable)' },
+            preloadFonts: { score: 0.6, description: 'Estimated (Lighthouse unavailable)' }
+          },
+          accessibility: fallbackScores.accessibility,
+          bestPractices: fallbackScores.bestPractices,
+          seo: fallbackScores.seo,
+          opportunities: [],
+          diagnostics: [],
+          error: `Lighthouse analysis failed (${error.message})`,
+          failed: true,
+          estimated: useFallbackScoring
+        };
       }
     }
-    
-    // Success - reset circuit breaker
-    if (appConfig.lighthouse?.circuitBreaker?.enabled && this.failureCount > 0) {
-      logger.info('Lighthouse success - resetting circuit breaker');
-      this.failureCount = 0;
-      this.circuitOpen = false;
-    }
+
+    // Note: success path returns from inside the loop above
   }
 
   async _runLighthouse(url, options = {}, attempt = 1) {
@@ -236,62 +287,17 @@ class LighthouseAnalyzer {
     } catch (error) {
       // Clean up timeout if it exists
       if (timeoutId) clearTimeout(timeoutId);
-      
+
       logger.error('Lighthouse analysis error:', {
         message: error.message,
         stack: error.stack,
         url: url,
         formFactor: options.formFactor,
+        attempt,
       });
 
-      // Return a fallback result with error flag instead of throwing
-      // Use estimated scores based on error tolerance config
-      const formFactor = options.formFactor || 'desktop';
-      const useFallbackScoring = appConfig.lighthouse?.errorTolerance?.useFallbackScoring ?? true;
-
-      // Generate estimated scores instead of 0s when fallback is enabled
-      const fallbackScores = useFallbackScoring ? {
-        performance: formFactor === 'desktop' ? 75 : 60, // Desktop typically faster
-        accessibility: 85, // Reasonable default
-        bestPractices: 80, // Reasonable default
-        seo: 85, // Reasonable default
-      } : {
-        performance: 0,
-        accessibility: 0,
-        bestPractices: 0,
-        seo: 0,
-      };
-
-      logger.warn(`Returning ${useFallbackScoring ? 'estimated' : 'zero'} scores for ${formFactor} due to Lighthouse failure`);
-
-      return {
-        formFactor: formFactor,
-        score: fallbackScores.performance,
-        performance: fallbackScores.performance,
-        metrics: {
-          firstContentfulPaint: formFactor === 'desktop' ? 1500 : 2500,
-          largestContentfulPaint: formFactor === 'desktop' ? 2500 : 4000,
-          cumulativeLayoutShift: 0.1,
-          totalBlockingTime: formFactor === 'desktop' ? 150 : 300,
-          coreWebVitals: {
-            lcp: formFactor === 'desktop' ? 2500 : 4000,
-            fid: 100,
-            cls: 0.1
-          }
-        },
-        fontAudits: {
-          fontDisplay: { score: 0.7, description: 'Estimated (Lighthouse unavailable)' },
-          preloadFonts: { score: 0.6, description: 'Estimated (Lighthouse unavailable)' }
-        },
-        accessibility: fallbackScores.accessibility,
-        bestPractices: fallbackScores.bestPractices,
-        seo: fallbackScores.seo,
-        opportunities: [],
-        diagnostics: [],
-        error: `Lighthouse analysis failed (${error.message})`,
-        failed: true,
-        estimated: useFallbackScoring
-      };
+      // Throw so analyzeWithLighthouse retry loop can catch and retry
+      throw error;
     } finally {
       // CRITICAL: Always kill Chrome after EVERY run to prevent resource exhaustion
       await this.closeLighthouse();

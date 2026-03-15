@@ -57,49 +57,63 @@ async function ensureReportScreenshot({ url, reportId, requestId, filename = 'sc
     return null;
   }
 
-  try {
-    await browserPool.execute(async (browser) => {
-      const page = await browser.newPage();
-      try {
-        await setDeviceProfile(page, 'desktop');
-
-        // Wait for network to be mostly idle for better screenshots
-        // Use 'networkidle2' which waits until there are no more than 2 network connections for 500ms
-        await page.goto(url, { waitUntil: 'networkidle2', timeout: 20000 });
-
-        // Additional settle time for late styles/layout/images
-        await new Promise(r => setTimeout(r, 500));
-
-        await page.screenshot({
-          path: screenshotPath,
-          type: 'jpeg',
-          quality: 78,
-          fullPage: false,
-        });
-      } finally {
+  const maxAttempts = 2;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await browserPool.execute(async (browser) => {
+        const page = await browser.newPage();
         try {
-          await page.close();
-        } catch {
-          // ignore
-        }
-      }
-    });
+          await setDeviceProfile(page, 'desktop');
 
-    // Guard: sometimes puppeteer returns without writing (rare). Ensure file exists.
-    if (!fsSync.existsSync(screenshotPath)) {
+          // Wait for network to be mostly idle for better screenshots
+          // Use 'networkidle2' which waits until there are no more than 2 network connections for 500ms
+          await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+
+          // Additional settle time for late styles/layout/images
+          await new Promise(r => setTimeout(r, 500));
+
+          await page.screenshot({
+            path: screenshotPath,
+            type: 'jpeg',
+            quality: 78,
+            fullPage: false,
+          });
+        } finally {
+          try {
+            await page.close();
+          } catch {
+            // ignore
+          }
+        }
+      });
+
+      // Guard: sometimes puppeteer returns without writing (rare). Ensure file exists.
+      if (!fsSync.existsSync(screenshotPath)) {
+        if (attempt < maxAttempts) {
+          logger.warn('Screenshot file not written, retrying', { reportId, attempt });
+          await new Promise(r => setTimeout(r, 1000));
+          continue;
+        }
+        return null;
+      }
+
+      return `/reports/${encodeURIComponent(reportId)}/${encodeURIComponent(filename)}`;
+    } catch (e) {
+      logger.warn('Screenshot capture failed', {
+        reportId,
+        url,
+        requestId,
+        attempt,
+        error: e.message,
+      });
+      if (attempt < maxAttempts) {
+        await new Promise(r => setTimeout(r, 1000));
+        continue;
+      }
       return null;
     }
-
-    return `/reports/${encodeURIComponent(reportId)}/${encodeURIComponent(filename)}`;
-  } catch (e) {
-    logger.warn('Screenshot capture failed', {
-      reportId,
-      url,
-      requestId,
-      error: e.message,
-    });
-    return null;
   }
+  return null;
 }
 
 module.exports = {
