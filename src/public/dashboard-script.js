@@ -485,14 +485,17 @@ function displayDashboard(data) {
     ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
     : 0;
 
+  // Build URL param for deep-linking to analyzer pages
+  const urlParam = data.url ? `?url=${encodeURIComponent(data.url)}&auto_scan=true` : '';
+
   // Generate plain-English summary
   const summary = generatePlainEnglishSummary(overallScore, scores, data);
-  
+
   // Get top 3 issues ranked by impact
   const topIssues = getTop3Issues(data, scores);
   
   // Get the single most important next step
-  const nextStep = getNextStep(topIssues, scores);
+  const nextStep = getNextStep(topIssues, scores, data);
 
   // Extract domain from URL for display
   let displayDomain = data.url;
@@ -665,11 +668,11 @@ function displayDashboard(data) {
           <!-- Detailed Category Links -->
           <h4 style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">${t('dashboard.exploreByCategory', 'Explore by Category')}</h4>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-            ${createCategoryLink(t('dashboard.categories.performanceUx', 'Performance & UX'), t('dashboard.categories.performanceUxDesc', 'Speed, Core Web Vitals, Mobile'), '/performance-hub.html', scores.performance, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>')}
-            ${createCategoryLink(t('dashboard.categories.seoIndexing', 'SEO & Indexing'), t('dashboard.categories.seoIndexingDesc', 'Metadata, Structure, Crawlability'), '/seo-analyzer.html', scores.seo, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>')}
-            ${createCategoryLink(t('dashboard.categories.accessibility', 'Accessibility'), t('dashboard.categories.accessibilityDesc', 'WCAG Compliance, Violations'), '/accessibility-analyzer.html', scores.accessibility, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M10.5 8.5h3M8 13h8M8 13v7M16 13v7"/></svg>')}
-            ${createCategoryLink(t('dashboard.categories.securityTrust', 'Security & Trust'), t('dashboard.categories.securityTrustDesc', 'SSL, Headers, Vulnerabilities'), '/security-analyzer.html', scores.security, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>')}
-            ${createCategoryLink(t('dashboard.categories.fonts', 'Fonts'), t('dashboard.categories.fontsDesc', 'Font Loading, Optimization'), '/enhanced-fonts.html', scores.font, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>')}
+            ${createCategoryLink(t('dashboard.categories.performanceUx', 'Performance & UX'), t('dashboard.categories.performanceUxDesc', 'Speed, Core Web Vitals, Mobile'), '/performance-hub.html' + urlParam, scores.performance, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>')}
+            ${createCategoryLink(t('dashboard.categories.seoIndexing', 'SEO & Indexing'), t('dashboard.categories.seoIndexingDesc', 'Metadata, Structure, Crawlability'), '/seo-analyzer.html' + urlParam, scores.seo, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>')}
+            ${createCategoryLink(t('dashboard.categories.accessibility', 'Accessibility'), t('dashboard.categories.accessibilityDesc', 'WCAG Compliance, Violations'), '/accessibility-analyzer.html' + urlParam, scores.accessibility, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M10.5 8.5h3M8 13h8M8 13v7M16 13v7"/></svg>')}
+            ${createCategoryLink(t('dashboard.categories.securityTrust', 'Security & Trust'), t('dashboard.categories.securityTrustDesc', 'SSL, Headers, Vulnerabilities'), '/security-analyzer.html' + urlParam, scores.security, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>')}
+            ${createCategoryLink(t('dashboard.categories.fonts', 'Fonts'), t('dashboard.categories.fontsDesc', 'Font Loading, Optimization'), '/enhanced-fonts.html' + urlParam, scores.font, '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>')}
           </div>
           
           <!-- Export Options -->
@@ -1037,6 +1040,7 @@ function generatePlainEnglishSummary(overallScore, scores, data) {
  */
 function generateInsights(scores, data) {
   const insights = [];
+  const urlParam = data && data.url ? `?url=${encodeURIComponent(data.url)}&auto_scan=true` : '';
 
   const perfScore = getAvgScore(scores.performance);
   const seoScore = getAvgScore(scores.seo);
@@ -1057,7 +1061,7 @@ function generateInsights(scores, data) {
     }
   } else {
     const runPerfScan = t('dashboard.results.insights.runPerformanceScan', 'Run performance scan');
-    insights.push(`⚡ <strong>${t('dashboard.results.insights.performanceNotScanned', 'Performance not scanned yet')}</strong> — <a href="/performance-hub.html" style="color: var(--accent-primary);">${runPerfScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
+    insights.push(`⚡ <strong>${t('dashboard.results.insights.performanceNotScanned', 'Performance not scanned yet')}</strong> — <a href="/performance-hub.html${urlParam}" style="color: var(--accent-primary);">${runPerfScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
   }
 
   // SEO insights
@@ -1071,7 +1075,7 @@ function generateInsights(scores, data) {
     }
   } else {
     const runSeoScan = t('dashboard.results.insights.runSeoScan', 'Run SEO scan');
-    insights.push(`🔍 <strong>${t('dashboard.results.insights.seoNotScanned', 'SEO not scanned yet')}</strong> — <a href="/seo-analyzer.html" style="color: var(--accent-primary);">${runSeoScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
+    insights.push(`🔍 <strong>${t('dashboard.results.insights.seoNotScanned', 'SEO not scanned yet')}</strong> — <a href="/seo-analyzer.html${urlParam}" style="color: var(--accent-primary);">${runSeoScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
   }
 
   // Accessibility insights
@@ -1085,7 +1089,7 @@ function generateInsights(scores, data) {
     }
   } else {
     const runA11yScan = t('dashboard.results.insights.runAccessibilityScan', 'Run accessibility scan');
-    insights.push(`♿ <strong>${t('dashboard.results.insights.accessibilityNotScanned', 'Accessibility not scanned yet')}</strong> — <a href="/accessibility-analyzer.html" style="color: var(--accent-primary);">${runA11yScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
+    insights.push(`♿ <strong>${t('dashboard.results.insights.accessibilityNotScanned', 'Accessibility not scanned yet')}</strong> — <a href="/accessibility-analyzer.html${urlParam}" style="color: var(--accent-primary);">${runA11yScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
   }
 
   // Security insights
@@ -1099,7 +1103,7 @@ function generateInsights(scores, data) {
     }
   } else {
     const runSecScan = t('dashboard.results.insights.runSecurityScan', 'Run security scan');
-    insights.push(`🔒 <strong>${t('dashboard.results.insights.securityNotScanned', 'Security not scanned yet')}</strong> — <a href="/security-analyzer.html" style="color: var(--accent-primary);">${runSecScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
+    insights.push(`🔒 <strong>${t('dashboard.results.insights.securityNotScanned', 'Security not scanned yet')}</strong> — <a href="/security-analyzer.html${urlParam}" style="color: var(--accent-primary);">${runSecScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
   }
 
   // Font insights
@@ -1113,7 +1117,7 @@ function generateInsights(scores, data) {
     }
   } else {
     const runFontScan = t('dashboard.results.insights.runFontScan', 'Run font scan');
-    insights.push(`🔤 <strong>${t('dashboard.results.insights.fontsNotScanned', 'Fonts not scanned yet')}</strong> — <a href="/enhanced-fonts.html" style="color: var(--accent-primary);">${runFontScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
+    insights.push(`🔤 <strong>${t('dashboard.results.insights.fontsNotScanned', 'Fonts not scanned yet')}</strong> — <a href="/enhanced-fonts.html${urlParam}" style="color: var(--accent-primary);">${runFontScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
   }
 
   // Limit to 5 insights
@@ -1136,6 +1140,7 @@ function getAvgScore(scores) {
  */
 function getTop3Issues(data, scores) {
   const issues = [];
+  const urlParam = data.url ? `?url=${encodeURIComponent(data.url)}&auto_scan=true` : '';
 
   // Performance issues
   const perfScore = getAvgScore(scores.performance);
@@ -1147,7 +1152,7 @@ function getTop3Issues(data, scores) {
         : t('dashboard.results.fixes.slowPageLoadDesc', 'Page could load faster, impacting user experience.'),
       severity: perfScore < 50 ? 'critical' : 'warning',
       score: perfScore,
-      link: '/performance-hub.html'
+      link: '/performance-hub.html' + urlParam
     });
   }
 
@@ -1161,7 +1166,7 @@ function getTop3Issues(data, scores) {
         : t('dashboard.results.fixes.seoIssuesDesc', 'Improve metadata to rank higher in search results.'),
       severity: seoScore < 50 ? 'critical' : 'warning',
       score: seoScore,
-      link: '/seo-analyzer.html'
+      link: '/seo-analyzer.html' + urlParam
     });
   }
 
@@ -1175,7 +1180,7 @@ function getTop3Issues(data, scores) {
         : t('dashboard.results.fixes.accessibilityIssuesDesc', 'Some users may have difficulty using your site.'),
       severity: a11yScore < 50 ? 'critical' : 'warning',
       score: a11yScore,
-      link: '/accessibility-analyzer.html'
+      link: '/accessibility-analyzer.html' + urlParam
     });
   }
 
@@ -1189,7 +1194,7 @@ function getTop3Issues(data, scores) {
         : t('dashboard.results.fixes.securityVulnerabilitiesDesc', 'Security headers could be strengthened.'),
       severity: secScore < 50 ? 'critical' : 'warning',
       score: secScore,
-      link: '/security-analyzer.html'
+      link: '/security-analyzer.html' + urlParam
     });
   }
 
@@ -1201,7 +1206,7 @@ function getTop3Issues(data, scores) {
       impact: t('dashboard.results.fixes.fontOptimizationDesc', 'Fonts may cause layout shifts or slow rendering.'),
       severity: 'warning',
       score: fontScore,
-      link: '/enhanced-fonts.html'
+      link: '/enhanced-fonts.html' + urlParam
     });
   }
 
@@ -1216,11 +1221,12 @@ function getTop3Issues(data, scores) {
 /**
  * Get the single most important next step
  */
-function getNextStep(topIssues, scores) {
+function getNextStep(topIssues, scores, data) {
+  const urlParam = data && data.url ? `?url=${encodeURIComponent(data.url)}&auto_scan=true` : '';
   if (topIssues.length === 0) {
     return {
       text: t('dashboard.results.nextStep.siteGreatShape', 'Your site is in great shape! Consider running a competitive analysis to find optimization opportunities.'),
-      link: '/competitive-analysis.html'
+      link: '/competitive-analysis.html' + urlParam
     };
   }
 
@@ -1440,6 +1446,7 @@ function generatePrioritizedIssues(data) {
  */
 function generateImprovementGuide(data) {
   const improvements = [];
+  const urlParam = data && data.url ? `?url=${encodeURIComponent(data.url)}&auto_scan=true` : '';
 
   // SEO improvements (threshold: 75 for "Good")
   if (data.seo?.results?.score?.overall < 75) {
@@ -1453,7 +1460,7 @@ function generateImprovementGuide(data) {
         t('dashboard.guide.seoAction3', 'Use proper heading hierarchy (H1 → H2 → H3)'),
         t('dashboard.guide.seoAction4', 'Add alt text to all images')
       ],
-      link: '/seo-analyzer.html'
+      link: '/seo-analyzer.html' + urlParam
     });
   }
 
@@ -1469,7 +1476,7 @@ function generateImprovementGuide(data) {
         t('dashboard.guide.performanceAction3', 'Minify CSS, JavaScript, and HTML'),
         t('dashboard.guide.performanceAction4', 'Implement lazy loading for images below the fold')
       ],
-      link: '/performance-hub.html'
+      link: '/performance-hub.html' + urlParam
     });
   }
 
@@ -1485,7 +1492,7 @@ function generateImprovementGuide(data) {
         t('dashboard.guide.accessibilityAction3', 'Make all functionality keyboard accessible'),
         t('dashboard.guide.accessibilityAction4', 'Add skip-to-content links for screen readers')
       ],
-      link: '/accessibility-analyzer.html'
+      link: '/accessibility-analyzer.html' + urlParam
     });
   }
 
@@ -1501,7 +1508,7 @@ function generateImprovementGuide(data) {
         t('dashboard.guide.securityAction3', 'Set X-Content-Type-Options: nosniff'),
         t('dashboard.guide.securityAction4', 'Configure X-Frame-Options to prevent clickjacking')
       ],
-      link: '/security-analyzer.html'
+      link: '/security-analyzer.html' + urlParam
     });
   }
 
@@ -1517,7 +1524,7 @@ function generateImprovementGuide(data) {
         t('dashboard.guide.typographyAction3', 'Limit font families to 2-3 maximum'),
         t('dashboard.guide.typographyAction4', 'Subset fonts to include only needed characters')
       ],
-      link: '/enhanced-fonts.html'
+      link: '/enhanced-fonts.html' + urlParam
     });
   }
 
