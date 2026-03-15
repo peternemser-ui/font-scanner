@@ -638,7 +638,7 @@ async function displayReputationResults(data) {
   if (data.recommendations && data.recommendations.length > 0) {
     sections.push({
       id: 'report-recommendations',
-      title: t('reports.common.reportRecommendations', 'Recommendations'),
+      title: t('reports.common.reportRecommendations', 'Recommendations & Fixes'),
       isPro: true,
       locked: !isUnlocked,
       context: 'ip-reputation',
@@ -974,7 +974,7 @@ function createRecommendationsSection(recommendations, options = {}) {
 
   return ReportAccordion.createSection({
     id: 'report-recommendations',
-    title: t('reports.common.reportAndRecommendations', 'Recommendations'),
+    title: t('reports.common.reportAndRecommendations', 'Recommendations & Fixes'),
     isPro: true,
     locked: locked,
     context: context,

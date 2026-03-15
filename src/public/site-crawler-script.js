@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         id: 'report-recommendations',
-        title: t('reports.crawler.fixCodeRecommendations', 'Recommendations'),
+        title: t('reports.crawler.fixCodeRecommendations', 'Recommendations & Fixes'),
         scoreTextRight: data.results?.pagesDiscovered || pages.length,
         isPro: true,
         locked: !isUnlocked,

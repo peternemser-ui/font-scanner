@@ -777,7 +777,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Report and Recommendations Section (Free)
     sections.push({
       id: 'report-recommendations',
-      title: '📋 ' + t('reports.common.reportAndRecommendations', 'Recommendations'),
+      title: '📋 ' + t('reports.common.reportAndRecommendations', 'Recommendations & Fixes'),
       isPro: false,
       locked: false,
       context: 'tag-intelligence',

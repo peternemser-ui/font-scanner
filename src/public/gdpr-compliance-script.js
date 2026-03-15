@@ -647,7 +647,7 @@ async function displayResults(data) {
     // Report and Recommendations Accordion (Pro) - follows SEO pattern
     (data.recommendations && data.recommendations.length > 0) ? {
       id: 'report-recommendations',
-      title: t('reports.gdpr.sections.fixCodeRecommendations', 'Recommendations'),
+      title: t('reports.gdpr.sections.fixCodeRecommendations', 'Recommendations & Fixes'),
       isPro: true,
       locked: !isUnlocked,
       context: 'gdpr-compliance',

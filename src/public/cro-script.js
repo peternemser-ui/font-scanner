@@ -502,7 +502,7 @@ async function displayResults(data) {
     },
     {
       id: 'report-recommendations',
-      title: t('reports.cro.sections.fixCodeRecommendations', 'Recommendations'),
+      title: t('reports.cro.sections.fixCodeRecommendations', 'Recommendations & Fixes'),
       scoreTextRight: data.score ? `${data.score}/100` : null,
       isPro: true,
       locked: !isUnlocked,

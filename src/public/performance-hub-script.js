@@ -1821,7 +1821,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ReportAccordion.createSection({ id: 'lh-performance-metrics', title: t('reports.performance.performanceMetrics', 'Performance Metrics'), scoreTextRight: formatScoreText(overallPerf), contentHTML: performanceMetricsContent }),
       ReportAccordion.createSection({ id: 'lh-cwv', title: t('reports.performance.coreWebVitals', 'Core Web Vitals'), scoreTextRight: formatScoreText(overallPerf), contentHTML: cwvContent }),
       ReportAccordion.createSection({ id: 'lh-resources', title: t('reports.performance.resourceBreakdown', 'Resource Breakdown'), scoreTextRight: null, contentHTML: resourcesContent }),
-      ReportAccordion.createSection({ id: 'lh-fixes', title: t('reports.common.fixCodeRecommendations', 'Recommendations'), scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent }),
+      ReportAccordion.createSection({ id: 'lh-fixes', title: t('reports.common.fixCodeRecommendations', 'Recommendations & Fixes'), scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent }),
       ReportAccordion.createSection({ id: 'ai-strategic-analysis', title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'), isPro: true, locked: proLocked, context: 'performance-lighthouse', reportId: reportId, scoreTextRight: null, contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>' })
     ].join('');
 
@@ -2879,7 +2879,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreTextRight: formatScoreText(inpScore),
         contentHTML: renderCWVDetailSection('INP', desktop, mobile)
       }),
-      ReportAccordion.createSection({ id: 'cwv-fixes', title: t('reports.common.fixCodeRecommendations', 'Recommendations'), scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent }),
+      ReportAccordion.createSection({ id: 'cwv-fixes', title: t('reports.common.fixCodeRecommendations', 'Recommendations & Fixes'), scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent }),
       ReportAccordion.createSection({ id: 'ai-strategic-analysis', title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'), isPro: true, locked: proLocked, context: 'core-web-vitals', reportId: reportId, scoreTextRight: null, contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>' })
     ].join('');
 

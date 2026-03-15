@@ -602,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ...diagnosticsContent,
       ReportAccordion.createSection({
         id: 'report-recommendations',
-        title: t('reports.common.reportRecommendations', 'Recommendations'),
+        title: t('reports.common.reportRecommendations', 'Recommendations & Fixes'),
         scoreTextRight: null,
         isPro: true,
         locked: proLocked,

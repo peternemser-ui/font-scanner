@@ -1125,7 +1125,7 @@ async function displayAccessibilityResults(resultData) {
     }),
     ReportAccordion.createSection({
       id: 'report-recommendations',
-      title: t('reports.common.fixCodeRecommendations', 'Recommendations'),
+      title: t('reports.common.fixCodeRecommendations', 'Recommendations & Fixes'),
       isPro: true,
       locked: !userHasPro(),
       context: 'accessibility',

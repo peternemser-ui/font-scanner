@@ -372,7 +372,7 @@ function displaySEOResults(results) {
       },
       {
         id: 'report-recommendations',
-        title: getSeoSectionTitle('fixCode', 'Recommendations'),
+        title: getSeoSectionTitle('fixCode', 'Recommendations & Fixes'),
         scoreTextRight: results.score?.overall,
         isPro: true,
         locked: !isUnlocked,

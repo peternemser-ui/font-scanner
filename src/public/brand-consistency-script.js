@@ -629,7 +629,7 @@ async function displayResults(data) {
     // When unlocked: show full content without blur
     {
       id: 'report-recommendations',
-      title: t('brandConsistency.reportAndRecommendations', 'Recommendations'),
+      title: t('brandConsistency.reportAndRecommendations', 'Recommendations & Fixes'),
       isPro: true,
       locked: !isUnlocked,
       context: 'brand-consistency',

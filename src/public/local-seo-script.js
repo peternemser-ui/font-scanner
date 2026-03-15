@@ -368,7 +368,7 @@ async function displayResults(data) {
       },
       {
         id: 'report-recommendations',
-        title: t('reports.common.reportAndRecommendations', 'Recommendations'),
+        title: t('reports.common.reportAndRecommendations', 'Recommendations & Fixes'),
         scoreTextRight: null,
         contentHTML: renderRecommendationsContent(data.recommendations),
         isPro: true,
@@ -453,7 +453,7 @@ async function displayResults(data) {
       }),
       ReportAccordion.createSection({
         id: 'report-recommendations',
-        title: t('reports.common.reportRecommendations', 'Recommendations'),
+        title: t('reports.common.reportRecommendations', 'Recommendations & Fixes'),
         isPro: true,
         locked: !isUnlocked,
         context: 'local-seo',

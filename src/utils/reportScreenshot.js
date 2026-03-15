@@ -6,7 +6,7 @@ const config = require('../config');
 const browserPool = require('./browserPool');
 const { createLogger } = require('./logger');
 const { isSafeReportId } = require('./reportId');
-const { setDeviceProfile } = require('./browserHelpers');
+const { setDeviceProfile, detectBotProtection } = require('./browserHelpers');
 
 const logger = createLogger('ReportScreenshot');
 
@@ -60,14 +60,23 @@ async function ensureReportScreenshot({ url, reportId, requestId, filename = 'sc
   const maxAttempts = 2;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      await browserPool.execute(async (browser) => {
+      const result = await browserPool.execute(async (browser) => {
         const page = await browser.newPage();
         try {
           await setDeviceProfile(page, 'desktop');
 
-          // Wait for network to be mostly idle for better screenshots
-          // Use 'networkidle2' which waits until there are no more than 2 network connections for 500ms
-          await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+          // Navigate and capture HTTP response for status checking
+          const response = await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+
+          // Check if the page is blocked (403, captcha, bot protection)
+          // Skip screenshot — a placeholder is better than a misleading error page
+          const botCheck = await detectBotProtection(page, response);
+          if (botCheck.isDetected) {
+            logger.warn('Screenshot skipped — site blocked headless browser', {
+              reportId, url, reason: botCheck.reason,
+            });
+            return { blocked: true };
+          }
 
           // Additional settle time for late styles/layout/images
           await new Promise(r => setTimeout(r, 500));
@@ -78,6 +87,8 @@ async function ensureReportScreenshot({ url, reportId, requestId, filename = 'sc
             quality: 78,
             fullPage: false,
           });
+
+          return { blocked: false };
         } finally {
           try {
             await page.close();
@@ -86,6 +97,11 @@ async function ensureReportScreenshot({ url, reportId, requestId, filename = 'sc
           }
         }
       });
+
+      // If site actively blocked us, don't retry — it won't change
+      if (result && result.blocked) {
+        return null;
+      }
 
       // Guard: sometimes puppeteer returns without writing (rare). Ensure file exists.
       if (!fsSync.existsSync(screenshotPath)) {

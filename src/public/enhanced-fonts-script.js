@@ -557,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         id: 'report-recommendations',
-        title: t('reports.common.reportRecommendations', 'Recommendations'),
+        title: t('reports.common.reportRecommendations', 'Recommendations & Fixes'),
         scoreTextRight: totalIssues > 0 ? `${totalIssues} ${totalIssues > 1 ? t('reports.common.issues', 'issues') : t('reports.common.issue', 'issue')}` : null,
         isPro: true,
         locked: !isUnlocked,

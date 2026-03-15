@@ -896,7 +896,7 @@ function displayPerformanceResults(results) {
   createAccordionSection(container, 'resource-analysis', t('reports.performance.resourceAnalysis', 'Resource Analysis'), () => renderResourceAnalysisContent(results.resources), results.resources?.score || 0);
   createAccordionSection(container, 'network-performance', t('reports.performance.networkPerformance', 'Network Performance'), () => renderNetworkPerformanceContent(results.network), results.network?.score || 0);
   createAccordionSection(container, 'caching-optimization', t('reports.performance.cachingOptimization', 'Caching & Optimization'), () => renderCachingOptimizationContent(results.caching), results.caching?.score || 0);
-  createAccordionSection(container, 'report-recommendations', t('reports.common.reportRecommendations', 'Recommendations'), () => renderRecommendationsContent(results.recommendations), null, { isPro: true }); // Pro gated
+  createAccordionSection(container, 'report-recommendations', t('reports.common.reportRecommendations', 'Recommendations & Fixes'), () => renderRecommendationsContent(results.recommendations), null, { isPro: true }); // Pro gated
   createAccordionSection(container, 'ai-strategic-analysis', t('reports.ai.strategicTitle', 'AI Strategic Analysis'), () => {
     const html = '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>';
     setTimeout(() => {
@@ -2334,7 +2334,7 @@ function displayCrossBrowserResults(results) {
   createAccordionSection(container, 'cwv-comparison', t('reports.performance.coreWebVitalsComparison', 'Core Web Vitals Comparison'),
     () => renderCWVComparisonContent(results.browsers), null);
 
-  createAccordionSection(container, 'cross-browser-recommendations', t('reports.performance.crossDeviceRecommendations', 'Cross-Device Recommendations'),
+  createAccordionSection(container, 'cross-browser-recommendations', t('reports.performance.crossDeviceRecommendations', 'Cross-Device Recommendations & Fixes'),
     () => renderCrossBrowserRecommendationsContent(results.recommendations, results.comparison), null);
 }
 

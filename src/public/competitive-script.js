@@ -976,7 +976,7 @@ function buildCompetitiveSections(data, reportId) {
   if (data.recommendations && data.recommendations.length > 0) {
     sections.push({
       id: 'report-recommendations',
-      title: t('reports.common.reportAndRecommendations', 'Recommendations'),
+      title: t('reports.common.reportAndRecommendations', 'Recommendations & Fixes'),
       expanded: true,
       isPro: true,
       locked: !isUnlocked,

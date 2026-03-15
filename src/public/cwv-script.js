@@ -1158,7 +1158,7 @@ async function displayResults(data) {
     `, null)}
 
     <!-- Recommendations (Pro) -->
-    ${recommendations.length > 0 ? createCWVAccordionSection('report-recommendations', '📋', t('reports.cwv.recommendationsTitle', 'Recommendations') + ' <span class="pro-pill">PRO</span>',
+    ${recommendations.length > 0 ? createCWVAccordionSection('report-recommendations', '📋', t('reports.cwv.recommendationsTitle', 'Recommendations & Fixes') + ' <span class="pro-pill">PRO</span>',
       hasProAccess ? `
       <div style="display: grid; gap: 1rem; padding: 1rem 0;">
         ${recommendations.map(rec => `

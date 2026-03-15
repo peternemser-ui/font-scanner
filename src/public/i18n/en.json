@@ -447,7 +447,7 @@
     "visualHierarchy": "Visual Hierarchy",
     "brandAssets": "Brand Assets",
     "crossPageConsistency": "Cross-Page Consistency",
-    "reportAndRecommendations": "Recommendations",
+    "reportAndRecommendations": "Recommendations & Fixes",
     "harmonyType": "Harmony Type",
     "uniqueHues": "Unique Hues",
     "neutralRatio": "Neutral Ratio",
@@ -3620,9 +3620,9 @@
       "recommendations": "Recommendations",
       "issuesFound": "Issues Found",
       "checksPassed": "Checks Passed",
-      "reportRecommendations": "Recommendations",
-      "fixCode": "Recommendations",
-      "fixCodeRecommendations": "Recommendations",
+      "reportRecommendations": "Recommendations & Fixes",
+      "fixCode": "Recommendations & Fixes",
+      "fixCodeRecommendations": "Recommendations & Fixes",
       "takeAction": "Take Action",
       "copy": "Copy",
       "copied": "Copied!",
@@ -3706,7 +3706,7 @@
       "learnMore": "Learn More",
       "remove": "Remove",
       "screenshotOf": "Screenshot of {{url}}",
-      "reportAndRecommendations": "Recommendations",
+      "reportAndRecommendations": "Recommendations & Fixes",
       "reportAndRecommendationsCount": "Recommendations ({{count}})",
       "errorInvalidData": "Error: Invalid response data structure",
       "errorMissingScores": "Error: Missing scores data",
@@ -5161,7 +5161,7 @@
       "averagePerformanceScore": "Average Performance Score",
       "deviceByDeviceAnalysis": "Device-by-Device Analysis",
       "coreWebVitalsComparison": "Core Web Vitals Comparison",
-      "crossDeviceRecommendations": "Cross-Device Recommendations",
+      "crossDeviceRecommendations": "Cross-Device Recommendations & Fixes",
       "unknownError": "Unknown error",
       "additionalMetrics": "Additional Metrics",
       "speedIndex": "Speed Index (SI)",
@@ -5456,7 +5456,7 @@
       "additionalMetricsTitle": "Additional Performance Metrics",
       "siName": "Speed Index",
       "ttiName": "Time to Interactive",
-      "recommendationsTitle": "Recommendations",
+      "recommendationsTitle": "Recommendations & Fixes",
       "detailedRecommendationsBlur": "Detailed performance recommendations...",
       "criticalOptimizationsBlur": "Critical optimization suggestions...",
       "recommendationsAvailable": "{{count}} Recommendation(s) Available",
@@ -6851,7 +6851,7 @@
         "formOptimization": "Form Optimization",
         "trustSignals": "Trust Signals",
         "mobileExperience": "Mobile Experience",
-        "fixCodeRecommendations": "Recommendations"
+        "fixCodeRecommendations": "Recommendations & Fixes"
       },
       "summary": {
         "overallCro": "Overall CRO",
@@ -7184,7 +7184,7 @@
         "legalPages": "Legal Pages",
         "dataSubjectRights": "Data Subject Rights",
         "complianceRisks": "Compliance Risks",
-        "fixCodeRecommendations": "Recommendations"
+        "fixCodeRecommendations": "Recommendations & Fixes"
       },
       "loader": {
         "scanInProgress": "GDPR compliance scan in progress...",
@@ -8178,7 +8178,7 @@
       "visualSitemap": "Visual Sitemap",
       "discoveredPages": "Discovered Pages & Export",
       "discoveredPagesExport": "Discovered Pages & Export ({{count}})",
-      "fixCodeRecommendations": "Recommendations",
+      "fixCodeRecommendations": "Recommendations & Fixes",
       "noSitemapToPrint": "No sitemap to print",
       "allowPopupsToPrint": "Please allow popups to print the sitemap",
       "noSitemapToDownload": "No sitemap to download",
@@ -8651,7 +8651,7 @@
           },
           "typeBreakdown": "Cookie Type Breakdown"
         },
-        "recommendationsTitle": "Recommendations",
+        "recommendationsTitle": "Recommendations & Fixes",
         "recommendationsNoneTitle": "Well-Managed Tag Infrastructure",
         "recommendationsNoneBody": "Your tag implementation follows best practices. Continue monitoring for new issues.",
         "waterfall": {
