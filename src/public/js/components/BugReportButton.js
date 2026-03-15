@@ -36,6 +36,7 @@
    * Build the inline trigger HTML
    */
   function renderTrigger() {
+    const isLight = document.body.classList.contains('white-theme');
     return `
       <div class="bug-report-trigger" style="
         text-align: center;
@@ -44,20 +45,22 @@
       ">
         <button class="bug-report-trigger__btn" data-bug-report-open
           style="
-            background: none;
-            border: none;
-            color: var(--r-text-muted, var(--text-muted, #6B7280));
+            background: ${isLight ? '#DC2626' : '#0D9488'};
+            border: 1px solid ${isLight ? '#B91C1C' : '#0F766E'};
+            color: #fff;
             font-size: 0.8125rem;
+            font-weight: 600;
             cursor: pointer;
-            padding: 0.375rem 0.75rem;
+            padding: 0.5rem 1.25rem;
             border-radius: 6px;
-            transition: color 0.15s, background 0.15s;
+            transition: opacity 0.15s, transform 0.15s;
             display: inline-flex;
             align-items: center;
-            gap: 0.375rem;
+            gap: 0.5rem;
+            box-shadow: 0 1px 3px ${isLight ? 'rgba(220,38,38,0.3)' : 'rgba(13,148,136,0.3)'};
           "
-          onmouseover="this.style.color='var(--r-text, var(--text-primary, #E5E7EB))';this.style.background='var(--r-surface-2, rgba(255,255,255,0.05))'"
-          onmouseout="this.style.color='var(--r-text-muted, var(--text-muted, #6B7280))';this.style.background='none'"
+          onmouseover="this.style.opacity='0.85';this.style.transform='translateY(-1px)'"
+          onmouseout="this.style.opacity='1';this.style.transform='none'"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
