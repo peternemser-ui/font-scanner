@@ -1376,7 +1376,7 @@ function renderMetaTagsContent(metaTags) {
     [
       descriptionLabel,
       metaTags.description
-        ? `${metaTags.description.substring(0, 50)}...`
+        ? `${String(metaTags.description).substring(0, 50)}...`
         : `✗ ${missing}`,
       `${metaTags.descriptionLength || 0} ${charsUnit}`,
       metaTags.descriptionLength >= 150 && metaTags.descriptionLength <= 160
@@ -3844,7 +3844,7 @@ window.exportSeoExcel = async function() {
     const xlChars = t('seo.export.excel.chars', 'chars');
     const basicTags = [
       [t('seo.export.excel.metaTags.rows.title', 'Title'), meta.title || '', meta.title ? xlPresent : xlMissing, `${meta.titleLength || 0} ${xlChars}`],
-      [t('seo.export.excel.metaTags.rows.description', 'Description'), (meta.description || '').substring(0, 80) + '...', meta.description ? xlPresent : xlMissing, `${meta.descriptionLength || 0} ${xlChars}`],
+      [t('seo.export.excel.metaTags.rows.description', 'Description'), String(meta.description || '').substring(0, 80) + '...', meta.description ? xlPresent : xlMissing, `${meta.descriptionLength || 0} ${xlChars}`],
       [t('seo.export.excel.metaTags.rows.canonicalUrl', 'Canonical URL'), meta.canonical || '', meta.canonical ? xlPresent : xlMissing, ''],
       [t('seo.export.excel.metaTags.rows.robots', 'Robots'), meta.robots || xlNotSet, meta.robots ? xlPresent : xlDefault, ''],
       [t('seo.export.excel.metaTags.rows.viewport', 'Viewport'), meta.viewport ? xlConfigured : '', meta.viewport ? xlPresent : xlMissing, ''],

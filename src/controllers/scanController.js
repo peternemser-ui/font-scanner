@@ -830,10 +830,10 @@ const performSEOScan = asyncHandler(async (req, res) => {
     // Normalize lightweight metaTags to match the flat format expected by the frontend
     const lm = lightweightResults.metaTags || {};
     lightweightResults.metaTags = {
-      title: lm.title?.content || lm.title || null,
-      titleLength: lm.title?.length || (typeof lm.title === 'string' ? lm.title.length : 0),
-      description: lm.description?.content || lm.description || null,
-      descriptionLength: lm.description?.length || (typeof lm.description === 'string' ? lm.description.length : 0),
+      title: lm.title?.content ?? (typeof lm.title === 'string' ? lm.title : null),
+      titleLength: lm.title?.length ?? (typeof lm.title === 'string' ? lm.title.length : 0),
+      description: lm.description?.content ?? (typeof lm.description === 'string' ? lm.description : null),
+      descriptionLength: lm.description?.length ?? (typeof lm.description === 'string' ? lm.description.length : 0),
       keywords: lm.keywords || null,
       robots: lm.robots || null,
       canonical: lm.canonical || null,
