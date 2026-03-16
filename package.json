@@ -79,7 +79,7 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
-    "@types/node": "^20.5.0",
+    "@types/node": "^20.19.37",
     "autocannon": "^8.0.0",
     "chai": "^4.5.0",
     "eslint": "^8.47.0",
