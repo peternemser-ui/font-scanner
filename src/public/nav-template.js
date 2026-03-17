@@ -353,9 +353,11 @@ function renderBreadcrumb(activePageId) {
  * @param {string} subtitle - Analyzer name (e.g., "SEO Analysis")
  * @returns {string} HTML string for the unified header
  */
+// Cache-bust logo assets so updates show immediately without relying on hard refresh.
+const LOGO_ASSET_VERSION = '20260112.2';
+
 function renderUnifiedHeader(appTitle, subtitle) {
-  // Cache-bust logo assets so updates show immediately without relying on hard refresh.
-  const logoAssetVersion = '20260112.2';
+  const logoAssetVersion = LOGO_ASSET_VERSION;
 
   return `
     <div class="unified-header">
@@ -782,6 +784,29 @@ function renderNavigation(activePageId) {
     const categoryI18nKey = categoryI18nMap[cat] || '';
     const categoryI18nAttr = categoryI18nKey ? `data-i18n="${categoryI18nKey}"` : '';
 
+    // For Help category on mobile, append footer links + language + theme toggle
+    let extraHelpItems = '';
+    if (cat === 'help') {
+      extraHelpItems = `
+        <a href="/privacy.html" class="nav-link"><span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span> <span data-i18n="footerBar.privacy">${navT('footerBar.privacy', 'Privacy')}</span></a>
+        <a href="/terms.html" class="nav-link"><span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span> <span data-i18n="footerBar.terms">${navT('footerBar.terms', 'Terms')}</span></a>
+        <a href="/refunds.html" class="nav-link"><span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span> <span data-i18n="footerBar.refunds">${navT('footerBar.refunds', 'Refunds')}</span></a>
+        <a href="#" class="nav-link" onclick="event.preventDefault();window.CookieConsent&&window.CookieConsent.showBanner()"><span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg></span> <span data-i18n="footerBar.cookieSettings">${navT('footerBar.cookieSettings', 'Cookie Settings')}</span></a>
+        <a href="mailto:support@sitemechanic.io" class="nav-link"><span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span> <span>${navT('footerBar.contact', 'Contact Support')}</span></a>
+        <div id="mobileHelpLanguageContainer" class="mobile-nav-help-language"></div>
+        <div class="mobile-nav-help-theme">
+          <button
+            id="mobileThemeToggleHelp"
+            class="nav-link mobile-nav-help-theme-btn"
+            type="button"
+          >
+            <span class="nav-icon"><svg class="theme-icon" width="20" height="20" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4"/><path d="M50 5 A45 45 0 0 0 50 95 Z" fill="currentColor"/></svg></span>
+            <span data-i18n="nav.toggleTheme">${navT('nav.toggleTheme', 'Toggle Theme')}</span>
+          </button>
+        </div>
+      `;
+    }
+
     return `
       <div class="mobile-nav-section" data-category="${cat}">
         <button class="mobile-nav-section-header" aria-expanded="false" aria-controls="mobile-section-${cat}">
@@ -793,6 +818,7 @@ function renderNavigation(activePageId) {
         </button>
         <div class="mobile-nav-section-items" id="mobile-section-${cat}">
           ${items.map(item => generateNavLink(item)).join('')}
+          ${extraHelpItems}
         </div>
       </div>
     `;
@@ -829,26 +855,22 @@ function renderNavigation(activePageId) {
     <!-- Mobile Navigation Overlay -->
     <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
     <nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Mobile navigation">
+      <div class="mobile-nav-logo">
+        <a href="/" aria-label="${navT('nav.aria.home', 'Site Mechanic Home')}">
+          <img src="/assets/logo-dark.svg?v=${LOGO_ASSET_VERSION}" alt="Site Mechanic" class="mobile-nav-logo-dark" height="32" />
+          <img src="/assets/logo-light.svg?v=${LOGO_ASSET_VERSION}" alt="Site Mechanic" class="mobile-nav-logo-light" height="32" />
+        </a>
+      </div>
       <div class="mobile-nav-header">
         <span class="mobile-nav-title" data-i18n="nav.menu">Menu</span>
         <button class="mobile-nav-close" id="mobileNavClose" aria-label="${navT('nav.aria.closeMenu', 'Close navigation menu')}">
           ✕
         </button>
       </div>
+      <div id="mobileAuthContainer" class="mobile-nav-auth"></div>
       <div class="mobile-nav-items">
         ${mobileNavItems}
         ${mobileMoreItems}
-      </div>
-      <div class="mobile-nav-footer">
-        <button 
-          id="mobileThemeToggle" 
-          class="mobile-theme-toggle" 
-          aria-label="${navT('nav.aria.toggleTheme', 'Toggle dark/light theme')}"
-          aria-pressed="false"
-        >
-          <span class="theme-icon">🌓</span>
-          <span class="theme-label" data-i18n="nav.toggleTheme">${navT('nav.toggleTheme', 'Toggle Theme')}</span>
-        </button>
       </div>
     </nav>
   `;
@@ -1474,6 +1496,8 @@ function initializeHeaderLanguageSwitcher() {
   const tryInit = () => {
     if (window.languageSwitcher && !window.languageSwitcher.initialized) {
       window.languageSwitcher.init('#languageSelectorContainer');
+      // Also initialize mobile language switcher
+      initializeMobileLanguageSwitcher();
       return true;
     }
     return false;
@@ -1494,6 +1518,74 @@ function initializeHeaderLanguageSwitcher() {
       }
     }
   }, 100);
+}
+
+/**
+ * Initialize a language switcher clone in the mobile menu
+ */
+function initializeMobileLanguageSwitcher() {
+  const mobileContainer = document.getElementById('mobileHelpLanguageContainer');
+  if (!mobileContainer || !window.languageSwitcher) return;
+
+  // Build a simple language list for mobile
+  const locales = [
+    { code: 'en', label: 'English', flag: 'gb' },
+    { code: 'es', label: 'Español', flag: 'es' },
+    { code: 'fr', label: 'Français', flag: 'fr' },
+    { code: 'de', label: 'Deutsch', flag: 'de' },
+    { code: 'pt', label: 'Português', flag: 'pt' },
+    { code: 'ja', label: '日本語', flag: 'jp' },
+    { code: 'zh', label: '中文', flag: 'cn' },
+    { code: 'ru', label: 'Русский', flag: 'ru' }
+  ];
+
+  const currentLang = localStorage.getItem('sm_language') || 'en';
+  const currentLocale = locales.find(l => l.code === currentLang) || locales[0];
+
+  mobileContainer.innerHTML = `
+    <button class="mobile-nav-lang-trigger" id="mobileLangTrigger" type="button" aria-expanded="false">
+      <img src="https://flagcdn.com/24x18/${currentLocale.flag}.png" width="24" height="18" alt="" aria-hidden="true" class="mobile-nav-lang-flag" />
+      <span>${currentLocale.label}</span>
+      <svg class="mobile-nav-section-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+    </button>
+    <div class="mobile-nav-lang-list" id="mobileLangList" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
+      ${locales.map(l => `
+        <button class="mobile-nav-lang-item${l.code === currentLang ? ' active' : ''}" data-lang="${l.code}">
+          <img src="https://flagcdn.com/24x18/${l.flag}.png" width="24" height="18" alt="" aria-hidden="true" />
+          <span>${l.label}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+
+  const trigger = document.getElementById('mobileLangTrigger');
+  const list = document.getElementById('mobileLangList');
+  if (trigger && list) {
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+      if (isExpanded) {
+        list.style.maxHeight = '0';
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.querySelector('.mobile-nav-section-arrow').style.transform = 'rotate(0deg)';
+      } else {
+        list.style.maxHeight = list.scrollHeight + 'px';
+        trigger.setAttribute('aria-expanded', 'true');
+        trigger.querySelector('.mobile-nav-section-arrow').style.transform = 'rotate(90deg)';
+      }
+    });
+
+    list.querySelectorAll('.mobile-nav-lang-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lang = btn.dataset.lang;
+        localStorage.setItem('sm_language', lang);
+        window.location.reload();
+      });
+    });
+  }
 }
 
 function getProManagerForNav() {
@@ -1967,6 +2059,46 @@ async function initializeAuthLinks() {
       langContainer.parentNode.insertBefore(reportsBtn, langContainer);
     }
 
+    // Populate mobile menu auth section (appears above nav items)
+    const mobileAuth = document.getElementById('mobileAuthContainer');
+    if (mobileAuth) {
+      const mobileItems = [];
+      mobileItems.push(`
+        <a href="/account.html" class="mobile-nav-auth-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span>${navT('userMenu.reportsAccount', 'Reports & Account')}</span>
+        </a>
+      `);
+      if (isAdmin) {
+        mobileItems.push(`
+          <a href="/admin.html" class="mobile-nav-auth-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z"/>
+            </svg>
+            <span>${navT('userMenu.admin', 'Admin Dashboard')}</span>
+          </a>
+        `);
+      }
+      mobileItems.push(`
+        <button class="mobile-nav-auth-item" id="mobileLogoutBtn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          <span>${navT('userMenu.logout', 'Logout')}</span>
+        </button>
+      `);
+      mobileAuth.innerHTML = mobileItems.join('');
+
+      const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+      if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', async () => {
+          await proMgr.logout();
+        });
+      }
+    }
+
   } else {
     // Not authenticated - show login link only
     container.innerHTML = `
@@ -1974,6 +2106,19 @@ async function initializeAuthLinks() {
         <a href="/auth.html" class="auth-link auth-login">${navT('userMenu.login', 'Login')}</a>
       </div>
     `;
+
+    // Show login in mobile menu too (appears above nav items)
+    const mobileAuth = document.getElementById('mobileAuthContainer');
+    if (mobileAuth) {
+      mobileAuth.innerHTML = `
+        <a href="/auth.html" class="mobile-nav-auth-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          <span>${navT('userMenu.login', 'Login')}</span>
+        </a>
+      `;
+    }
   }
 }
 
@@ -2019,7 +2164,7 @@ function ensureGlobalFooter() {
         <div class="footer-content">
           <span class="footer-text">
             ${copyrightText.replace('Peter Freedman', '<strong>Peter Freedman</strong>')} |
-            <span style="opacity: 0.7;">v${data.build}</span> |
+            <span style="opacity: 0.7;">v${data.version || data.build || '?'}</span> |
             <a href="/faq.html" class="site-footer-link">${faqLabel}</a> |
             <a href="/privacy.html" class="site-footer-link">${privacyLabel}</a> |
             <a href="/terms.html" class="site-footer-link">${termsLabel}</a> |
@@ -2196,6 +2341,7 @@ function initializeThemeControls() {
   const headerThemeToggle = document.getElementById('headerThemeToggle');
   const footerThemeToggle = document.getElementById('themeToggle');
   const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+  const mobileHelpThemeToggle = document.getElementById('mobileThemeToggleHelp');
   const body = document.body;
   const html = document.documentElement;
   // Print mode: force print theme for PDF export
@@ -2293,6 +2439,11 @@ function initializeThemeControls() {
   // Mobile theme toggle
   if (mobileThemeToggle) {
     mobileThemeToggle.addEventListener('click', toggleTheme);
+  }
+
+  // Mobile Help section theme toggle
+  if (mobileHelpThemeToggle) {
+    mobileHelpThemeToggle.addEventListener('click', toggleTheme);
   }
 }
 
