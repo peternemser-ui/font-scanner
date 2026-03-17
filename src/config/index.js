@@ -32,15 +32,15 @@ const config = {
   rateLimit: {
     // Global rate limit (all endpoints)
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10), // 1 minute
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10), // 100 per minute
+    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '400', 10), // 400 per minute
 
     // Scan endpoint rate limit (more restrictive - resource intensive)
     scanWindowMs: parseInt(process.env.SCAN_RATE_LIMIT_WINDOW_MS || '60000', 10), // 1 minute
-    scanMaxRequests: parseInt(process.env.SCAN_RATE_LIMIT_MAX_REQUESTS || '20', 10), // 20 per minute
+    scanMaxRequests: parseInt(process.env.SCAN_RATE_LIMIT_MAX_REQUESTS || '80', 10), // 80 per minute
 
     // Download endpoint rate limit
     downloadWindowMs: parseInt(process.env.DOWNLOAD_RATE_LIMIT_WINDOW_MS || '60000', 10), // 1 minute
-    downloadMaxRequests: parseInt(process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS || '50', 10), // 50 per minute
+    downloadMaxRequests: parseInt(process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS || '200', 10), // 200 per minute
 
     // Contact form endpoint rate limit (anti-spam)
     contactWindowMs: parseInt(process.env.CONTACT_RATE_LIMIT_WINDOW_MS || '3600000', 10), // 1 hour
