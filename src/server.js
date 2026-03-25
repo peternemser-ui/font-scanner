@@ -348,8 +348,12 @@ app.use(
     xFrameOptions: { action: 'sameorigin' },
   })
 );
-// Abuse filter — hard IP-based limit to block DoS/spam (applies to ALL requests)
-app.use(abuseFilter);
+// Abuse filter — hard IP-based limit to block DoS/spam (skip static assets)
+const STATIC_ASSET_RE_ABUSE = /\.(js|css|svg|png|jpg|jpeg|gif|ico|woff2?|ttf|eot|map|json|webp|avif)(\?.*)?$/i;
+app.use((req, res, next) => {
+  if (STATIC_ASSET_RE_ABUSE.test(req.path)) return next();
+  return abuseFilter(req, res, next);
+});
 
 // Rate limiting — tiered global limiter for API and page requests (skip static assets)
 const STATIC_ASSET_RE = /\.(js|css|svg|png|jpg|jpeg|gif|ico|woff2?|ttf|eot|map|json|webp|avif)(\?.*)?$/i;
