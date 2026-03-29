@@ -48,6 +48,7 @@ class BrowserPool {
           try {
             const browser = await puppeteer.launch({
               headless: 'new', // Use new headless mode
+              executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
               args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',

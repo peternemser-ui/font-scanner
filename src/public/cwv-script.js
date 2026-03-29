@@ -807,7 +807,9 @@ function showCWVError(errorOrMessage, inputUrl, loader) {
 
   // Classify the error
   let titleKey = 'analysisFailed';
+  let titleFallback = 'Analysis Failed';
   let subtitleKey = 'analysisFailedSubtitle';
+  let subtitleFallback = 'We couldn\'t complete the analysis for {{domain}}. Please check the URL and try again.';
   let failedStep = 'unknown';
   let chips = null;
   let category = 'generic';
@@ -817,7 +819,9 @@ function showCWVError(errorOrMessage, inputUrl, loader) {
       errorLower.includes('redirect')) {
     category = 'redirect';
     titleKey = 'redirectFailed';
+    titleFallback = 'Redirect Failed';
     subtitleKey = 'redirectFailedSubtitle';
+    subtitleFallback = 'The site redirected too many times or the redirect destination couldn\'t be reached.';
     failedStep = 'http';
     chips = { dns: 'ok', tls: 'ok', http: 'fail' };
   } else if (errorLower.includes('notfound') || errorLower.includes('enotfound') ||
@@ -825,41 +829,51 @@ function showCWVError(errorOrMessage, inputUrl, loader) {
       errorLower.includes('err_name_not_resolved')) {
     category = 'dns';
     titleKey = 'cantReach';
+    titleFallback = 'Can\'t Reach {{domain}}';
     subtitleKey = 'subtitle';
+    subtitleFallback = 'DNS could not resolve this domain. Check the spelling and try again.';
     failedStep = 'dns';
     chips = { dns: 'fail', tls: 'unknown', http: 'unknown' };
   } else if (errorLower.includes('network') || errorLower.includes('connection') ||
       errorLower.includes('econnrefused') || errorLower.includes('econnreset')) {
     category = 'connection';
     titleKey = 'connectionFailed';
+    titleFallback = 'Connection Failed';
     subtitleKey = 'connectionSubtitle';
+    subtitleFallback = 'Could not establish a connection to {{domain}}. The server may be down.';
     failedStep = 'tcp';
     chips = { dns: 'ok', tls: 'unknown', http: 'fail' };
   } else if (errorLower.includes('timeout') || errorLower.includes('timed out') ||
       errorLower.includes('too long')) {
     category = 'timeout';
     titleKey = 'timedOut';
+    titleFallback = 'Request Timed Out';
     subtitleKey = 'timedOutSubtitle';
+    subtitleFallback = '{{domain}} took too long to respond. The server may be slow or overloaded.';
     failedStep = 'http';
     chips = { dns: 'ok', tls: 'ok', http: 'fail' };
   } else if (errorLower.includes('bot') || errorLower.includes('cloudflare') ||
       errorLower.includes('captcha') || errorLower.includes('blocked')) {
     category = 'blocked';
     titleKey = 'accessBlocked';
+    titleFallback = 'Access Blocked';
     subtitleKey = 'accessBlockedSubtitle';
+    subtitleFallback = '{{domain}} uses bot protection that prevented our scanner from accessing the page.';
     failedStep = 'http';
     chips = { dns: 'ok', tls: 'ok', http: 'fail' };
   } else if (errorLower.includes('ssl') || errorLower.includes('certificate') ||
       errorLower.includes('cert')) {
     category = 'ssl';
     titleKey = 'certIssue';
+    titleFallback = 'SSL Certificate Issue';
     subtitleKey = 'certIssueSubtitle';
+    subtitleFallback = '{{domain}} has an invalid or expired SSL certificate.';
     failedStep = 'tls';
     chips = { dns: 'ok', tls: 'fail', http: 'unknown' };
   }
 
-  const title = t(`scanError.${titleKey}`, titleKey, { domain });
-  const subtitle = t(`scanError.${subtitleKey}`, subtitleKey, { domain });
+  const title = t(`scanError.${titleKey}`, titleFallback, { domain });
+  const subtitle = t(`scanError.${subtitleKey}`, subtitleFallback, { domain });
   const reasonText = message.slice(0, 120);
   const ts = new Date().toISOString();
 

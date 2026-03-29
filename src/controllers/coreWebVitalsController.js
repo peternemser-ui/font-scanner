@@ -5,7 +5,7 @@
 
 const coreWebVitalsService = require('../services/coreWebVitalsService');
 const { createLogger } = require('../utils/logger');
-const { ValidationError, asyncHandler } = require('../utils/errorHandler');
+const { ValidationError, asyncHandler, parsePuppeteerError } = require('../utils/errorHandler');
 const { validateUrl, sanitizeUrl, normalizeUrl, testUrlReachability } = require('../utils/validators');
 const { isUrlSafe } = require('../utils/ssrfProtection');
 
@@ -53,7 +53,12 @@ exports.analyzeCoreWebVitals = asyncHandler(async (req, res) => {
   }
   
   // Perform Core Web Vitals analysis with the validated URL
-  const results = await coreWebVitalsService.analyzeCoreWebVitals(url);
+  let results;
+  try {
+    results = await coreWebVitalsService.analyzeCoreWebVitals(url);
+  } catch (err) {
+    throw parsePuppeteerError(err);
+  }
 
   // Attach report metadata (reportId, screenshotUrl, timestamps)
   const analyzerKey = getAnalyzerKeyOverride(req, 'core-web-vitals');

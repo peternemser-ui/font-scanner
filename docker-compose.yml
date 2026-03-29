@@ -105,6 +105,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    shm_size: '1gb'
     security_opt:
       - no-new-privileges:true
     cap_drop:
