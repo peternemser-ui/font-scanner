@@ -1,7 +1,7 @@
 /**
  * 🎨 DESIGN TOKENS
  * Unified design system for Site Mechanic
- * Version: 2.0 - Business-Ready Streamline
+ * Version: 2.0 — Design 2.0 usability refresh
  * 
  * Usage: Import this before styles.css in all HTML files
  * <link rel="stylesheet" href="/design-tokens.css">
@@ -50,7 +50,7 @@
   /* Text Colors (Dark Mode) */
   --color-text: #FFFFFF;
   --color-text-secondary: #CCCCCC;
-  --color-text-muted: #888888;
+  --color-text-muted: #9CA6B4;
   
   /* ========================================
      BACKGROUNDS
@@ -444,7 +444,7 @@ html[data-theme="dark"],
   /* Text */
   --r-text: #F1F5F9;
   --r-text-muted: #94A3B8;
-  --r-text-faint: #64748B;
+  --r-text-faint: #8494AB;
 
   /* Severity Accents */
   --r-good: #22C55E;
@@ -489,7 +489,7 @@ html[data-theme="light"] {
   /* Text */
   --r-text: #111827;
   --r-text-muted: #6B7280;
-  --r-text-faint: #9CA3AF;
+  --r-text-faint: #64748B;
 
   /* Severity Accents */
   --r-good: #16A34A;
@@ -573,7 +573,7 @@ html[data-theme="print"] {
   --r-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   --r-text: #F1F5F9;
   --r-text-muted: #94A3B8;
-  --r-text-faint: #64748B;
+  --r-text-faint: #8494AB;
   --r-good: #22C55E;
   --r-warn: #F59E0B;
   --r-bad: #EF4444;
@@ -601,7 +601,7 @@ html[data-theme="print"] .report-scope {
   --r-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
   --r-text: #111827;
   --r-text-muted: #6B7280;
-  --r-text-faint: #9CA3AF;
+  --r-text-faint: #64748B;
   --r-good: #16A34A;
   --r-warn: #D97706;
   --r-bad: #DC2626;
@@ -627,7 +627,7 @@ html[data-theme="print"] .report-scope {
   --text-primary: #111827;
   --text-secondary: #4B5563;
   --text-tertiary: #6B7280;
-  --text-muted: #9CA3AF;
+  --text-muted: #64748B;
   --text-body: #374151;
   --text-heading: #111827;
   --text-label: #6B7280;

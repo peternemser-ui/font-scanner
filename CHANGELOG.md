@@ -5,6 +5,18 @@ All notable changes to Site Mechanic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Design 2.0] - 2026-07-09
+
+### Added
+- **Analyzer quick-switcher**: switch between analyzers directly from the scan-context bar
+- **Hosting analyzer in navigation**: hosting analyzer now surfaced in the main nav
+- **v2.0 footer badge**: subtle version pill in the homepage footer bar
+
+### Changed
+- **WCAG AA contrast fixes**: muted and faint text tokens adjusted to meet AA contrast ratios
+- **44px hamburger touch target**: mobile menu button enlarged to meet minimum touch target size
+- **Example chips start the scan immediately**: clicking an example chip fills the URL and runs the analysis in one step
+
 ## [Unreleased]
 
 ### Added

@@ -87,6 +87,9 @@
     "menu": "Menu",
     "toggleTheme": "Changer le thème",
     "freeBadge": "GRATUIT",
+    "scanContext": {
+      "runAnother": "Lancer une autre analyse:"
+    },
     "aria": {
       "toggleMenu": "Basculer le menu de navigation",
       "home": "Accueil Site Mechanic",

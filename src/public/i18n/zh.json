@@ -88,6 +88,9 @@
     "toggleTheme": "切换主题",
     "freeBadge": "免费",
     "cancel": "取消",
+    "scanContext": {
+      "runAnother": "运行其他检查:"
+    },
     "aria": {
       "toggleMenu": "切换导航菜单",
       "home": "Site Mechanic 首页",

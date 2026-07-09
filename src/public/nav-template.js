@@ -232,6 +232,14 @@ const ALL_DIAGNOSTICS = [
     tier: 'pro',
     description: 'Visual consistency and brand alignment'
   },
+  {
+    href: '/hosting-analyzer.html',
+    label: 'Hosting Guide',
+    id: 'hosting-analyzer',
+    category: 'technology',
+    tier: 'pro',
+    description: 'Hosting provider, infrastructure, and cost analysis'
+  },
 
 
   // --- H. COMPETITIVE INSIGHTS ---
@@ -523,6 +531,31 @@ function renderScanContextBar() {
     }
   }
 
+  // Quick-switcher: jump to another primary analyzer, carrying the scanned URL
+  const carryUrl = new URLSearchParams(window.location.search).get('url') || context.url || '';
+  const currentPath = window.location.pathname;
+  const quickSwitchTools = [
+    { id: 'dashboard', href: '/dashboard.html', i18nKey: 'nav.dashboard', label: 'Overview', match: ['dashboard'] },
+    { id: 'performance-hub', href: '/performance-hub.html', i18nKey: 'nav.performance', label: 'Speed', match: ['performance-hub', 'performance-analyzer', 'performance-snapshot', 'core-web-vitals'] },
+    { id: 'seo-analyzer', href: '/seo-analyzer.html', i18nKey: 'nav.seo', label: 'SEO', match: ['seo-analyzer'] },
+    { id: 'accessibility-analyzer', href: '/accessibility-analyzer.html', i18nKey: 'nav.accessibility', label: 'Accessibility', match: ['accessibility-analyzer'] },
+    { id: 'security-analyzer', href: '/security-analyzer.html', i18nKey: 'nav.security', label: 'Security', match: ['security-analyzer'] },
+    { id: 'competitive-analysis', href: '/competitive-analysis.html', i18nKey: 'nav.rankCompetition', label: 'Competitive', match: ['competitive-analysis'] }
+  ];
+  const quickSwitchLinks = quickSwitchTools.map(tool => {
+    const isActive = tool.match.some(m => currentPath.includes(m)) ||
+      (tool.id === 'dashboard' && (currentPath === '/' || currentPath.includes('index')));
+    const labelSpan = `<span data-i18n="${tool.i18nKey}">${navT(tool.i18nKey, tool.label)}</span>`;
+    if (isActive) {
+      return `<span class="scan-context-quick-link active" aria-current="page" aria-disabled="true">${labelSpan}</span>`;
+    }
+    let href = tool.href;
+    if (carryUrl && tool.id !== 'dashboard') {
+      href += `?url=${encodeURIComponent(carryUrl)}`;
+    }
+    return `<a href="${href}" class="scan-context-quick-link">${labelSpan}</a>`;
+  }).join('');
+
   bar.innerHTML = `
     <div class="scan-context-content">
       <div class="scan-context-info">
@@ -540,6 +573,10 @@ function renderScanContextBar() {
           <span data-i18n="dashboard.results.runNewScan">Run New Scan</span>
         </button>
       </div>
+    </div>
+    <div class="scan-context-quick">
+      <span class="scan-context-quick-label" data-i18n="nav.scanContext.runAnother">${navT('nav.scanContext.runAnother', 'Run another check:')}</span>
+      <div class="scan-context-quick-links">${quickSwitchLinks}</div>
     </div>
   `;
   bar.style.display = 'block';
@@ -638,6 +675,50 @@ function addScanContextStyles() {
       background: rgba(var(--accent-primary-rgb), 0.2);
       border-color: rgba(var(--accent-primary-rgb), 0.5);
     }
+    .scan-context-quick {
+      max-width: 1400px;
+      margin: 0.4rem auto 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .scan-context-quick-label {
+      color: #888;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+    .scan-context-quick-links {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+    .scan-context-quick-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-decoration: none;
+      color: #aaa;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.2s ease;
+    }
+    a.scan-context-quick-link:hover {
+      background: rgba(var(--accent-primary-rgb), 0.1);
+      border-color: rgba(var(--accent-primary-rgb), 0.4);
+      color: var(--accent-primary);
+    }
+    .scan-context-quick-link.active {
+      background: rgba(var(--accent-primary-rgb), 0.15);
+      border-color: rgba(var(--accent-primary-rgb), 0.4);
+      color: var(--accent-primary);
+      cursor: default;
+      pointer-events: none;
+    }
     @media (max-width: 600px) {
       .scan-context-content {
         flex-direction: column;
@@ -649,6 +730,13 @@ function addScanContextStyles() {
       .scan-context-btn {
         flex: 1;
         justify-content: center;
+      }
+      .scan-context-quick-links {
+        width: 100%;
+      }
+      .scan-context-quick-link {
+        min-height: 44px;
+        flex: 1 1 auto;
       }
     }
   `;
@@ -686,7 +774,8 @@ function renderNavigation(activePageId) {
     'geo-seo': 'nav.geoSeo',
     'brand-consistency': 'nav.brandAudit',
     'cro-analyzer': 'nav.croAnalysis',
-    'gdpr-compliance': 'nav.gdprCheck'
+    'gdpr-compliance': 'nav.gdprCheck',
+    'hosting-analyzer': 'nav.hostingGuide'
   };
 
   // Helper to generate nav link HTML
@@ -1002,6 +1091,10 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
       activePageId = 'gdpr-compliance';
       appTitle = 'SITE MECHANIC';
       subtitle = '> gdpr check / privacy compliance';
+    } else if (path.includes('hosting-analyzer')) {
+      activePageId = 'hosting-analyzer';
+      appTitle = 'SITE MECHANIC';
+      subtitle = '> hosting guide / infrastructure analysis';
     } else if (path === '/' || path.includes('index')) {
       activePageId = 'dashboard';
       appTitle = 'SITE MECHANIC';

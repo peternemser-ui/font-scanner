@@ -88,6 +88,9 @@
     "toggleTheme": "Переключить тему",
     "freeBadge": "БЕСПЛАТНО",
     "cancel": "Отмена",
+    "scanContext": {
+      "runAnother": "Запустить другую проверку:"
+    },
     "aria": {
       "toggleMenu": "Переключить меню навигации",
       "home": "Главная Site Mechanic",

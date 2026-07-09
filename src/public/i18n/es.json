@@ -88,6 +88,9 @@
     "toggleTheme": "Cambiar tema",
     "cancel": "Cancelar",
     "freeBadge": "GRATIS",
+    "scanContext": {
+      "runAnother": "Ejecutar otra comprobación:"
+    },
     "aria": {
       "toggleMenu": "Alternar menú de navegación",
       "home": "Inicio de Site Mechanic",

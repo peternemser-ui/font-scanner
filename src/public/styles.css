@@ -64,7 +64,7 @@ summary:focus-visible,
   max-width: 680px;
   margin: 0.5rem 0 0;
   color: var(--text-secondary, #64748b);
-  font-size: 0.925rem;
+  font-size: 1rem;
   line-height: 1.6;
   text-align: left;
 }
@@ -1024,12 +1024,12 @@ body.white-theme .app-logo-light {
   display: none; /* Hidden by default on desktop */
   flex-direction: column;
   justify-content: space-around;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 6px;
+  padding: 10px;
   z-index: 5001;
   transition: all 0.3s ease;
 }
@@ -1768,9 +1768,9 @@ body > header,
   }
 
   .hamburger-btn {
-    width: 32px;
-    height: 32px;
-    padding: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 11px;
   }
   
   .hamburger-line {
@@ -1817,9 +1817,9 @@ body > header,
 /* Extra small phones (iPhone SE, etc.) */
 @media (max-width: 375px) {
   .hamburger-btn {
-    width: 28px;
-    height: 28px;
-    padding: 4px;
+    width: 44px;
+    height: 44px;
+    padding: 12px;
   }
   
   .hamburger-line {

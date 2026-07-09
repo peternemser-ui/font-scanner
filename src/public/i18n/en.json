@@ -88,6 +88,9 @@
     "cancel": "Cancel",
     "toggleTheme": "Toggle Theme",
     "freeBadge": "FREE",
+    "scanContext": {
+      "runAnother": "Run another check:"
+    },
     "aria": {
       "toggleMenu": "Toggle navigation menu",
       "home": "Site Mechanic Home",

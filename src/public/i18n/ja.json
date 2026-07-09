@@ -88,6 +88,9 @@
     "cancel": "キャンセル",
     "toggleTheme": "テーマ切替",
     "freeBadge": "無料",
+    "scanContext": {
+      "runAnother": "別のチェックを実行:"
+    },
     "aria": {
       "toggleMenu": "ナビゲーションメニューの切替",
       "home": "Site Mechanic ホーム",

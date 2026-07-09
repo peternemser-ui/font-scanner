@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (urlInput) {
         urlInput.value = chip.dataset.url;
         urlInput.focus();
+        runComprehensiveAnalysis();
       }
     });
   });
@@ -215,7 +216,11 @@ async function runComprehensiveAnalysis() {
   const submitButton = document.getElementById('dashboardAnalyzeButton');
   const errorMessage = document.getElementById('errorMessage');
   const resultsContainer = document.getElementById('dashboardResults');
-  
+
+  if (submitButton && submitButton.disabled) {
+    return;
+  }
+
   const url = urlInput.value.trim();
   
   if (!url) {
@@ -335,26 +340,44 @@ async function runComprehensiveAnalysis() {
     // Helper: fetch + parse JSON. Returns the parsed body and attaches __ok flag.
     // Quota errors (429 + SCAN_QUOTA_EXCEEDED) are thrown so allSettled rejects them.
     // Other errors are returned as fulfilled with an error property for partial-result display.
-    async function fetchApi(endpoint, body) {
-      const r = await fetch(endpoint, {
-        method: 'POST',
-        headers: authHeaders,
-        credentials: 'include',
-        body: JSON.stringify(body)
-      });
-      const data = await r.json();
-      if (!r.ok) {
-        // Quota errors must be thrown so the quota check below can detect them
-        if (data.code === 'SCAN_QUOTA_EXCEEDED') {
-          const err = new Error(data.message || 'Scan quota exceeded');
-          err.data = data;
-          err.status = r.status;
-          throw err;
+    // Each request has a hard timeout so one slow endpoint can't pin the whole dashboard.
+    const REQUEST_TIMEOUT_MS = 75000;
+    async function fetchApi(endpoint, body, timeoutMs = REQUEST_TIMEOUT_MS) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const r = await fetch(endpoint, {
+          method: 'POST',
+          headers: authHeaders,
+          credentials: 'include',
+          body: JSON.stringify(body),
+          signal: controller.signal
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          // Quota errors must be thrown so the quota check below can detect them
+          if (data.code === 'SCAN_QUOTA_EXCEEDED') {
+            const err = new Error(data.message || 'Scan quota exceeded');
+            err.data = data;
+            err.status = r.status;
+            throw err;
+          }
+          // Other errors: return as data with error flag so dashboard shows partial results
+          return { error: data.message || data.error || 'Request failed', _status: r.status };
         }
-        // Other errors: return as data with error flag so dashboard shows partial results
-        return { error: data.message || data.error || 'Request failed', _status: r.status };
+        return data;
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          const timeoutErr = new Error(t('errors.analysisTimedOut', 'Analysis timed out. The website may be too slow or complex. Please try again.'));
+          timeoutErr.code = 'CLIENT_TIMEOUT';
+          timeoutErr.endpoint = endpoint;
+          timeoutErr.timeoutMs = timeoutMs;
+          throw timeoutErr;
+        }
+        throw err;
+      } finally {
+        clearTimeout(timer);
       }
-      return data;
     }
 
     // Parallel fetch - all requests start at the same time
