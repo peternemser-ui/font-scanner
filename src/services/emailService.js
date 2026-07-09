@@ -10,6 +10,21 @@ const logger = createLogger('EmailService');
 
 const I18N_DIR = path.join(__dirname, '../public/i18n');
 
+const LOGO_CID = 'sm-logo@sitemechanic.io';
+const LOGO_PATH = path.join(__dirname, '../public/assets/logo-red.png');
+
+/**
+ * Inline logo attachment referenced by cid: from the branded email header.
+ */
+function logoAttachment() {
+  return {
+    filename: 'sitemechanic-logo.png',
+    path: LOGO_PATH,
+    cid: LOGO_CID,
+    contentDisposition: 'inline'
+  };
+}
+
 /**
  * Build the branded email wrapper with red logo header.
  * All transactional emails should use this for consistent UX.
@@ -20,8 +35,10 @@ const I18N_DIR = path.join(__dirname, '../public/i18n');
  */
 function brandedEmailHtml({ body, fromName }) {
   const appUrl = process.env.APP_BASE_URL || process.env.BASE_URL || 'https://sitemechanic.io';
-  // Hosted PNG logo — email clients don't support SVG or data URIs
-  const logoUrl = `${appUrl}/assets/logo-red.png`;
+  // Logo is embedded as an inline CID attachment (see logoAttachment) so it
+  // renders even when clients block remote images. Every sendMail call that
+  // uses this wrapper must include logoAttachment() in its attachments.
+  const logoUrl = `cid:${LOGO_CID}`;
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -42,7 +59,7 @@ function brandedEmailHtml({ body, fromName }) {
           <!-- Logo header -->
           <tr>
             <td style="background-color:#F8FAFC;padding:28px 40px;text-align:center;border-radius:12px 12px 0 0;border-bottom:1px solid #e2e8f0;">
-              <img src="${logoUrl}" alt="Site Mechanic" width="180" style="display:block;margin:0 auto;max-width:180px;height:auto;" />
+              <img src="${logoUrl}" alt="Site Mechanic" width="180" style="display:block;margin:0 auto;max-width:180px;height:auto;font-size:20px;font-weight:700;color:#0F172A;letter-spacing:0.3px;" />
             </td>
           </tr>
           <!-- Body -->
@@ -147,7 +164,8 @@ async function sendPasswordResetEmail(toEmail, resetUrl, locale) {
     to: toEmail,
     subject,
     text: `${heading}\n\n${intro}\n\n${resetUrl}\n\n${expiry}\n\n${footerText}`,
-    html
+    html,
+    attachments: [logoAttachment()]
   });
 
   logger.info(`[Email] Password reset email sent to ${toEmail}`, { messageId: info.messageId });
@@ -199,7 +217,8 @@ async function sendTestEmail(toEmail) {
     to: toEmail,
     subject: 'Site Mechanic — SMTP Test',
     text: `SMTP Test\n\nIf you received this, your SMTP configuration is working correctly.\n\nSent at: ${sentAt}`,
-    html
+    html,
+    attachments: [logoAttachment()]
   });
 
   logger.info(`[Email] Test email sent to ${toEmail}`, { messageId: info.messageId });
@@ -391,17 +410,18 @@ async function sendReportPurchaseEmail({ toEmail, reportId, siteUrl, analyzerTyp
     subject,
     text: plainText,
     html,
+    attachments: [logoAttachment()],
   };
 
   // Attach PDF if available
   if (pdfBuffer) {
     const domain = (siteUrl || '').replace(/^https?:\/\//, '').split('/')[0] || 'report';
     const dateStr = new Date().toISOString().split('T')[0];
-    mailOptions.attachments = [{
+    mailOptions.attachments.push({
       filename: `${(analyzerType || 'report').replace(/[^a-z0-9-]/gi, '-')}-report-${domain}-${dateStr}.pdf`,
       content: pdfBuffer,
       contentType: 'application/pdf',
-    }];
+    });
   }
 
   const info = await transporter.sendMail(mailOptions);
@@ -632,7 +652,8 @@ async function sendWelcomeEmail(toEmail, locale) {
     to: toEmail,
     subject,
     text: `${heading}\n\n${intro}\n\n${appUrl}\n\n- ${feature1}: ${feature1Desc}\n- ${feature2}: ${feature2Desc}\n- ${feature3}: ${feature3Desc}`,
-    html
+    html,
+    attachments: [logoAttachment()]
   });
 
   logger.info(`[Email] Welcome email sent to ${toEmail}`, { messageId: info.messageId });
