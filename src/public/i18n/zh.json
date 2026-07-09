@@ -9581,35 +9581,86 @@
     "accessibility": "无障碍性"
   },
   "email": {
-    "reportPurchase": {
-      "subject": "您的{{type}}报告已准备就绪",
-      "heading": "您的{{type}}报告已准备就绪",
-      "intro": "您关于 {{site}} 的报告已生成，可以查看。",
-      "viewOnline": "在线查看报告",
-      "aiHeading": "AI战略评估",
-      "quickWinLabel": "快速改进",
-      "footer": "此邮件是因为您在 Site Mechanic 上购买了报告而发送的。",
-      "attachmentNote": "您的完整PDF报告已附在此邮件中。"
+    "common": {
+      "logoAlt": "Site Mechanic",
+      "copyright": "© {{year}} {{name}}。保留所有权利。",
+      "support": "支持",
+      "privacy": "隐私政策",
+      "terms": "服务条款",
+      "managePrefs": "管理邮件偏好"
     },
     "welcome": {
       "subject": "欢迎使用 Site Mechanic！",
+      "preheader": "您的账户已就绪 — 几秒钟内即可运行首次网站诊断。",
+      "kicker": "账户已就绪",
       "heading": "欢迎使用 Site Mechanic！",
       "intro": "您的账户已创建。您可以开始使用专业工具分析您的网站了。",
-      "cta": "开始使用",
+      "cta": "运行您的首次扫描",
       "featuresHeading": "您可以进行以下操作：",
       "feature1": "运行 SEO、性能和安全审计",
+      "feature1Desc": "使用 15+ 专业工具，在几秒钟内分析任何网站",
       "feature2": "获取基于 AI 的实用建议",
+      "feature2Desc": "AI 分析准确告诉您需要修复什么以及原因",
       "feature3": "导出详细的 PDF 报告",
+      "feature3Desc": "与客户和相关方分享带品牌的报告",
       "footer": "您收到此邮件是因为您在 Site Mechanic 上创建了账户。"
     },
     "passwordReset": {
       "subject": "重置您的 Site Mechanic 密码",
+      "preheader": "使用邮件中的链接设置新密码。链接将在 1 小时后过期。",
+      "kicker": "账户安全",
       "heading": "重置您的密码",
       "intro": "我们收到了重置您密码的请求。请点击下方按钮选择新密码。",
       "cta": "重置密码",
       "expiry": "此链接将在 1 小时后过期。",
       "fallback": "如果按钮无法使用，请将此链接复制并粘贴到浏览器中：",
       "footer": "如果您没有请求重置密码，可以忽略此邮件。您的密码将保持不变。"
+    },
+    "reportPurchase": {
+      "subject": "您的{{type}}报告已准备就绪",
+      "preheader": "您关于 {{site}} 的{{type}}报告已可查看。",
+      "kicker": "诊断完成",
+      "heading": "您的{{type}}报告已准备就绪",
+      "intro": "您关于 {{site}} 的报告已生成，可以查看。",
+      "fieldSite": "网站",
+      "fieldReport": "报告",
+      "fieldDate": "日期",
+      "siteFallback": "您的网站",
+      "filenameFallback": "report",
+      "viewOnline": "在线查看报告",
+      "attachmentNote": "您的完整PDF报告已附在此邮件中。",
+      "aiHeading": "AI战略评估",
+      "quickWinLabel": "快速改进",
+      "footer": "此邮件是因为您在 Site Mechanic 上购买了报告而发送的。"
+    },
+    "smtpTest": {
+      "subject": "Site Mechanic — SMTP 测试",
+      "preheader": "SMTP 连接已验证 — 您的邮件配置正常工作。",
+      "kicker": "系统诊断",
+      "heading": "SMTP 测试",
+      "intro": "如果您收到此邮件，说明您的 SMTP 配置工作正常。",
+      "verified": "连接已验证",
+      "sentAt": "发送时间："
+    },
+    "analyzer": {
+      "security": "安全",
+      "seo": "SEO",
+      "performance": "性能",
+      "accessibility": "无障碍",
+      "core-web-vitals": "核心网页指标",
+      "fonts": "字体与排版",
+      "tag-intelligence": "跟踪与分析",
+      "broken-links": "失效链接",
+      "mobile": "移动端测试",
+      "hosting": "主机托管",
+      "site-crawler": "网站爬虫",
+      "cro": "转化优化",
+      "brand-consistency": "品牌一致性",
+      "geo-seo": "GEO SEO",
+      "local-seo": "本地 SEO",
+      "gdpr": "GDPR 合规",
+      "ip-reputation": "IP 信誉",
+      "competitive": "竞争分析"
     }
   }
 }

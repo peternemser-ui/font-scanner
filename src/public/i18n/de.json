@@ -9581,35 +9581,86 @@
     "accessibility": "Barrierefreiheit"
   },
   "email": {
-    "reportPurchase": {
-      "subject": "Ihr {{type}}-Bericht ist fertig",
-      "heading": "Ihr {{type}}-Bericht ist fertig",
-      "intro": "Ihr Bericht für {{site}} wurde erstellt und ist bereit zur Ansicht.",
-      "viewOnline": "Bericht online ansehen",
-      "aiHeading": "KI-Strategiebewertung",
-      "quickWinLabel": "Schneller Gewinn",
-      "footer": "Diese E-Mail wurde gesendet, weil Sie einen Bericht bei Site Mechanic erworben haben.",
-      "attachmentNote": "Ihr vollständiger PDF-Bericht ist dieser E-Mail angehängt."
+    "common": {
+      "logoAlt": "Site Mechanic",
+      "copyright": "© {{year}} {{name}}. Alle Rechte vorbehalten.",
+      "support": "Support",
+      "privacy": "Datenschutzerklärung",
+      "terms": "Nutzungsbedingungen",
+      "managePrefs": "E-Mail-Einstellungen verwalten"
     },
     "welcome": {
       "subject": "Willkommen bei Site Mechanic!",
+      "preheader": "Ihr Konto ist bereit – führen Sie Ihre erste Website-Diagnose in Sekunden durch.",
+      "kicker": "Konto bereit",
       "heading": "Willkommen bei Site Mechanic!",
       "intro": "Ihr Konto wurde erstellt. Sie können jetzt Ihre Websites mit professionellen Tools analysieren.",
-      "cta": "Loslegen",
+      "cta": "Ersten Scan starten",
       "featuresHeading": "Das können Sie tun:",
       "feature1": "SEO-, Performance- und Sicherheitsaudits durchführen",
+      "feature1Desc": "Analysieren Sie jede Website in Sekunden mit über 15 professionellen Tools",
       "feature2": "Umsetzbare Empfehlungen mit KI-Erkenntnissen erhalten",
+      "feature2Desc": "Die KI-Analyse zeigt Ihnen genau, was Sie beheben müssen und warum",
       "feature3": "Detaillierte PDF-Berichte exportieren",
+      "feature3Desc": "Teilen Sie gebrandete Berichte mit Kunden und Stakeholdern",
       "footer": "Sie erhalten diese E-Mail, weil Sie ein Konto bei Site Mechanic erstellt haben."
     },
     "passwordReset": {
       "subject": "Setzen Sie Ihr Site Mechanic-Passwort zurück",
+      "preheader": "Verwenden Sie den enthaltenen Link, um ein neues Passwort zu wählen. Er läuft in 1 Stunde ab.",
+      "kicker": "Kontosicherheit",
       "heading": "Passwort zurücksetzen",
       "intro": "Wir haben eine Anfrage zum Zurücksetzen Ihres Passworts erhalten. Klicken Sie auf die Schaltfläche unten, um ein neues zu wählen.",
       "cta": "Passwort zurücksetzen",
       "expiry": "Dieser Link läuft in 1 Stunde ab.",
       "fallback": "Wenn die Schaltfläche nicht funktioniert, kopieren Sie diese URL und fügen Sie sie in Ihren Browser ein:",
       "footer": "Wenn Sie kein Zurücksetzen des Passworts angefordert haben, können Sie diese E-Mail ignorieren. Ihr Passwort bleibt unverändert."
+    },
+    "reportPurchase": {
+      "subject": "Ihr {{type}}-Bericht ist fertig",
+      "preheader": "Ihr {{type}}-Bericht für {{site}} ist bereit zur Ansicht.",
+      "kicker": "Diagnose abgeschlossen",
+      "heading": "Ihr {{type}}-Bericht ist fertig",
+      "intro": "Ihr Bericht für {{site}} wurde erstellt und ist bereit zur Ansicht.",
+      "fieldSite": "Website",
+      "fieldReport": "Bericht",
+      "fieldDate": "Datum",
+      "siteFallback": "Ihre Website",
+      "filenameFallback": "bericht",
+      "viewOnline": "Bericht online ansehen",
+      "attachmentNote": "Ihr vollständiger PDF-Bericht ist dieser E-Mail angehängt.",
+      "aiHeading": "KI-Strategiebewertung",
+      "quickWinLabel": "Schneller Gewinn",
+      "footer": "Diese E-Mail wurde gesendet, weil Sie einen Bericht bei Site Mechanic erworben haben."
+    },
+    "smtpTest": {
+      "subject": "Site Mechanic — SMTP-Test",
+      "preheader": "SMTP-Verbindung bestätigt – Ihre E-Mail-Konfiguration funktioniert.",
+      "kicker": "Systemdiagnose",
+      "heading": "SMTP-Test",
+      "intro": "Wenn Sie dies erhalten haben, funktioniert Ihre SMTP-Konfiguration korrekt.",
+      "verified": "Verbindung bestätigt",
+      "sentAt": "Gesendet am:"
+    },
+    "analyzer": {
+      "security": "Sicherheit",
+      "seo": "SEO",
+      "performance": "Performance",
+      "accessibility": "Barrierefreiheit",
+      "core-web-vitals": "Core Web Vitals",
+      "fonts": "Schriften & Typografie",
+      "tag-intelligence": "Tracking & Analytics",
+      "broken-links": "Defekte Links",
+      "mobile": "Mobiler Test",
+      "hosting": "Hosting",
+      "site-crawler": "Website-Crawler",
+      "cro": "Conversion-Optimierung",
+      "brand-consistency": "Markenkonsistenz",
+      "geo-seo": "GEO SEO",
+      "local-seo": "Lokales SEO",
+      "gdpr": "DSGVO-Konformität",
+      "ip-reputation": "IP-Reputation",
+      "competitive": "Wettbewerbsanalyse"
     }
   }
 }

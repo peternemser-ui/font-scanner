@@ -9585,35 +9585,86 @@
     "accessibility": "Acessibilidade"
   },
   "email": {
-    "reportPurchase": {
-      "subject": "Seu relatório de {{type}} está pronto",
-      "heading": "Seu relatório de {{type}} está pronto",
-      "intro": "Seu relatório para {{site}} foi gerado e está pronto para visualização.",
-      "viewOnline": "Ver relatório online",
-      "aiHeading": "Avaliação estratégica com IA",
-      "quickWinLabel": "Ganho rápido",
-      "footer": "Este e-mail foi enviado porque você comprou um relatório no Site Mechanic.",
-      "attachmentNote": "Seu relatório PDF completo está anexado a este e-mail."
+    "common": {
+      "logoAlt": "Site Mechanic",
+      "copyright": "© {{year}} {{name}}. Todos os direitos reservados.",
+      "support": "Suporte",
+      "privacy": "Política de Privacidade",
+      "terms": "Termos de Serviço",
+      "managePrefs": "Gerenciar preferências de e-mail"
     },
     "welcome": {
       "subject": "Bem-vindo ao Site Mechanic!",
+      "preheader": "Sua conta está pronta — execute seu primeiro diagnóstico de site em segundos.",
+      "kicker": "Conta pronta",
       "heading": "Bem-vindo ao Site Mechanic!",
       "intro": "Sua conta foi criada. Você está pronto para analisar seus sites com ferramentas profissionais.",
-      "cta": "Começar",
+      "cta": "Executar seu primeiro scan",
       "featuresHeading": "Veja o que você pode fazer:",
       "feature1": "Executar auditorias de SEO, desempenho e segurança",
+      "feature1Desc": "Analise qualquer site em segundos com mais de 15 ferramentas profissionais",
       "feature2": "Obter recomendações práticas com insights de IA",
+      "feature2Desc": "A análise com IA diz exatamente o que corrigir e por quê",
       "feature3": "Exportar relatórios detalhados em PDF",
+      "feature3Desc": "Compartilhe relatórios com sua marca com clientes e partes interessadas",
       "footer": "Você está recebendo este e-mail porque criou uma conta no Site Mechanic."
     },
     "passwordReset": {
       "subject": "Redefinir sua senha do Site Mechanic",
+      "preheader": "Use o link incluído para escolher uma nova senha. Ele expira em 1 hora.",
+      "kicker": "Segurança da conta",
       "heading": "Redefinir sua senha",
       "intro": "Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para escolher uma nova.",
       "cta": "Redefinir senha",
       "expiry": "Este link expira em 1 hora.",
       "fallback": "Se o botão não funcionar, copie e cole esta URL no seu navegador:",
       "footer": "Se você não solicitou a redefinição de senha, pode ignorar este e-mail. Sua senha permanecerá inalterada."
+    },
+    "reportPurchase": {
+      "subject": "Seu relatório de {{type}} está pronto",
+      "preheader": "Seu relatório de {{type}} para {{site}} está pronto para visualização.",
+      "kicker": "Diagnóstico concluído",
+      "heading": "Seu relatório de {{type}} está pronto",
+      "intro": "Seu relatório para {{site}} foi gerado e está pronto para visualização.",
+      "fieldSite": "Site",
+      "fieldReport": "Relatório",
+      "fieldDate": "Data",
+      "siteFallback": "seu site",
+      "filenameFallback": "relatorio",
+      "viewOnline": "Ver relatório online",
+      "attachmentNote": "Seu relatório PDF completo está anexado a este e-mail.",
+      "aiHeading": "Avaliação estratégica com IA",
+      "quickWinLabel": "Ganho rápido",
+      "footer": "Este e-mail foi enviado porque você comprou um relatório no Site Mechanic."
+    },
+    "smtpTest": {
+      "subject": "Site Mechanic — Teste SMTP",
+      "preheader": "Conexão SMTP verificada: sua configuração de e-mail está funcionando.",
+      "kicker": "Diagnóstico do sistema",
+      "heading": "Teste SMTP",
+      "intro": "Se você recebeu isto, sua configuração SMTP está funcionando corretamente.",
+      "verified": "Conexão verificada",
+      "sentAt": "Enviado em:"
+    },
+    "analyzer": {
+      "security": "Segurança",
+      "seo": "SEO",
+      "performance": "Desempenho",
+      "accessibility": "Acessibilidade",
+      "core-web-vitals": "Core Web Vitals",
+      "fonts": "Fontes e Tipografia",
+      "tag-intelligence": "Rastreamento e Análise",
+      "broken-links": "Links Quebrados",
+      "mobile": "Teste Mobile",
+      "hosting": "Hospedagem",
+      "site-crawler": "Rastreador de Sites",
+      "cro": "Otimização de Conversão",
+      "brand-consistency": "Consistência de Marca",
+      "geo-seo": "GEO SEO",
+      "local-seo": "SEO Local",
+      "gdpr": "Conformidade GDPR",
+      "ip-reputation": "Reputação de IP",
+      "competitive": "Análise Competitiva"
     }
   }
 }

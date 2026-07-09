@@ -9711,35 +9711,86 @@
     "accessibility": "Accessibility"
   },
   "email": {
-    "reportPurchase": {
-      "subject": "Your {{type}} Report is Ready",
-      "heading": "Your {{type}} Report is Ready",
-      "intro": "Your report for {{site}} has been generated and is ready to view.",
-      "viewOnline": "View Report Online",
-      "aiHeading": "AI Strategic Assessment",
-      "quickWinLabel": "Quick Win",
-      "footer": "This email was sent because you purchased a report on Site Mechanic.",
-      "attachmentNote": "Your full PDF report is attached to this email."
+    "common": {
+      "logoAlt": "Site Mechanic",
+      "copyright": "© {{year}} {{name}}. All rights reserved.",
+      "support": "Support",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "managePrefs": "Manage email preferences"
     },
     "welcome": {
       "subject": "Welcome to Site Mechanic!",
+      "preheader": "Your account is ready — run your first site diagnostic in seconds.",
+      "kicker": "Account ready",
       "heading": "Welcome to Site Mechanic!",
       "intro": "Your account has been created. You're ready to start analyzing your websites with professional-grade tools.",
-      "cta": "Get Started",
+      "cta": "Start Your First Scan",
       "featuresHeading": "Here's what you can do:",
       "feature1": "Run SEO, performance, and security audits",
+      "feature1Desc": "Analyze any website in seconds with 15+ professional tools",
       "feature2": "Get actionable recommendations with AI insights",
+      "feature2Desc": "AI-powered analysis tells you exactly what to fix and why",
       "feature3": "Export detailed PDF reports",
+      "feature3Desc": "Share branded reports with clients and stakeholders",
       "footer": "You're receiving this because you created an account on Site Mechanic."
     },
     "passwordReset": {
       "subject": "Reset your Site Mechanic password",
+      "preheader": "Use the link inside to choose a new password. It expires in 1 hour.",
+      "kicker": "Account security",
       "heading": "Reset Your Password",
       "intro": "We received a request to reset your password. Click the button below to choose a new one.",
       "cta": "Reset Password",
       "expiry": "This link expires in 1 hour.",
       "fallback": "If the button doesn't work, copy and paste this URL into your browser:",
       "footer": "If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged."
+    },
+    "reportPurchase": {
+      "subject": "Your {{type}} Report is Ready",
+      "preheader": "Your {{type}} report for {{site}} is ready to view.",
+      "kicker": "Diagnostic complete",
+      "heading": "Your {{type}} Report is Ready",
+      "intro": "Your report for {{site}} has been generated and is ready to view.",
+      "fieldSite": "Site",
+      "fieldReport": "Report",
+      "fieldDate": "Date",
+      "siteFallback": "your site",
+      "filenameFallback": "report",
+      "viewOnline": "View Report Online",
+      "attachmentNote": "Your full PDF report is attached to this email.",
+      "aiHeading": "AI Strategic Assessment",
+      "quickWinLabel": "Quick Win",
+      "footer": "This email was sent because you purchased a report on Site Mechanic."
+    },
+    "smtpTest": {
+      "subject": "Site Mechanic — SMTP Test",
+      "preheader": "SMTP connection verified — your email configuration is working.",
+      "kicker": "System diagnostics",
+      "heading": "SMTP Test",
+      "intro": "If you received this, your SMTP configuration is working correctly.",
+      "verified": "Connection verified",
+      "sentAt": "Sent at:"
+    },
+    "analyzer": {
+      "security": "Security",
+      "seo": "SEO",
+      "performance": "Performance",
+      "accessibility": "Accessibility",
+      "core-web-vitals": "Core Web Vitals",
+      "fonts": "Font & Typography",
+      "tag-intelligence": "Tag Intelligence",
+      "broken-links": "Broken Links",
+      "mobile": "Mobile",
+      "hosting": "Hosting",
+      "site-crawler": "Site Crawler",
+      "cro": "CRO",
+      "brand-consistency": "Brand Consistency",
+      "geo-seo": "Geo SEO",
+      "local-seo": "Local SEO",
+      "gdpr": "GDPR Compliance",
+      "ip-reputation": "IP Reputation",
+      "competitive": "Competitive Analysis"
     }
   },
   "bugReport": {

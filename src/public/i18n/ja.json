@@ -9647,35 +9647,86 @@
     "accessibility": "アクセシビリティ"
   },
   "email": {
-    "reportPurchase": {
-      "subject": "{{type}}レポートの準備ができました",
-      "heading": "{{type}}レポートの準備ができました",
-      "intro": "{{site}}のレポートが生成され、閲覧可能になりました。",
-      "viewOnline": "オンラインでレポートを見る",
-      "aiHeading": "AI戦略的評価",
-      "quickWinLabel": "クイックウィン",
-      "footer": "このメールは、Site Mechanicでレポートをご購入いただいたためお送りしています。",
-      "attachmentNote": "完全なPDFレポートがこのメールに添付されています。"
+    "common": {
+      "logoAlt": "Site Mechanic",
+      "copyright": "© {{year}} {{name}}. 無断転載を禁じます。",
+      "support": "サポート",
+      "privacy": "プライバシーポリシー",
+      "terms": "利用規約",
+      "managePrefs": "メール設定を管理"
     },
     "welcome": {
       "subject": "Site Mechanic へようこそ！",
+      "preheader": "アカウントの準備が整いました。数秒で最初のサイト診断を実行できます。",
+      "kicker": "アカウント準備完了",
       "heading": "Site Mechanic へようこそ！",
       "intro": "アカウントが作成されました。プロフェッショナルなツールでウェブサイトの分析を始めましょう。",
-      "cta": "始める",
+      "cta": "最初のスキャンを実行",
       "featuresHeading": "できること：",
       "feature1": "SEO、パフォーマンス、セキュリティの監査を実行",
+      "feature1Desc": "15以上のプロ仕様ツールで、あらゆるウェブサイトを数秒で分析",
       "feature2": "AIによる実践的な改善提案を取得",
+      "feature2Desc": "AI分析が、何をどう修正すべきかを的確に示します",
       "feature3": "詳細なPDFレポートをエクスポート",
+      "feature3Desc": "ブランド入りのレポートをクライアントや関係者と共有",
       "footer": "このメールは、Site Mechanic でアカウントを作成されたためお送りしています。"
     },
     "passwordReset": {
       "subject": "Site Mechanic パスワードのリセット",
+      "preheader": "メール内のリンクから新しいパスワードを設定してください。1時間で期限切れになります。",
+      "kicker": "アカウントセキュリティ",
       "heading": "パスワードをリセット",
       "intro": "パスワードのリセットリクエストを受け付けました。下のボタンをクリックして新しいパスワードを設定してください。",
       "cta": "パスワードをリセット",
       "expiry": "このリンクは1時間後に期限切れになります。",
       "fallback": "ボタンが機能しない場合は、このURLをブラウザにコピー＆ペーストしてください：",
       "footer": "パスワードのリセットをリクエストしていない場合は、このメールを無視してください。パスワードは変更されません。"
+    },
+    "reportPurchase": {
+      "subject": "{{type}}レポートの準備ができました",
+      "preheader": "{{site}}の{{type}}レポートが閲覧可能になりました。",
+      "kicker": "診断完了",
+      "heading": "{{type}}レポートの準備ができました",
+      "intro": "{{site}}のレポートが生成され、閲覧可能になりました。",
+      "fieldSite": "サイト",
+      "fieldReport": "レポート",
+      "fieldDate": "日付",
+      "siteFallback": "お客様のサイト",
+      "filenameFallback": "report",
+      "viewOnline": "オンラインでレポートを見る",
+      "attachmentNote": "完全なPDFレポートがこのメールに添付されています。",
+      "aiHeading": "AI戦略的評価",
+      "quickWinLabel": "クイックウィン",
+      "footer": "このメールは、Site Mechanicでレポートをご購入いただいたためお送りしています。"
+    },
+    "smtpTest": {
+      "subject": "Site Mechanic — SMTPテスト",
+      "preheader": "SMTP接続を確認しました。メール設定は正常に機能しています。",
+      "kicker": "システム診断",
+      "heading": "SMTPテスト",
+      "intro": "このメールが届いていれば、SMTP設定は正しく機能しています。",
+      "verified": "接続を確認しました",
+      "sentAt": "送信日時："
+    },
+    "analyzer": {
+      "security": "セキュリティ",
+      "seo": "SEO",
+      "performance": "パフォーマンス",
+      "accessibility": "アクセシビリティ",
+      "core-web-vitals": "コアウェブバイタル",
+      "fonts": "フォント＆タイポグラフィ",
+      "tag-intelligence": "トラッキングと分析",
+      "broken-links": "リンク切れ",
+      "mobile": "モバイルテスト",
+      "hosting": "ホスティング",
+      "site-crawler": "サイトクローラー",
+      "cro": "コンバージョン最適化",
+      "brand-consistency": "ブランド一貫性",
+      "geo-seo": "GEO SEO",
+      "local-seo": "ローカルSEO",
+      "gdpr": "GDPRコンプライアンス",
+      "ip-reputation": "IPレピュテーション",
+      "competitive": "競合分析"
     }
   }
 }

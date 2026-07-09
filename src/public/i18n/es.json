@@ -9585,35 +9585,86 @@
     "accessibility": "Accesibilidad"
   },
   "email": {
-    "reportPurchase": {
-      "subject": "Tu informe de {{type}} está listo",
-      "heading": "Tu informe de {{type}} está listo",
-      "intro": "Tu informe para {{site}} ha sido generado y está listo para ver.",
-      "viewOnline": "Ver informe en línea",
-      "aiHeading": "Evaluación estratégica con IA",
-      "quickWinLabel": "Mejora rápida",
-      "footer": "Este correo fue enviado porque compraste un informe en Site Mechanic.",
-      "attachmentNote": "Tu informe PDF completo está adjunto a este correo."
+    "common": {
+      "logoAlt": "Site Mechanic",
+      "copyright": "© {{year}} {{name}}. Todos los derechos reservados.",
+      "support": "Soporte",
+      "privacy": "Política de Privacidad",
+      "terms": "Términos del Servicio",
+      "managePrefs": "Gestionar preferencias de correo"
     },
     "welcome": {
       "subject": "Bienvenido a Site Mechanic",
+      "preheader": "Tu cuenta está lista: ejecuta tu primer diagnóstico de sitio en segundos.",
+      "kicker": "Cuenta lista",
       "heading": "Bienvenido a Site Mechanic",
       "intro": "Tu cuenta ha sido creada. Ya puedes comenzar a analizar tus sitios web con herramientas profesionales.",
-      "cta": "Comenzar",
+      "cta": "Ejecutar tu primer análisis",
       "featuresHeading": "Esto es lo que puedes hacer:",
       "feature1": "Ejecutar auditorías de SEO, rendimiento y seguridad",
+      "feature1Desc": "Analiza cualquier sitio web en segundos con más de 15 herramientas profesionales",
       "feature2": "Obtener recomendaciones prácticas con inteligencia artificial",
+      "feature2Desc": "El análisis con IA te dice exactamente qué corregir y por qué",
       "feature3": "Exportar informes detallados en PDF",
+      "feature3Desc": "Comparte informes con tu marca con clientes y colaboradores",
       "footer": "Recibes este correo porque creaste una cuenta en Site Mechanic."
     },
     "passwordReset": {
       "subject": "Restablecer tu contraseña de Site Mechanic",
+      "preheader": "Usa el enlace incluido para elegir una nueva contraseña. Expira en 1 hora.",
+      "kicker": "Seguridad de la cuenta",
       "heading": "Restablecer tu contraseña",
       "intro": "Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón de abajo para elegir una nueva.",
       "cta": "Restablecer contraseña",
       "expiry": "Este enlace expira en 1 hora.",
       "fallback": "Si el botón no funciona, copia y pega esta URL en tu navegador:",
       "footer": "Si no solicitaste restablecer tu contraseña, puedes ignorar este correo. Tu contraseña no se modificará."
+    },
+    "reportPurchase": {
+      "subject": "Tu informe de {{type}} está listo",
+      "preheader": "Tu informe de {{type}} para {{site}} está listo para ver.",
+      "kicker": "Diagnóstico completado",
+      "heading": "Tu informe de {{type}} está listo",
+      "intro": "Tu informe para {{site}} ha sido generado y está listo para ver.",
+      "fieldSite": "Sitio",
+      "fieldReport": "Informe",
+      "fieldDate": "Fecha",
+      "siteFallback": "tu sitio",
+      "filenameFallback": "informe",
+      "viewOnline": "Ver informe en línea",
+      "attachmentNote": "Tu informe PDF completo está adjunto a este correo.",
+      "aiHeading": "Evaluación estratégica con IA",
+      "quickWinLabel": "Mejora rápida",
+      "footer": "Este correo fue enviado porque compraste un informe en Site Mechanic."
+    },
+    "smtpTest": {
+      "subject": "Site Mechanic — Prueba SMTP",
+      "preheader": "Conexión SMTP verificada: tu configuración de correo funciona.",
+      "kicker": "Diagnóstico del sistema",
+      "heading": "Prueba SMTP",
+      "intro": "Si has recibido esto, tu configuración SMTP funciona correctamente.",
+      "verified": "Conexión verificada",
+      "sentAt": "Enviado el:"
+    },
+    "analyzer": {
+      "security": "Seguridad",
+      "seo": "SEO",
+      "performance": "Rendimiento",
+      "accessibility": "Accesibilidad",
+      "core-web-vitals": "Core Web Vitals",
+      "fonts": "Fuentes y Tipografía",
+      "tag-intelligence": "Seguimiento y Analítica",
+      "broken-links": "Enlaces Rotos",
+      "mobile": "Pruebas Móviles",
+      "hosting": "Hosting",
+      "site-crawler": "Rastreador de Sitios",
+      "cro": "Optimización de Conversión",
+      "brand-consistency": "Consistencia de Marca",
+      "geo-seo": "GEO SEO",
+      "local-seo": "SEO Local",
+      "gdpr": "Cumplimiento RGPD",
+      "ip-reputation": "Reputación de IP",
+      "competitive": "Análisis Competitivo"
     }
   }
 }
