@@ -14,14 +14,23 @@ Disallow: /icon-styles-showcase.html
 Disallow: /index_backup.html
 Disallow: /index_simple.html
 Disallow: /*demo.html
+Disallow: /modern-ui-demo.html
+Disallow: /design-system-demo.html
+Disallow: /health-timeline-demo.html
 Disallow: /theme-debug.html
 
-# Auth, admin, and billing utility pages
+# Auth, admin, account, and billing utility pages
 Disallow: /auth.html
 Disallow: /admin.html
+Disallow: /account.html
 Disallow: /billing-success.html
 Disallow: /billing-cancel.html
+Disallow: /billing/
 Disallow: /local-seo.html
+
+# Application internals — not content
+Disallow: /api/
+Disallow: /reports/
 
 # Crawl-delay to be respectful (optional)
 Crawl-delay: 1

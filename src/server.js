@@ -456,49 +456,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Root redirect - redirect / to /:lang/ based on Accept-Language
+// Root - serve the landing page (dashboard) directly with a 200.
+// No Accept-Language redirect: locale-sniffing redirects hurt SEO; hreflang
+// tags handle language targeting, and /:lang/ prefixed URLs still work via
+// the prefix-strip middleware above (req.urlLang carries the language).
 app.get('/', (req, res, next) => {
-  // If URL was already language-prefixed (e.g., /ja/ -> /), serve index.html
-  if (req.urlLang) return next();
-
-  // If already handled by static middleware or has a file extension, skip
   if (req.path !== '/') return next();
-
-  // Detect preferred language from Accept-Language header
-  const acceptLang = req.headers['accept-language'] || '';
-  const preferredLang = detectPreferredLanguage(acceptLang, SUPPORTED_LANG_PREFIXES) || 'en';
-
-  // Redirect to language-prefixed URL
-  res.redirect(302, `/${preferredLang}/`);
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
-
-/**
- * Detect preferred language from Accept-Language header
- */
-function detectPreferredLanguage(acceptLanguage, supportedLangs) {
-  if (!acceptLanguage) return null;
-
-  // Parse Accept-Language header (e.g., "ja,en-US;q=0.9,en;q=0.8")
-  const languages = acceptLanguage
-    .split(',')
-    .map(lang => {
-      const [code, qValue] = lang.trim().split(';q=');
-      return {
-        code: code.split('-')[0].toLowerCase(), // 'en-US' -> 'en'
-        q: qValue ? parseFloat(qValue) : 1.0
-      };
-    })
-    .sort((a, b) => b.q - a.q);
-
-  // Find first supported language
-  for (const { code } of languages) {
-    if (supportedLangs.includes(code)) {
-      return code;
-    }
-  }
-
-  return null;
-}
 
 // Static files — differentiated Cache-Control by asset type
 // Images/fonts/SVGs: 30 days (rarely change, cache-busted via ?v= query string)
@@ -996,11 +961,6 @@ app.get('/api/test', (req, res) => {
       'PDF report generation',
     ],
   });
-});
-
-// Serve frontend
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Serve favicon
