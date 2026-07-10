@@ -1010,8 +1010,7 @@
     resetAccessState,
 
     // Constants
-    getFeatureLabels,
-    VALUE_PROPS
+    getFeatureLabels
   };
 
 })(window);
