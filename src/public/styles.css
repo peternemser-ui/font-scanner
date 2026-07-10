@@ -815,7 +815,7 @@ p {
 :root {
   --unified-header-height: 108px;
   --nav-bar-height: 60px;
-  --app-logo-height: clamp(55px, 3.75vw, 70px); /* +25% (was 44-56px) */
+  --app-logo-height: clamp(68px, 4.7vw, 86px);
 }
 
 /* Main Header Bar - Contains all top controls */
@@ -1709,7 +1709,7 @@ body > header,
   :root {
     --unified-header-height: 72px;
     --nav-bar-height: 0px;
-    --app-logo-height: 50px; /* +25% (was 40px) */
+    --app-logo-height: 60px;
   }
 
   /* Show hamburger menu */
@@ -1766,7 +1766,7 @@ body > header,
   :root {
     --unified-header-height: 60px;
     --nav-bar-height: 0px;
-    --app-logo-height: 42px; /* +25% (was 34px) */
+    --app-logo-height: 48px;
   }
 
   .hamburger-btn {
@@ -8345,15 +8345,21 @@ body.white-theme .example-chip:hover {
    keyboard focus. No structural / JS changes.
    ============================================================ */
 :root {
-  --unified-header-height: 94px; /* fits the +25% logo (70px) + tagline */
+  --unified-header-height: 106px; /* fits the enlarged logo + tagline */
 }
 
 .unified-header {
   padding: 0 clamp(16px, 2.5vw, 32px);
 }
 
+/* Tagline hugs the logo */
+.unified-header-center {
+  gap: 0;
+}
+
 .app-subtitle {
   font-size: 0.875rem;
+  margin-top: 0;
 }
 
 /* Nav row: taller, roomier, larger type */
@@ -8433,6 +8439,6 @@ body.white-theme .example-chip:hover {
 
 @media (max-width: 1018px) {
   :root {
-    --unified-header-height: 78px; /* fits the +25% mobile logo (50px) */
+    --unified-header-height: 88px; /* fits the enlarged mobile logo (60px) */
   }
 }
