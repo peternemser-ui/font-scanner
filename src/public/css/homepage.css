@@ -1,0 +1,1143 @@
+/* ============================================================
+   HOMEPAGE v3 — editorial technical SaaS landing
+   Scope: everything is gated on body[data-page="dashboard"] so
+   this file cannot leak into other pages. Loads LAST in the
+   cascade (after styles.css / spacing-fixes.css) so it wins
+   without !important wherever specificity allows.
+   Theme model: dark is the site default; light via body.white-theme.
+   ============================================================ */
+
+body[data-page="dashboard"] {
+  /* Brand + status color tokens (homepage scope) */
+  --hp-red: #dd3838;                 /* Site Mechanic brand red (logo-red.svg) */
+  --hp-red-hover: #c22f2f;
+  --hp-red-soft: rgba(221, 56, 56, 0.12);
+  --hp-red-text: #f0625c;            /* red for text/links on dark bg (contrast) */
+  --hp-green: #22a34a;               /* positive indicators only */
+  --hp-amber: #e8930c;               /* score visualizations only */
+
+  /* Layout tokens */
+  --hp-container: 1200px;            /* wide container for visuals/cards */
+  --hp-copy-max: 640px;              /* readable text measure */
+  --hp-pad-x: clamp(20px, 4.5vw, 48px);
+  --hp-band-y: clamp(56px, 8vw, 104px);
+
+  /* Surfaces (dark default) */
+  --hp-bg: #0b0d10;
+  --hp-band-raised: #12151a;
+  --hp-surface: #171b21;
+  --hp-surface-2: #1e242c;
+  --hp-line: rgba(255, 255, 255, 0.09);
+  --hp-line-strong: rgba(255, 255, 255, 0.16);
+
+  /* Text */
+  --hp-text: #f4f6f8;
+  --hp-text-2: #b9c2cc;
+  --hp-text-3: #8b95a1;
+
+  /* Controls — radii derive from the design-token scale */
+  --hp-control-h: 56px;
+  --hp-radius: var(--radius-lg, 12px);
+  --hp-radius-lg: var(--radius-xl, 16px);
+  --hp-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.35);
+  --hp-shadow-pop: 0 24px 64px rgba(0, 0, 0, 0.5);
+  --hp-focus-ring: 0 0 0 3px rgba(240, 98, 92, 0.4);
+
+  background: var(--hp-bg);
+}
+
+body.white-theme[data-page="dashboard"] {
+  --hp-red-text: #c22f2f;
+  --hp-bg: #ffffff;
+  --hp-band-raised: #faf8f5;         /* warm neutral */
+  --hp-surface: #ffffff;
+  --hp-surface-2: #f6f4f1;
+  --hp-line: rgba(17, 24, 39, 0.10);
+  --hp-line-strong: rgba(17, 24, 39, 0.18);
+  --hp-text: #171b21;
+  --hp-text-2: #414b57;
+  --hp-text-3: #6b7583;
+  --hp-shadow-card: 0 1px 2px rgba(17, 24, 39, 0.06), 0 12px 32px rgba(17, 24, 39, 0.08);
+  --hp-shadow-pop: 0 24px 64px rgba(17, 24, 39, 0.14);
+  --hp-focus-ring: 0 0 0 3px rgba(221, 56, 56, 0.3);
+
+  background: var(--hp-bg) !important; /* the legacy white-theme body rule uses !important */
+}
+
+/* ------------------------------------------------------------
+   Page shell: release the 1120px straitjacket. Bands go full
+   bleed; each band manages its own inner container.
+   ------------------------------------------------------------ */
+body[data-page="dashboard"] .page-shell {
+  max-width: none;
+  padding: 0;
+}
+
+body[data-page="dashboard"] .hp-container {
+  max-width: var(--hp-container);
+  margin: 0 auto;
+  padding-left: var(--hp-pad-x);
+  padding-right: var(--hp-pad-x);
+}
+
+/* ------------------------------------------------------------
+   Graph-paper background: keep the technical grid concept but
+   confine it to the hero and fade it out before content bands.
+   ------------------------------------------------------------ */
+body[data-page="dashboard"]::after {
+  opacity: 0.16;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0, rgba(0, 0, 0, 0.55) 420px, transparent 900px);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0, rgba(0, 0, 0, 0.55) 420px, transparent 900px);
+}
+
+body.white-theme[data-page="dashboard"]::after {
+  opacity: 0.28;
+}
+
+/* ------------------------------------------------------------
+   Shared type
+   ------------------------------------------------------------ */
+body[data-page="dashboard"] .hp-eyebrow {
+  margin: 0 0 14px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hp-red-text);
+}
+
+body[data-page="dashboard"] .hp-h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-serif, 'DM Serif Text', Georgia, serif);
+  font-size: clamp(1.75rem, 2.6vw, 2.375rem);
+  font-weight: 400;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  color: var(--hp-text);
+}
+
+body[data-page="dashboard"] .hp-lead {
+  margin: 0 0 20px;
+  max-width: var(--hp-copy-max);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--hp-text-2);
+}
+
+/* Red text links.
+   The :not() chain mirrors styles.css's global dark-theme anchor rule
+   (body:not(.white-theme) a:not(.btn):not(.nav-link):not(.action-card-button))
+   so these tie on specificity and win by source order (this file loads last). */
+body[data-page="dashboard"] a.hp-textlink:not(.btn):not(.nav-link):not(.action-card-button),
+body[data-page="dashboard"] .hp-signup-note a:not(.btn):not(.nav-link),
+body[data-page="dashboard"] a.homepage-footer-bar__link:not(.btn):not(.nav-link) {
+  color: var(--hp-red-text);
+}
+
+body[data-page="dashboard"] .hp-textlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--hp-red-text);
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+body[data-page="dashboard"] .hp-textlink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+body[data-page="dashboard"] .hp-textlink:focus-visible {
+  outline: none;
+  box-shadow: var(--hp-focus-ring);
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+body[data-page="dashboard"] .hp-hero {
+  position: relative;
+  padding: clamp(40px, 6vw, 88px) 0 clamp(48px, 6vw, 96px);
+}
+
+body[data-page="dashboard"] .hp-hero__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(32px, 4.5vw, 72px);
+  align-items: center;
+}
+
+/* Left column — explicit left alignment (legacy .homepage-hero rules
+   center-align text; this column must read editorial-left on desktop) */
+body[data-page="dashboard"] .hp-hero__copy {
+  text-align: left;
+  min-width: 0;
+}
+
+body[data-page="dashboard"] .hp-hero__headline {
+  margin: 0 0 18px;
+  max-width: 620px;
+  text-align: left; /* global h1 rule centers */
+  font-family: var(--font-serif, 'DM Serif Text', Georgia, serif);
+  font-size: clamp(2.125rem, 3.6vw, 3.625rem); /* ~58px at 1440+, 34px at 390 */
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--hp-text);
+  white-space: pre-line;
+}
+
+body[data-page="dashboard"] .hp-hero__subhead {
+  margin: 0 0 28px;
+  max-width: var(--hp-copy-max);
+  font-size: clamp(1.0625rem, 1.4vw, 1.1875rem);
+  line-height: 1.6;
+  color: var(--hp-text-2);
+}
+
+/* --- Scan form: the strongest interaction on the page --- */
+body[data-page="dashboard"] .hp-form {
+  max-width: 640px;
+  margin: 0 0 12px;
+}
+
+body[data-page="dashboard"] .hp-form__row {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  background: var(--hp-surface);
+  border: 1px solid var(--hp-line-strong);
+  border-radius: var(--hp-radius-lg);
+  box-shadow: var(--hp-shadow-card);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+body[data-page="dashboard"] .hp-form__row:focus-within {
+  border-color: var(--hp-red);
+  box-shadow: var(--hp-shadow-card), var(--hp-focus-ring);
+}
+
+body[data-page="dashboard"] .hp-form__input {
+  flex: 1;
+  min-width: 0;
+  height: var(--hp-control-h);
+  padding: 0 18px;
+  border: none;
+  border-radius: calc(var(--hp-radius-lg) - 6px);
+  background: transparent;
+  font-size: 1.125rem;
+  color: var(--hp-text);
+}
+
+body[data-page="dashboard"] .hp-form__input::placeholder {
+  color: var(--hp-text-3);
+}
+
+body[data-page="dashboard"] .hp-form__input:focus {
+  outline: none;
+}
+
+body[data-page="dashboard"] .hp-form__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--hp-control-h);
+  min-width: 148px;
+  padding: 0 32px;
+  border: none;
+  border-radius: calc(var(--hp-radius-lg) - 6px);
+  background: var(--hp-red);
+  color: #ffffff;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+body[data-page="dashboard"] .hp-form__button:hover {
+  background: var(--hp-red-hover);
+}
+
+body[data-page="dashboard"] .hp-form__button:active {
+  transform: scale(0.98);
+}
+
+body[data-page="dashboard"] .hp-form__button:focus-visible {
+  outline: 2px solid var(--hp-text);
+  outline-offset: 2px;
+}
+
+body[data-page="dashboard"] .hp-form__button:disabled {
+  background: var(--hp-surface-2);
+  color: var(--hp-text-3);
+  cursor: wait;
+}
+
+/* Legacy styles.css paints #dashboardAnalyzeButton cyan (bg, border, glow)
+   with !important (the shared analyzer-button rule) — counter it, scoped. */
+body[data-page="dashboard"] #dashboardAnalyzeButton {
+  background: var(--hp-red) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body[data-page="dashboard"] #dashboardAnalyzeButton:hover {
+  background: var(--hp-red-hover) !important;
+}
+
+body[data-page="dashboard"] #dashboardAnalyzeButton:disabled {
+  background: var(--hp-surface-2) !important;
+  color: var(--hp-text-3) !important;
+}
+
+/* Legacy rule outlines the focused button cyan — keep a visible ring
+   but in page-neutral color (works on both themes, offset from red bg) */
+body[data-page="dashboard"] #dashboardAnalyzeButton:focus {
+  outline: 2px solid var(--hp-text) !important;
+  outline-offset: 2px !important;
+}
+
+/* Usage pill + helper text row directly under the form */
+body[data-page="dashboard"] .hp-form__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  margin: 0 0 18px;
+  min-height: 28px;
+}
+
+body[data-page="dashboard"] .hp-form__meta .page-shell-usage-pill {
+  margin: 0;
+  justify-content: flex-start;
+}
+
+body[data-page="dashboard"] .hp-form__helper {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--hp-text-3);
+}
+
+/* Example chips — right next to the scanner */
+body[data-page="dashboard"] .hp-hero .example-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 22px;
+  max-width: 640px;
+}
+
+body[data-page="dashboard"] .hp-hero .example-chips__label {
+  font-size: 0.9375rem;
+  color: var(--hp-text-3);
+  margin-right: 2px;
+}
+
+body[data-page="dashboard"] .hp-hero .example-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--hp-text-2);
+  background: var(--hp-surface);
+  border: 1px solid var(--hp-line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+body[data-page="dashboard"] .hp-hero .example-chip:hover {
+  border-color: var(--hp-red);
+  color: var(--hp-red-text);
+  background: var(--hp-surface);
+}
+
+body[data-page="dashboard"] .hp-hero .example-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--hp-focus-ring);
+}
+
+/* Secondary actions under the form */
+body[data-page="dashboard"] .hp-hero .sample-report-link {
+  margin: 0;
+  font-size: 1rem;
+}
+
+body[data-page="dashboard"] .hp-signup-note {
+  margin: 14px 0 0;
+  max-width: var(--hp-copy-max);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--hp-text-3);
+}
+
+body[data-page="dashboard"] .hp-signup-note a {
+  color: var(--hp-red-text);
+  font-weight: 600;
+  text-decoration: none;
+  /* a runtime script strips inter-element whitespace; keep the gap explicit */
+  margin-left: 5px;
+}
+
+body[data-page="dashboard"] .hp-signup-note a:hover {
+  text-decoration: underline;
+}
+
+body[data-page="dashboard"] .hp-signup-note a:focus-visible {
+  outline: none;
+  box-shadow: var(--hp-focus-ring);
+  border-radius: 4px;
+}
+
+/* --- Hero right: framed product preview --- */
+body[data-page="dashboard"] .hp-hero__visual {
+  min-width: 0;
+}
+
+body[data-page="dashboard"] .hp-browser {
+  background: var(--hp-surface);
+  border: 1px solid var(--hp-line-strong);
+  border-radius: var(--hp-radius-lg);
+  box-shadow: var(--hp-shadow-pop);
+  overflow: hidden;
+}
+
+body[data-page="dashboard"] .hp-browser__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--hp-surface-2);
+  border-bottom: 1px solid var(--hp-line);
+}
+
+body[data-page="dashboard"] .hp-browser__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--hp-line-strong);
+}
+
+body[data-page="dashboard"] .hp-browser__url {
+  margin-left: 10px;
+  padding: 4px 12px;
+  font-size: 0.8125rem;
+  color: var(--hp-text-3);
+  background: var(--hp-bg);
+  border: 1px solid var(--hp-line);
+  border-radius: 999px;
+}
+
+body[data-page="dashboard"] .hp-browser__body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: clamp(20px, 2.4vw, 30px);
+}
+
+/* Overall score ring (SVG) — header row above the category bars */
+body[data-page="dashboard"] .hp-score {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--hp-line);
+}
+
+body[data-page="dashboard"] .hp-score__ring {
+  width: 92px;
+  flex-shrink: 0;
+  height: auto;
+}
+
+body[data-page="dashboard"] .hp-score__ring .hp-ring-track {
+  stroke: var(--hp-line);
+}
+
+body[data-page="dashboard"] .hp-score__ring .hp-ring-value {
+  stroke: var(--hp-green);
+}
+
+body[data-page="dashboard"] .hp-score__ring text {
+  fill: var(--hp-text);
+  font-family: var(--font-sans, Inter, sans-serif);
+  font-size: 26px;
+  font-weight: 700;
+}
+
+body[data-page="dashboard"] .hp-score__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--hp-text-3);
+}
+
+/* Category score rows */
+body[data-page="dashboard"] .hp-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+body[data-page="dashboard"] .hp-cat {
+  display: grid;
+  grid-template-columns: 108px 1fr 34px;
+  align-items: center;
+  gap: 12px;
+}
+
+body[data-page="dashboard"] .hp-cat__name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--hp-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body[data-page="dashboard"] .hp-cat__track {
+  height: 8px;
+  background: var(--hp-line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+body[data-page="dashboard"] .hp-cat__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--hp-green);
+}
+
+body[data-page="dashboard"] .hp-cat__fill--warn {
+  background: var(--hp-amber);
+}
+
+body[data-page="dashboard"] .hp-cat__score {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--hp-text);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   BANDS (value / features / CTA) — full-bleed with inner container
+   ============================================================ */
+body[data-page="dashboard"] .hp-band {
+  position: relative;
+  padding: var(--hp-band-y) 0;
+}
+
+body[data-page="dashboard"] .hp-band--raised {
+  background: var(--hp-band-raised);
+  border-top: 1px solid var(--hp-line);
+  border-bottom: 1px solid var(--hp-line);
+}
+
+/* ------------------------------------------------------------
+   PRODUCT VALUE band
+   ------------------------------------------------------------ */
+/* neutralize legacy .hero-right card styling (class kept for the
+   body.scan-complete hide rule) */
+body[data-page="dashboard"] .hp-value .hero-right {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body[data-page="dashboard"] .hp-value__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  gap: clamp(32px, 5vw, 80px);
+  align-items: center;
+}
+
+/* Report document card (links to the sample PDF) */
+body[data-page="dashboard"] .hp-doc {
+  display: block;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: clamp(22px, 2.6vw, 34px);
+  background: var(--hp-surface);
+  border: 1px solid var(--hp-line-strong);
+  border-radius: var(--hp-radius-lg);
+  box-shadow: var(--hp-shadow-pop);
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+body[data-page="dashboard"] .hp-doc:hover {
+  transform: translateY(-3px);
+}
+
+body[data-page="dashboard"] .hp-doc:focus-visible {
+  outline: none;
+  box-shadow: var(--hp-shadow-pop), var(--hp-focus-ring);
+}
+
+body[data-page="dashboard"] .hp-doc__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--hp-line);
+  margin-bottom: 18px;
+}
+
+body[data-page="dashboard"] .hp-doc__logo {
+  height: 26px;
+  width: auto;
+}
+
+body[data-page="dashboard"] .hp-doc__badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--hp-red-text);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+body[data-page="dashboard"] .hp-doc__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+body[data-page="dashboard"] .hp-doc__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--hp-surface-2);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--hp-text-2);
+}
+
+body[data-page="dashboard"] .hp-doc__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--hp-red-text);
+}
+
+/* Value copy + benefits */
+body[data-page="dashboard"] .hp-benefits {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+body[data-page="dashboard"] .hp-benefit {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+body[data-page="dashboard"] .hp-benefit__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--hp-red-soft);
+  color: var(--hp-red-text);
+}
+
+body[data-page="dashboard"] .hp-benefit__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+body[data-page="dashboard"] .hp-benefit__text {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--hp-text);
+  padding-top: 8px;
+}
+
+body[data-page="dashboard"] .hp-value__note {
+  margin: 24px 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--hp-text-3);
+  max-width: var(--hp-copy-max);
+}
+
+/* ------------------------------------------------------------
+   FEATURE COVERAGE — 5 linked cards
+   ------------------------------------------------------------ */
+/* neutralize legacy .feature-strip constraints */
+body[data-page="dashboard"] .hp-features.feature-strip {
+  max-width: none;
+  margin: 0;
+  border-top: none;
+  padding: var(--hp-band-y) 0;
+}
+
+body[data-page="dashboard"] .hp-features__head {
+  max-width: var(--hp-copy-max);
+  margin-bottom: clamp(24px, 3vw, 40px);
+}
+
+body[data-page="dashboard"] .hp-features__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+body[data-page="dashboard"] .hp-feature-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 20px;
+  background: var(--hp-surface);
+  border: 1px solid var(--hp-line);
+  border-radius: var(--hp-radius);
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+body[data-page="dashboard"] .hp-feature-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--hp-line-strong);
+  box-shadow: var(--hp-shadow-card);
+}
+
+body[data-page="dashboard"] .hp-feature-card:focus-visible {
+  outline: none;
+  box-shadow: var(--hp-focus-ring);
+}
+
+body[data-page="dashboard"] .hp-feature-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--hp-red-soft);
+  color: var(--hp-red-text);
+}
+
+body[data-page="dashboard"] .hp-feature-card__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+body[data-page="dashboard"] .hp-feature-card .feature-strip__item-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--hp-text);
+}
+
+body[data-page="dashboard"] .hp-feature-card .feature-strip__item-desc {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--hp-text-2);
+}
+
+body[data-page="dashboard"] .hp-feature-card__go {
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--hp-red-text);
+}
+
+/* ------------------------------------------------------------
+   PRO CTA band
+   ------------------------------------------------------------ */
+/* neutralize legacy .pro-upsell */
+body[data-page="dashboard"] .hp-cta.pro-upsell {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+body[data-page="dashboard"] .hp-cta__band {
+  background: var(--hp-band-raised);
+  border-top: 1px solid var(--hp-line);
+  padding: var(--hp-band-y) 0;
+}
+
+body[data-page="dashboard"] .hp-cta__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: center;
+}
+
+body[data-page="dashboard"] .hp-cta__bullets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+body[data-page="dashboard"] .hp-cta__bullet {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--hp-text-2);
+}
+
+body[data-page="dashboard"] .hp-cta__bullet svg {
+  width: 18px;
+  height: 18px;
+  color: var(--hp-green);
+  flex-shrink: 0;
+}
+
+body[data-page="dashboard"] .hp-cta__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  justify-self: end;
+}
+
+/* !important counters the white-theme mega button rule in styles.css
+   (its :not() chain contains an ID, so it can't be beaten on specificity) */
+body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--hp-control-h);
+  padding: 0 40px;
+  border: none !important;
+  border-radius: var(--hp-radius);
+  background: var(--hp-red) !important;
+  color: #ffffff !important;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta:hover {
+  background: var(--hp-red-hover) !important;
+}
+
+body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta:active {
+  transform: scale(0.98);
+}
+
+body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta:focus-visible {
+  outline: 2px solid var(--hp-text);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------
+   FOOTER bar (homepage-scoped)
+   ------------------------------------------------------------ */
+body[data-page="dashboard"] .homepage-footer-bar {
+  padding: 36px 0;
+  text-align: center;
+}
+
+body[data-page="dashboard"] .homepage-footer-bar__text {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--hp-text-2);
+}
+
+body[data-page="dashboard"] .homepage-footer-bar__link {
+  color: var(--hp-red-text);
+  font-weight: 600;
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+body[data-page="dashboard"] .homepage-footer-bar__link:hover {
+  text-decoration: underline;
+}
+
+body[data-page="dashboard"] .homepage-footer-bar__link:focus-visible {
+  outline: none;
+  box-shadow: var(--hp-focus-ring);
+  border-radius: 4px;
+}
+
+body[data-page="dashboard"] .sm-version-badge {
+  font-size: 0.8125rem;
+  color: var(--hp-text-3);
+}
+
+/* Shared UsagePill component renders 10-12px type; lift it to readable
+   sizes on the homepage without touching the component itself */
+body[data-page="dashboard"] .usage-pill__plan {
+  font-size: 0.75rem !important;
+}
+
+body[data-page="dashboard"] .usage-pill__login-link {
+  font-size: 0.8125rem !important;
+}
+
+/* ------------------------------------------------------------
+   Report document card skeleton (wireframe, no fake copy)
+   ------------------------------------------------------------ */
+body[data-page="dashboard"] .hp-doc__body {
+  display: block;
+}
+
+body[data-page="dashboard"] .hp-doc__line {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--hp-line-strong);
+}
+
+body[data-page="dashboard"] .hp-doc__line--title {
+  width: 62%;
+  height: 14px;
+  margin-bottom: 10px;
+}
+
+body[data-page="dashboard"] .hp-doc__line--sub {
+  width: 40%;
+  background: var(--hp-line);
+  margin-bottom: 20px;
+}
+
+body[data-page="dashboard"] .hp-doc__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+body[data-page="dashboard"] .hp-doc__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--hp-surface-2);
+  border-radius: 8px;
+}
+
+body[data-page="dashboard"] .hp-doc__line--row {
+  flex: 1;
+  background: var(--hp-line);
+}
+
+body[data-page="dashboard"] .hp-doc__dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+body[data-page="dashboard"] .hp-doc__dot--high { background: var(--hp-red); }
+body[data-page="dashboard"] .hp-doc__dot--med  { background: var(--hp-amber); }
+body[data-page="dashboard"] .hp-doc__dot--ok   { background: var(--hp-green); }
+
+/* ------------------------------------------------------------
+   Post-scan state: hide marketing sections (moved from the old
+   inline <style> block in dashboard.html — behavior contract
+   with dashboard-script.js's body.scan-complete toggle)
+   ------------------------------------------------------------ */
+body.scan-complete .hero-right,
+body.scan-complete .feature-strip,
+body.scan-complete .pro-upsell,
+body.scan-complete .homepage-footer-bar,
+body.scan-complete .sample-report-link,
+body.scan-complete .example-chips,
+body.scan-complete .hp-hero__visual,
+body.scan-complete .hp-value,
+body.scan-complete .hp-signup-note,
+body.scan-complete .hp-eyebrow {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------
+   Scan results container inherits the wider stage
+   ------------------------------------------------------------ */
+body[data-page="dashboard"] #dashboardResults {
+  max-width: var(--hp-container) !important;
+  padding-left: var(--hp-pad-x) !important;
+  padding-right: var(--hp-pad-x) !important;
+}
+
+/* ============================================================
+   RESPONSIVE
+   1440+: full design | 1024–1279: tighter hero | 768–1023: hero
+   stacks | <768: single column, stacked form
+   ============================================================ */
+@media (max-width: 1279px) {
+  body[data-page="dashboard"] .hp-hero__grid {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  }
+}
+
+/* 1024-1140: five feature cards don't fit — drop to 3 columns */
+@media (max-width: 1140px) and (min-width: 1024px) {
+  body[data-page="dashboard"] .hp-features__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  body[data-page="dashboard"] .hp-hero__grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  /* Stacked hero: deliberately centered composition */
+  body[data-page="dashboard"] .hp-hero__copy {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  body[data-page="dashboard"] .hp-hero__headline {
+    text-align: center;
+  }
+
+  body[data-page="dashboard"] .hp-hero__headline,
+  body[data-page="dashboard"] .hp-hero__subhead,
+  body[data-page="dashboard"] .hp-form,
+  body[data-page="dashboard"] .hp-signup-note {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body[data-page="dashboard"] .hp-form__meta,
+  body[data-page="dashboard"] .hp-hero .example-chips {
+    justify-content: center;
+  }
+
+  body[data-page="dashboard"] .hp-hero__visual {
+    max-width: 640px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  body[data-page="dashboard"] .hp-value__grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  body[data-page="dashboard"] .hp-features__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body[data-page="dashboard"] .hp-cta__inner {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-page="dashboard"] .hp-cta__actions {
+    justify-self: start;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 767px) {
+  body[data-page="dashboard"] .hp-form__row {
+    flex-direction: column;
+    padding: 8px;
+  }
+
+  body[data-page="dashboard"] .hp-form__input {
+    height: 52px;
+    text-align: center;
+  }
+
+  body[data-page="dashboard"] .hp-form__button {
+    width: 100%;
+    height: 52px;
+  }
+
+  /* Match the stacked Analyze button height (52px) */
+  body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta {
+    height: 52px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  body[data-page="dashboard"] .hp-browser__body {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  body[data-page="dashboard"] .hp-cat {
+    width: 100%;
+  }
+
+  body[data-page="dashboard"] .hp-benefits {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-page="dashboard"] .hp-features__grid {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-page="dashboard"] .hp-doc {
+    max-width: 100%;
+  }
+}
+
+/* Reduced motion: strip transforms/transitions */
+@media (prefers-reduced-motion: reduce) {
+  body[data-page="dashboard"] .hp-form__button,
+  body[data-page="dashboard"] .hp-doc,
+  body[data-page="dashboard"] .hp-feature-card,
+  body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta,
+  body[data-page="dashboard"] .hp-form__row,
+  body[data-page="dashboard"] .hp-hero .example-chip {
+    transition: none;
+  }
+
+  body[data-page="dashboard"] .hp-doc:hover,
+  body[data-page="dashboard"] .hp-feature-card:hover,
+  body[data-page="dashboard"] .hp-form__button:active,
+  body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta:active {
+    transform: none;
+  }
+}

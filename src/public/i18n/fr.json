@@ -5,11 +5,14 @@
   "homepage": {
     "hero": {
       "headline": "Analysez n'importe quel site web.\nObtenez des corrections prioritaires.",
-      "subhead": "Diagnostics de performance, SEO, accessibilité, sécurité et typographie en une seule analyse.",
+      "subhead": "Un seul scan vérifie performance, SEO, accessibilité, sécurité et typographie — et classe ce qu'il faut corriger en premier.",
       "placeholder": "https://exemple.com",
-      "helperText": "La plupart des analyses se terminent en ~30 secondes",
-      "button": "Analyser",
-      "whatsIncluded": "Ce qui est inclus"
+      "helperText": "La plupart des scans prennent environ 30 secondes.",
+      "button": "Scanner le site",
+      "whatsIncluded": "Ce qui est inclus",
+      "eyebrow": "Diagnostic web",
+      "bugPrompt": "Un bug dans un rapport ?",
+      "bugPromptCta": "Inscrivez-vous et signalez-le : nous débloquons un rapport gratuitement."
     },
     "whatYouGet": {
       "title": "Ce que vous obtiendrez",
@@ -21,7 +24,7 @@
       "sampleReport": "Voir un exemple de rapport PDF →"
     },
     "exampleUrls": {
-      "label": "Essayez :",
+      "label": "Essayez un exemple :",
       "example1": "example.com",
       "example2": "wikipedia.org",
       "example3": "github.com"
@@ -47,7 +50,8 @@
       "typography": {
         "title": "Typographie",
         "desc": "Chargement des polices et cohérence"
-      }
+      },
+      "open": "Ouvrir l'analyseur"
     },
     "proUpsell": {
       "title": "Débloquez les Rapports Pro",
@@ -59,6 +63,14 @@
     "footer": {
       "needHelp": "Besoin d'aide ?",
       "contactSupport": "Contacter le support"
+    },
+    "value": {
+      "title": "Un scan. Une vision complète de la santé de votre site.",
+      "desc": "Site Mechanic vérifie en parallèle la performance, le SEO, l'accessibilité, la sécurité et la typographie. Les résultats deviennent une liste de correctifs classés par priorité — le plus critique d'abord, avec le contexte nécessaire pour agir.",
+      "exportNote": "Enregistrez vos rapports dans votre compte, partagez-les par lien ou exportez des PDF prêts à présenter avec Pro."
+    },
+    "preview": {
+      "siteHealth": "Santé du site"
     }
   },
   "nav": {

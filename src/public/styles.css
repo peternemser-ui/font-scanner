@@ -469,7 +469,9 @@ body {
    Served as: /assets/images/tools-background.png
 */
 :root {
-  --bg-graphic-url: url('/assets/images/tools-background.png');
+  /* Asset was never added — 'none' avoids a 404 on every page load.
+     Restore the url() once the PNG exists (see comment above). */
+  --bg-graphic-url: none;
   --bg-graphic-opacity: 0.07;
   --bg-graphic-size: min(1100px, 92vw) auto;
   --bg-graphic-position: center 18vh;
@@ -813,7 +815,7 @@ p {
 :root {
   --unified-header-height: 108px;
   --nav-bar-height: 60px;
-  --app-logo-height: clamp(44px, 3vw, 56px);
+  --app-logo-height: clamp(55px, 3.75vw, 70px); /* +25% (was 44-56px) */
 }
 
 /* Main Header Bar - Contains all top controls */
@@ -1707,7 +1709,7 @@ body > header,
   :root {
     --unified-header-height: 72px;
     --nav-bar-height: 0px;
-    --app-logo-height: 40px;
+    --app-logo-height: 50px; /* +25% (was 40px) */
   }
 
   /* Show hamburger menu */
@@ -1764,7 +1766,7 @@ body > header,
   :root {
     --unified-header-height: 60px;
     --nav-bar-height: 0px;
-    --app-logo-height: 34px;
+    --app-logo-height: 42px; /* +25% (was 34px) */
   }
 
   .hamburger-btn {
@@ -2835,7 +2837,7 @@ body.white-theme #analyzeBtn:focus {
    NOTE: UI kit buttons use `.btn` + variants (e.g. `.btn-primary`) and manage
    their own colors. Avoid overriding them here.
 */
-body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip):not(.auth-user-trigger) {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.hp-form__button):not(.pro-upsell__cta):not(.example-chip):not(.auth-user-trigger) {
   background-color: #f8f9fa !important; /* Light neutral background */
   color: #1a1a1a !important; /* Dark text */
   border: 2px solid #dee2e6 !important; /* Subtle border */
@@ -2846,12 +2848,12 @@ body.white-theme button[style*="color"] {
   color: inherit !important; /* Respect inline color for special buttons */
 }
 
-body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip):not(.auth-user-trigger):hover {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.hp-form__button):not(.pro-upsell__cta):not(.example-chip):not(.auth-user-trigger):hover {
   background-color: #e9ecef !important; /* Slightly darker on hover */
   border-color: #adb5bd !important;
 }
 
-body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip):not(.auth-user-trigger):disabled {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.hp-form__button):not(.pro-upsell__cta):not(.example-chip):not(.auth-user-trigger):disabled {
   background-color: #e9ecef !important; /* Subtle disabled state */
   color: #6c757d !important; /* Muted but readable text */
   border-color: #dee2e6 !important;
@@ -8333,5 +8335,104 @@ body.white-theme .example-chip:hover {
   .pro-upsell__bullets {
     flex-direction: column;
     gap: 8px;
+  }
+}
+
+/* ============================================================
+   HEADER REFRESH v3 (2026-07) — global, all pages
+   Scale + clarity pass only: tighter bar, larger nav type,
+   clearer active state, lighter control borders, visible
+   keyboard focus. No structural / JS changes.
+   ============================================================ */
+:root {
+  --unified-header-height: 94px; /* fits the +25% logo (70px) + tagline */
+}
+
+.unified-header {
+  padding: 0 clamp(16px, 2.5vw, 32px);
+}
+
+.app-subtitle {
+  font-size: 0.875rem;
+}
+
+/* Nav row: taller, roomier, larger type */
+.top-nav {
+  gap: 0.375rem;
+  padding: 0.5rem clamp(12px, 2vw, 28px);
+  min-height: 52px;
+}
+
+.nav-link {
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border-radius: 8px;
+  min-height: 44px;
+}
+
+/* Active: accent underline instead of a boxed border */
+.nav-link.active {
+  background: var(--bg-tertiary);
+  color: var(--accent-primary);
+  border: none;
+  box-shadow: inset 0 -2px 0 0 var(--accent-primary);
+}
+
+/* Keyboard focus */
+.nav-link:focus-visible,
+.nav-dropdown-trigger:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+
+.header-theme-toggle:focus-visible,
+.hamburger-btn:focus-visible,
+.auth-link:focus-visible,
+#authUserTrigger:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Lighter chrome on right-side controls */
+.header-theme-toggle,
+.language-switcher-trigger,
+.auth-link.auth-login {
+  border-color: var(--border-primary, rgba(255, 255, 255, 0.12));
+}
+
+.auth-link.auth-login {
+  font-size: 0.9375rem;
+  padding: 8px 18px;
+  min-height: 40px;
+}
+
+/* Between 1019-1240px the larger nav type wraps to two rows — compact it
+   and force a single scrollable row (the nav has scroll buttons) until
+   the hamburger takes over at 1018px. */
+@media (max-width: 1240px) and (min-width: 1019px) {
+  .nav-link {
+    padding: 8px 10px;
+    font-size: 0.8125rem;
+    gap: 5px;
+  }
+
+  .top-nav {
+    gap: 0.25rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .nav-link,
+  .nav-dropdown-trigger {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 1018px) {
+  :root {
+    --unified-header-height: 78px; /* fits the +25% mobile logo (50px) */
   }
 }

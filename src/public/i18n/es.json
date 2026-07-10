@@ -5,11 +5,14 @@
   "homepage": {
     "hero": {
       "headline": "Escanea cualquier sitio web.\nObtén correcciones priorizadas.",
-      "subhead": "Diagnósticos de rendimiento, SEO, accesibilidad, seguridad y tipografía en un solo escaneo.",
+      "subhead": "Un solo escaneo revisa rendimiento, SEO, accesibilidad, seguridad y tipografía — y prioriza qué corregir primero.",
       "placeholder": "https://ejemplo.com",
-      "helperText": "La mayoría de los escaneos terminan en ~30 segundos",
-      "button": "Analizar",
-      "whatsIncluded": "Qué está incluido"
+      "helperText": "La mayoría de los escaneos tardan unos 30 segundos.",
+      "button": "Escanear sitio",
+      "whatsIncluded": "Qué está incluido",
+      "eyebrow": "Diagnóstico web",
+      "bugPrompt": "¿Viste un error en un informe?",
+      "bugPromptCta": "Regístrate y repórtalo: desbloqueamos un informe gratis."
     },
     "whatYouGet": {
       "title": "Lo que obtendrás",
@@ -21,7 +24,7 @@
       "sampleReport": "Ver un informe PDF de ejemplo →"
     },
     "exampleUrls": {
-      "label": "Prueba:",
+      "label": "Prueba un ejemplo:",
       "example1": "example.com",
       "example2": "wikipedia.org",
       "example3": "github.com"
@@ -47,7 +50,8 @@
       "typography": {
         "title": "Tipografía",
         "desc": "Carga de fuentes y consistencia"
-      }
+      },
+      "open": "Abrir analizador"
     },
     "proUpsell": {
       "title": "Desbloquea Informes Pro",
@@ -59,6 +63,14 @@
     "footer": {
       "needHelp": "¿Necesitas ayuda?",
       "contactSupport": "Contactar soporte"
+    },
+    "value": {
+      "title": "Un escaneo. Una imagen completa de la salud de tu sitio.",
+      "desc": "Site Mechanic revisa en paralelo rendimiento, SEO, accesibilidad, seguridad y tipografía. Los resultados se convierten en una lista priorizada de correcciones — lo más crítico primero, con el contexto que necesitas para actuar.",
+      "exportNote": "Guarda informes en tu cuenta, compártelos por enlace o exporta PDF listos para clientes con Pro."
+    },
+    "preview": {
+      "siteHealth": "Salud del sitio"
     }
   },
   "nav": {

@@ -5,11 +5,14 @@
   "homepage": {
     "hero": {
       "headline": "扫描任何网站。\n获取优先修复建议。",
-      "subhead": "性能、SEO、无障碍、安全和排版诊断，一次扫描搞定。",
+      "subhead": "一次扫描即可检查性能、SEO、无障碍、安全和排版，并按优先级排序待修复项。",
       "placeholder": "https://example.com",
-      "helperText": "大多数扫描在约30秒内完成",
-      "button": "分析",
-      "whatsIncluded": "包含内容"
+      "helperText": "大多数扫描约需 30 秒。",
+      "button": "扫描网站",
+      "whatsIncluded": "包含内容",
+      "eyebrow": "网站诊断",
+      "bugPrompt": "在报告中发现了问题？",
+      "bugPromptCta": "注册并反馈，我们将免费为您解锁一份报告。"
     },
     "whatYouGet": {
       "title": "您将获得",
@@ -21,7 +24,7 @@
       "sampleReport": "查看示例PDF报告 →"
     },
     "exampleUrls": {
-      "label": "试试:",
+      "label": "试试示例：",
       "example1": "example.com",
       "example2": "wikipedia.org",
       "example3": "github.com"
@@ -47,7 +50,8 @@
       "typography": {
         "title": "排版",
         "desc": "字体加载和一致性"
-      }
+      },
+      "open": "打开分析器"
     },
     "proUpsell": {
       "title": "解锁专业版报告",
@@ -59,6 +63,14 @@
     "footer": {
       "needHelp": "需要帮助？",
       "contactSupport": "联系支持"
+    },
+    "value": {
+      "title": "一次扫描，全面了解网站健康状况。",
+      "desc": "Site Mechanic 并行检查性能、SEO、无障碍、安全和排版。结果会生成一份按优先级排序的修复清单——最关键的问题优先，并附带可操作的上下文。",
+      "exportNote": "将报告保存到您的账户、通过链接分享，或使用 Pro 导出可交付客户的 PDF。"
+    },
+    "preview": {
+      "siteHealth": "网站健康度"
     }
   },
   "nav": {

@@ -5,11 +5,14 @@
   "homepage": {
     "hero": {
       "headline": "Escaneie qualquer site.\nObtenha correções priorizadas.",
-      "subhead": "Diagnósticos de desempenho, SEO, acessibilidade, segurança e tipografia em uma única análise.",
+      "subhead": "Um único escaneamento verifica desempenho, SEO, acessibilidade, segurança e tipografia — e prioriza o que corrigir primeiro.",
       "placeholder": "https://exemplo.com",
-      "helperText": "A maioria das análises termina em ~30 segundos",
-      "button": "Analisar",
-      "whatsIncluded": "O que está incluído"
+      "helperText": "A maioria dos escaneamentos leva cerca de 30 segundos.",
+      "button": "Escanear site",
+      "whatsIncluded": "O que está incluído",
+      "eyebrow": "Diagnóstico de sites",
+      "bugPrompt": "Encontrou um bug em um relatório?",
+      "bugPromptCta": "Cadastre-se e reporte — desbloqueamos um relatório grátis."
     },
     "whatYouGet": {
       "title": "O que você receberá",
@@ -21,7 +24,7 @@
       "sampleReport": "Ver um relatório PDF de exemplo →"
     },
     "exampleUrls": {
-      "label": "Experimente:",
+      "label": "Experimente um exemplo:",
       "example1": "example.com",
       "example2": "wikipedia.org",
       "example3": "github.com"
@@ -47,7 +50,8 @@
       "typography": {
         "title": "Tipografia",
         "desc": "Carregamento de fontes e consistência"
-      }
+      },
+      "open": "Abrir analisador"
     },
     "proUpsell": {
       "title": "Desbloqueie Relatórios Pro",
@@ -59,6 +63,14 @@
     "footer": {
       "needHelp": "Precisa de ajuda?",
       "contactSupport": "Contatar suporte"
+    },
+    "value": {
+      "title": "Um escaneamento. Uma visão completa da saúde do seu site.",
+      "desc": "O Site Mechanic verifica em paralelo desempenho, SEO, acessibilidade, segurança e tipografia. Os resultados viram uma lista priorizada de correções — o mais crítico primeiro, com o contexto necessário para agir.",
+      "exportNote": "Salve relatórios na sua conta, compartilhe por link ou exporte PDFs prontos para clientes com o Pro."
+    },
+    "preview": {
+      "siteHealth": "Saúde do site"
     }
   },
   "nav": {

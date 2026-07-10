@@ -5,11 +5,14 @@
   "homepage": {
     "hero": {
       "headline": "どんなサイトもスキャン。\n優先度付きの修正を取得。",
-      "subhead": "パフォーマンス、SEO、アクセシビリティ、セキュリティ、タイポグラフィの診断を1回のスキャンで。",
+      "subhead": "1回のスキャンでパフォーマンス、SEO、アクセシビリティ、セキュリティ、タイポグラフィをチェックし、修正の優先順位を提示します。",
       "placeholder": "https://example.com",
-      "helperText": "ほとんどのスキャンは約30秒で完了します",
-      "button": "分析する",
-      "whatsIncluded": "含まれる内容"
+      "helperText": "ほとんどのスキャンは約30秒で完了します。",
+      "button": "サイトをスキャン",
+      "whatsIncluded": "含まれる内容",
+      "eyebrow": "ウェブサイト診断",
+      "bugPrompt": "レポートに不具合を見つけましたか？",
+      "bugPromptCta": "登録して報告すると、レポートを1件無料でアンロックします。"
     },
     "whatYouGet": {
       "title": "取得できる内容",
@@ -21,7 +24,7 @@
       "sampleReport": "サンプルPDFレポートを見る →"
     },
     "exampleUrls": {
-      "label": "試す:",
+      "label": "例を試す：",
       "example1": "example.com",
       "example2": "wikipedia.org",
       "example3": "github.com"
@@ -47,7 +50,8 @@
       "typography": {
         "title": "タイポグラフィ",
         "desc": "フォント読み込みと一貫性"
-      }
+      },
+      "open": "アナライザーを開く"
     },
     "proUpsell": {
       "title": "Proレポートをアンロック",
@@ -59,6 +63,14 @@
     "footer": {
       "needHelp": "ヘルプが必要ですか？",
       "contactSupport": "サポートに連絡"
+    },
+    "value": {
+      "title": "1回のスキャンで、サイトの健全性を完全に把握。",
+      "desc": "Site Mechanicはパフォーマンス、SEO、アクセシビリティ、セキュリティ、タイポグラフィを並行してチェックします。結果は優先度順の修正リストになり、最も重要な項目から、対応に必要なコンテキストとともに表示されます。",
+      "exportNote": "レポートはアカウントに保存、リンクで共有、またはProでクライアント向けPDFとしてエクスポートできます。"
+    },
+    "preview": {
+      "siteHealth": "サイトの健全性"
     }
   },
   "nav": {

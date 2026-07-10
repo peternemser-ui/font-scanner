@@ -69,7 +69,6 @@
     <link rel="stylesheet" href="analyzer-loading.css?v=3.2.0" />
     <link rel="stylesheet" href="ui-components.css?v=3.2.0" />
     <link rel="stylesheet" href="spacing-fixes.css?v=3.2.0" />
-    <link rel="stylesheet" href="faq.css?v=3.2.0" />
 
     <!-- PDF Export Styles -->
     <link rel="stylesheet" href="/pdf-export-styles.css?v=3.2.0">
@@ -83,605 +82,9 @@
     <link rel="stylesheet" href="/css/components/reportAccordion.css?v=3.2.0" />
     <link rel="stylesheet" href="/css/components/page-shell.css?v=3.2.0" />
 
-    <!-- CRITICAL: Theme background fix -->
-    <style>
-      /* Dark mode (when white-theme is NOT present) */
-      body:not(.white-theme) {
-        background: #000000 !important;
-        background-color: #000000 !important;
-      }
-      /* Light mode (when white-theme IS present) */
-      body.white-theme {
-        background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
-        color: #1a1a1a !important;
-      }
+    <!-- Homepage v3 styles (must load last) -->
+    <link rel="stylesheet" href="/css/homepage.css?v=3.3.0" />
 
-      /* Dashboard Layout */
-      .dashboard-main {
-        max-width: 1400px;
-        margin: 0;
-        padding: 2rem 1.5rem 4rem;
-        min-height: calc(100vh - 80px);
-      }
-
-      .dashboard-header {
-        margin-bottom: 2rem;
-      }
-
-      .dashboard-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--text-primary, #fff);
-        margin: 0 0 0.5rem 0;
-      }
-
-      .dashboard-subtitle {
-        font-size: 1rem;
-        color: var(--text-secondary, #888);
-        margin: 0;
-      }
-
-      /* Two-column grid */
-      .dashboard-grid {
-        display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: 1.5rem;
-        align-items: start;
-      }
-
-      @media (max-width: 900px) {
-        .dashboard-grid {
-          grid-template-columns: 1fr;
-        }
-        .dashboard-right {
-          order: 2;
-        }
-      }
-
-      .dashboard-left {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-      }
-
-      .dashboard-right {
-        position: sticky;
-        top: 100px;
-      }
-
-      /* Cards */
-      .dashboard-card {
-        background: var(--bg-card, rgba(255,255,255,0.03));
-        border: 1px solid var(--border-color, rgba(255,255,255,0.1));
-        border-radius: 12px;
-        padding: 1.5rem;
-      }
-
-      .card-heading {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--text-primary, #fff);
-        margin: 0 0 1rem 0;
-      }
-
-      /* Scan form */
-      .scan-form .input-label {
-        display: block;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--text-secondary, #888);
-        margin-bottom: 0.5rem;
-      }
-
-      .scan-form .input-group {
-        display: flex;
-        gap: 0.75rem;
-      }
-
-      .scan-form .url-input {
-        flex: 1;
-        padding: 0.875rem 1rem;
-        font-size: 1rem;
-        border: 1px solid var(--border-color, rgba(255,255,255,0.15));
-        border-radius: 8px;
-        background: var(--bg-input, rgba(255,255,255,0.05));
-        color: var(--text-primary, #fff);
-        transition: border-color 0.2s, box-shadow 0.2s;
-      }
-
-      .scan-form .url-input:focus {
-        outline: 2px solid var(--accent-primary, #00ff41);
-        outline-offset: 2px;
-        border-color: var(--accent-primary, #00ff41);
-      }
-
-      .scan-form .scan-button {
-        padding: 0.875rem 1.5rem;
-        font-size: 1rem;
-        font-weight: 600;
-        background: var(--accent-primary, #00ff41);
-        color: #000;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: background 0.2s, transform 0.1s;
-      }
-
-      .scan-form .scan-button:hover {
-        background: var(--accent-primary-dark, #00cc33);
-      }
-
-      .scan-form .scan-button:focus {
-        outline: 2px solid var(--accent-primary, #00ff41);
-        outline-offset: 2px;
-      }
-
-      .scan-form .scan-button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      .scan-form .input-help {
-        margin: 0.75rem 0 0;
-        font-size: 0.8rem;
-        color: var(--text-muted, #666);
-        line-height: 1.5;
-      }
-
-      /* Enhanced Scan Card Styling */
-      .scan-card-enhanced {
-        position: relative;
-        background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.08) 0%, rgba(var(--accent-primary-rgb), 0.02) 100%);
-        border: 1px solid rgba(var(--accent-primary-rgb), 0.2);
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-      }
-
-      .scan-card-enhanced::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--accent-primary), transparent);
-        opacity: 0.6;
-      }
-
-      .scan-card-enhanced:hover {
-        border-color: rgba(var(--accent-primary-rgb), 0.4);
-        box-shadow: 0 8px 32px rgba(var(--accent-primary-rgb), 0.15);
-      }
-
-      .scan-card-enhanced:focus-within {
-        border-color: var(--accent-primary);
-        box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.15);
-      }
-
-      /* Enhanced Input Field */
-      .scan-card-enhanced .input {
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        transition: all 0.2s ease;
-      }
-
-      .scan-card-enhanced .input:focus {
-        background: rgba(0, 0, 0, 0.4);
-        border-color: var(--accent-primary);
-        box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.15), 0 0 20px rgba(var(--accent-primary-rgb), 0.1);
-      }
-
-      /* Enhanced Button with Shine Effect */
-      .scan-card-enhanced .btn-primary {
-        position: relative;
-        overflow: hidden;
-        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark, var(--accent-primary)) 100%);
-        box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.3);
-        transition: all 0.2s ease;
-      }
-
-      .scan-card-enhanced .btn-primary::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
-        transition: left 0.5s ease;
-      }
-
-      .scan-card-enhanced .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(var(--accent-primary-rgb), 0.4);
-      }
-
-      .scan-card-enhanced .btn-primary:hover::after {
-        left: 100%;
-      }
-
-      .scan-card-enhanced .btn-primary:active {
-        transform: translateY(0);
-      }
-
-      /* Light theme adjustments */
-      body.white-theme .scan-card-enhanced {
-        background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.06) 0%, rgba(var(--accent-primary-rgb), 0.02) 100%);
-      }
-
-      body.white-theme .scan-card-enhanced .input {
-        background: rgba(255, 255, 255, 0.8);
-        border-color: rgba(0, 0, 0, 0.15);
-      }
-
-      body.white-theme .scan-card-enhanced .input:focus {
-        background: rgba(255, 255, 255, 1);
-      }
-
-      .scan-form .input-help code {
-        background: var(--bg-secondary, #1e1e1e);
-        padding: 2px 6px;
-        border-radius: 3px;
-      }
-
-      /* Footer */
-      .dashboard-footer {
-        text-align: left;
-        padding: 2rem 1rem;
-        font-size: 0.85rem;
-        color: var(--text-muted, #666);
-        border-top: 1px solid var(--border-color, rgba(255,255,255,0.1));
-        margin-top: 2rem;
-      }
-
-      .dashboard-footer a {
-        color: var(--accent-primary, #00ff41);
-        text-decoration: none;
-      }
-
-      .sm-version-badge {
-        display: inline-block;
-        margin-left: 10px;
-        padding: 1px 8px;
-        border: 1px solid var(--border-color, rgba(255,255,255,0.15));
-        border-radius: var(--radius-full, 999px);
-        font-size: 11px;
-        letter-spacing: 0.06em;
-        color: var(--text-muted, #666);
-        vertical-align: middle;
-      }
-
-      /* Light mode overrides */
-      body.white-theme .dashboard-card {
-        background: #fff;
-        border-color: #e0e0e0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      }
-
-      body.white-theme .scan-form .url-input {
-        background: #fff;
-        border-color: #d0d0d0;
-        color: #1a1a1a;
-      }
-
-      body.white-theme .scan-form .url-input:focus {
-        border-color: #00994d;
-        box-shadow: 0 0 0 3px rgba(0,153,77,0.15);
-      }
-
-      body.white-theme .scan-form .scan-button {
-        background: #00994d;
-        color: #fff;
-      }
-
-      body.white-theme .scan-form .scan-button:hover {
-        background: #007a3d;
-      }
-
-      /* Light mode: Account status card */
-      body.white-theme #accountStatusCard {
-        background: linear-gradient(135deg, #f0fff4, #ecfdf5);
-        border-color: rgba(0, 153, 77, 0.2);
-      }
-      
-      body.white-theme #planBadge {
-        background: rgba(0, 153, 77, 0.1) !important;
-        color: #00994d !important;
-        border-color: rgba(0, 153, 77, 0.3) !important;
-      }
-      
-      body.white-theme #scansUsed,
-      body.white-theme #reportsGenerated,
-      body.white-theme #scansRemaining {
-        color: #1a1a1a !important;
-      }
-      
-      body.white-theme #usageBar {
-        background: linear-gradient(90deg, #00994d, #22c55e) !important;
-      }
-
-      /* Responsive category grid */
-      @media (max-width: 700px) {
-        .dashboard-main {
-          padding: 1.5rem 1rem 3rem;
-        }
-        .dashboard-card {
-          padding: 1.25rem;
-        }
-        .scan-form .input-group {
-          flex-direction: column;
-        }
-        .scan-form .scan-button {
-          width: 100%;
-        }
-      }
-
-      /* Hide promotional sections after scan completes (keep hero image) */
-      body.scan-complete .hero-right,
-      body.scan-complete .feature-strip,
-      body.scan-complete .pro-upsell,
-      body.scan-complete .homepage-footer-bar,
-      body.scan-complete .whats-included-link,
-      body.scan-complete .sample-report-link,
-      body.scan-complete .example-chips {
-        display: none !important;
-      }
-
-      /* ============================================
-         HOME-HERO: Homepage-only hero layout
-         Scoped entirely under .home-hero
-         ============================================ */
-
-      .home-hero {
-        /* no overflow clipping — graphics stay inside container */
-      }
-
-      /* Light-theme: force hero wrapper divs to be transparent so collage shows through.
-         The global white-theme rules set background-color:inherit on all divs/sections,
-         which can paint a solid background over the absolutely-positioned graphic. */
-      body.white-theme .home-hero,
-      body.white-theme .home-hero .hero-grid,
-      body.white-theme .home-hero__form-wrap,
-      body.white-theme .home-hero__dial-wrap,
-      body.white-theme .home-hero__checklist-inner {
-        background: transparent !important;
-        background-color: transparent !important;
-      }
-
-      /* Remove the global white-theme border/shadow from the hero section */
-      body.white-theme .home-hero {
-        border: none !important;
-        box-shadow: none !important;
-      }
-
-      /* Keep the checklist card styled correctly in light mode */
-      body.white-theme .home-hero .hero-right {
-        background: rgba(255, 255, 255, 0.92) !important;
-        border: 1px solid #e4e4e4 !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
-      }
-
-      /* Headline column — constrained left, sits on top of collage */
-      .home-hero .hero-left {
-        max-width: 48%;
-        position: relative;
-        z-index: 2;
-      }
-
-      /* Ensure hero-grid creates proper stacking above graphic */
-      .home-hero .hero-grid {
-        position: relative;
-        z-index: 2;
-      }
-
-      /* Full-width form wrapper below the headline area */
-      .home-hero__form-wrap {
-        max-width: 1100px;
-        margin: 0 auto;
-        position: relative;
-        z-index: 2;
-      }
-
-      .home-hero__form-wrap .hero-form {
-        margin-bottom: 4px;
-      }
-
-      .home-hero__form-wrap .hero-form__input {
-        min-width: 0;
-      }
-
-      .home-hero__form-wrap .page-shell-usage-pill {
-        margin: 4px 0 0;
-        justify-content: center;
-      }
-
-      .home-hero__subtext {
-        margin: 6px 0 0;
-        font-size: 0.95rem;
-      }
-
-      /* "What you'll get" — compact 2-column card */
-      .home-hero .hero-right {
-        max-width: 1100px;
-        margin: 20px auto 0;
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid #e4e4e4;
-        border-radius: 20px;
-        padding: 22px 28px;
-        position: relative;
-        z-index: 2;
-      }
-
-      .home-hero .hero-right::before {
-        display: none;
-      }
-
-      .home-hero .hero-right__title {
-        display: none;
-      }
-
-      .home-hero .hero-right__list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      .home-hero .hero-right__item {
-        font-size: 19px;
-        font-weight: 600;
-        color: #333;
-        line-height: 1.2;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .home-hero .hero-right__item::before {
-        content: '\2713';
-        font-weight: 700;
-        color: #22a34a;
-        font-size: 14px;
-        flex-shrink: 0;
-      }
-
-      /* 2-column grid: 58% chart / 42% bullets */
-      .home-hero__checklist-inner {
-        display: grid;
-        grid-template-columns: 58% 42%;
-        align-items: center;
-        gap: 0;
-        min-height: 220px;
-      }
-
-      .home-hero__checklist-chart {
-        width: 100%;
-        max-height: 360px;
-        height: auto;
-        object-fit: contain;
-        justify-self: center;
-      }
-
-      /* Example chips — tight below card */
-      .home-hero > .example-chips {
-        max-width: 1100px;
-        margin: 14px auto 8px;
-        position: relative;
-        z-index: 2;
-        justify-content: center;
-      }
-
-      .home-hero > .example-chips .example-chip {
-        height: 36px;
-        line-height: 36px;
-        padding: 0 16px;
-        font-size: 14px;
-      }
-
-      .sample-report-link {
-        display: inline-block;
-        margin-top: 0.75rem;
-        margin-left: 1rem;
-        color: var(--accent-primary, #5bf4e7);
-        font-size: 1.64rem;
-        font-weight: 600;
-        text-decoration: none;
-        transition: opacity 0.2s ease;
-      }
-
-      .sample-report-link:hover {
-        opacity: 0.8;
-        text-decoration: underline;
-      }
-
-      /* Graphic 01: Hero Collage — right side, behind headline + form */
-      .home-hero__collage {
-        position: absolute;
-        right: 0;
-        top: 0;
-        width: min(700px, 55vw);
-        height: auto;
-        z-index: 0;
-        pointer-events: none;
-      }
-
-      /* Graphic 02: Dial Strip — tighter, wider */
-      .home-hero__dial-wrap {
-        max-width: 1100px;
-        margin: 0 auto;
-        position: relative;
-        z-index: 2;
-      }
-
-      .home-hero__dial {
-        display: block;
-        margin: 6px auto 0;
-        width: 100%;
-        max-width: 1100px;
-        height: auto;
-      }
-
-      /* Dark mode card styling */
-      body:not(.white-theme) .home-hero .hero-right {
-        background: rgba(20, 20, 20, 0.85);
-        border-color: rgba(255, 255, 255, 0.12);
-      }
-
-      body:not(.white-theme) .home-hero .hero-right__item {
-        color: rgba(255, 255, 255, 0.88);
-      }
-
-      /* Mobile: <= 768px */
-      @media (max-width: 768px) {
-        .home-hero .hero-left {
-          max-width: 100%;
-        }
-
-        .home-hero__form-wrap {
-          max-width: 100%;
-        }
-
-        .home-hero .hero-right {
-          max-width: 100%;
-          padding: 18px 20px;
-        }
-
-        .home-hero__checklist-inner {
-          grid-template-columns: 1fr;
-          min-height: auto;
-          gap: 16px;
-        }
-
-        .home-hero__checklist-chart {
-          max-height: 160px;
-          justify-self: center;
-        }
-
-        .home-hero__collage {
-          position: relative;
-          right: auto;
-          top: auto;
-          margin: 18px auto 0;
-          display: block;
-          width: 92%;
-          max-width: 520px;
-        }
-
-        .home-hero__dial-wrap {
-          overflow-x: auto;
-        }
-
-        .home-hero > .example-chips {
-          justify-content: flex-start;
-        }
-      }
-    </style>
-
-    <!-- Mobile Homepage Refinement (must load after spacing-fixes.css) -->
-    <link rel="stylesheet" href="/css/mobile-homepage.css?v=3.2.0" />
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js?v=3.2.0"></script>
@@ -766,186 +169,267 @@
     <div id="nav-placeholder"></div>
 
     <main class="page-shell">
-      <!-- Homepage Hero Section -->
-      <section class="homepage-hero home-hero">
-        <!-- Graphic 01: Hero Collage (right-side, absolutely positioned) -->
-        <img class="home-hero__collage"
-             src="/assets/SM_graphic_01_hero_collage.png?v=20260112.2"
-             alt="" aria-hidden="true" loading="eager" />
+      <!-- ================= HERO ================= -->
+      <section class="homepage-hero home-hero hp-hero" aria-labelledby="hp-headline">
+        <div class="hp-container">
+          <div class="hp-hero__grid">
+            <!-- Left: copy + scan form -->
+            <div class="hp-hero__copy">
+              <p class="hp-eyebrow" data-i18n="homepage.hero.eyebrow">Website diagnostics</p>
 
-        <!-- Headline + subhead: constrained to left column -->
-        <div class="hero-grid">
-          <div class="hero-left">
-            <h1 class="hero-headline" data-i18n="homepage.hero.headline">Scan any website.
+              <h1 id="hp-headline" class="hp-hero__headline" data-i18n="homepage.hero.headline">Scan any website.
 Get prioritized fixes &mdash; and shareable reports.</h1>
 
-            <p class="hero-subhead" data-i18n="homepage.hero.subhead">Performance, SEO, accessibility, security, and typography diagnostics in one scan.</p>
-            <a href="/assets/sample-seo-report.pdf" target="_blank" rel="noopener" class="sample-report-link" data-i18n="homepage.whatYouGet.sampleReport">View a sample PDF report &rarr;</a>
+              <p class="hp-hero__subhead" data-i18n="homepage.hero.subhead">One scan checks performance, SEO, accessibility, security, and typography &mdash; and ranks what to fix first.</p>
+
+              <form class="hero-form hp-form" onsubmit="return false;">
+                <div class="hp-form__row">
+                  <label for="dashboardUrlInput" class="visually-hidden" data-i18n="homepage.hero.placeholder">Website URL to analyze</label>
+                  <input
+                    type="url"
+                    id="dashboardUrlInput"
+                    class="hp-form__input"
+                    data-i18n-placeholder="homepage.hero.placeholder"
+                    placeholder="https://example.com"
+                    aria-label="Enter website URL to analyze"
+                    required
+                    aria-required="true"
+                  />
+                  <button id="dashboardAnalyzeButton" type="button" class="hp-form__button" data-i18n="homepage.hero.button" aria-label="Start website scan">Scan site</button>
+                </div>
+              </form>
+
+              <div class="hp-form__meta">
+                <div id="usagePillContainer" class="page-shell-usage-pill"></div>
+                <p class="hp-form__helper" data-i18n="homepage.hero.helperText">Most scans take about 30 seconds.</p>
+              </div>
+
+              <div class="example-chips">
+                <span class="example-chips__label" data-i18n="homepage.exampleUrls.label">Try an example:</span>
+                <button type="button" class="example-chip" data-url="example.com" data-i18n="homepage.exampleUrls.example1">example.com</button>
+                <button type="button" class="example-chip" data-url="wikipedia.org" data-i18n="homepage.exampleUrls.example2">wikipedia.org</button>
+                <button type="button" class="example-chip" data-url="github.com" data-i18n="homepage.exampleUrls.example3">github.com</button>
+              </div>
+
+              <a href="/assets/sample-seo-report.pdf" target="_blank" rel="noopener" class="sample-report-link hp-textlink" data-i18n="homepage.whatYouGet.sampleReport">View a sample PDF report &rarr;</a>
+
+              <p class="hp-signup-note">
+                <span data-i18n="homepage.hero.bugPrompt">Spotted a bug in a report?</span>
+                <a href="/auth.html" data-i18n="homepage.hero.bugPromptCta">Sign up and report it &mdash; we'll unlock one report free.</a>
+              </p>
+            </div>
+
+            <!-- Right: framed product preview (decorative demo values) -->
+            <div class="hp-hero__visual" aria-hidden="true">
+              <div class="hp-browser">
+                <div class="hp-browser__bar">
+                  <span class="hp-browser__dot"></span>
+                  <span class="hp-browser__dot"></span>
+                  <span class="hp-browser__dot"></span>
+                  <span class="hp-browser__url">sitemechanic.io/report</span>
+                </div>
+                <div class="hp-browser__body">
+                  <div class="hp-score">
+                    <svg class="hp-score__ring" viewBox="0 0 110 110" role="presentation" focusable="false">
+                      <circle class="hp-ring-track" cx="55" cy="55" r="46" fill="none" stroke-width="9" />
+                      <circle class="hp-ring-value" cx="55" cy="55" r="46" fill="none" stroke-width="9"
+                              stroke-linecap="round" stroke-dasharray="248.6 289.0"
+                              transform="rotate(-90 55 55)" />
+                      <text x="55" y="64" text-anchor="middle">86</text>
+                    </svg>
+                    <span class="hp-score__label" data-i18n="homepage.preview.siteHealth">Site health</span>
+                  </div>
+                  <ul class="hp-cats">
+                    <li class="hp-cat">
+                      <span class="hp-cat__name" data-i18n="homepage.featureStrip.performance.title">Performance</span>
+                      <span class="hp-cat__track"><span class="hp-cat__fill hp-cat__fill--warn" style="width: 74%"></span></span>
+                      <span class="hp-cat__score">74</span>
+                    </li>
+                    <li class="hp-cat">
+                      <span class="hp-cat__name" data-i18n="homepage.featureStrip.seo.title">SEO</span>
+                      <span class="hp-cat__track"><span class="hp-cat__fill" style="width: 92%"></span></span>
+                      <span class="hp-cat__score">92</span>
+                    </li>
+                    <li class="hp-cat">
+                      <span class="hp-cat__name" data-i18n="homepage.featureStrip.accessibility.title">Accessibility</span>
+                      <span class="hp-cat__track"><span class="hp-cat__fill" style="width: 88%"></span></span>
+                      <span class="hp-cat__score">88</span>
+                    </li>
+                    <li class="hp-cat">
+                      <span class="hp-cat__name" data-i18n="homepage.featureStrip.security.title">Security</span>
+                      <span class="hp-cat__track"><span class="hp-cat__fill" style="width: 95%"></span></span>
+                      <span class="hp-cat__score">95</span>
+                    </li>
+                    <li class="hp-cat">
+                      <span class="hp-cat__name" data-i18n="homepage.featureStrip.typography.title">Typography</span>
+                      <span class="hp-cat__track"><span class="hp-cat__fill hp-cat__fill--warn" style="width: 81%"></span></span>
+                      <span class="hp-cat__score">81</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </section>
 
-        <!-- URL Input Form: FULL WIDTH, below headline area -->
-        <div class="home-hero__form-wrap">
-          <form class="hero-form" onsubmit="return false;">
-            <div class="hero-form__row">
-              <label for="dashboardUrlInput" class="visually-hidden" data-i18n="homepage.hero.placeholder">Website URL to analyze</label>
-              <input
-                type="url"
-                id="dashboardUrlInput"
-                class="hero-form__input"
-                data-i18n-placeholder="homepage.hero.placeholder"
-                placeholder="https://example.com"
-                aria-label="Enter website URL to analyze"
-                required
-                aria-required="true"
-              />
-              <button id="dashboardAnalyzeButton" type="button" class="hero-form__button" data-i18n="homepage.hero.button" aria-label="Start website scan">Analyze</button>
+      <!-- ================= PRODUCT VALUE ================= -->
+      <section class="hp-band hp-band--raised hp-value" aria-labelledby="hp-value-title">
+        <div class="hp-container">
+          <div class="hp-value__grid">
+            <!-- Report document card: links to the real sample PDF -->
+            <a class="hp-doc" href="/assets/sample-seo-report.pdf" target="_blank" rel="noopener" aria-label="View a sample PDF report">
+              <span class="hp-doc__head">
+                <img class="hp-doc__logo" src="/assets/logo-red.svg" alt="" width="140" height="26" loading="lazy" />
+                <span class="hp-doc__badge">PDF</span>
+              </span>
+              <span class="hp-doc__body" aria-hidden="true">
+                <span class="hp-doc__line hp-doc__line--title"></span>
+                <span class="hp-doc__line hp-doc__line--sub"></span>
+                <span class="hp-doc__rows">
+                  <span class="hp-doc__row"><span class="hp-doc__dot hp-doc__dot--high"></span><span class="hp-doc__line hp-doc__line--row"></span></span>
+                  <span class="hp-doc__row"><span class="hp-doc__dot hp-doc__dot--med"></span><span class="hp-doc__line hp-doc__line--row"></span></span>
+                  <span class="hp-doc__row"><span class="hp-doc__dot hp-doc__dot--ok"></span><span class="hp-doc__line hp-doc__line--row"></span></span>
+                </span>
+              </span>
+              <span class="hp-doc__foot">
+                <span data-i18n="homepage.whatYouGet.sampleReport">View a sample PDF report &rarr;</span>
+              </span>
+            </a>
+
+            <!-- Copy + benefits (keeps .hero-right for scan-complete hiding) -->
+            <div class="hero-right hp-value__content">
+              <h2 id="hp-value-title" class="hp-h2" data-i18n="homepage.value.title">One scan. A complete picture of your site's health.</h2>
+              <p class="hp-lead" data-i18n="homepage.value.desc">Site Mechanic checks performance, SEO, accessibility, security, and typography in parallel. The results become one ranked fix list &mdash; most critical first, with the context you need to act on each.</p>
+              <ul class="hp-benefits">
+                <li class="hp-benefit">
+                  <span class="hp-benefit__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+                  </span>
+                  <span class="hp-benefit__text" data-i18n="homepage.whatYouGet.bullet1">Issue severity ranking</span>
+                </li>
+                <li class="hp-benefit">
+                  <span class="hp-benefit__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                  </span>
+                  <span class="hp-benefit__text" data-i18n="homepage.whatYouGet.bullet2">Actionable fixes</span>
+                </li>
+                <li class="hp-benefit">
+                  <span class="hp-benefit__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                  </span>
+                  <span class="hp-benefit__text" data-i18n="homepage.whatYouGet.bullet3">Score breakdowns</span>
+                </li>
+                <li class="hp-benefit">
+                  <span class="hp-benefit__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  </span>
+                  <span class="hp-benefit__text" data-i18n="homepage.whatYouGet.bullet4">Code snippets</span>
+                </li>
+              </ul>
+              <p class="hp-value__note" data-i18n="homepage.value.exportNote">Save reports to your account, share them by link, or export client-ready PDFs with Pro.</p>
             </div>
-          </form>
+          </div>
+        </div>
+      </section>
 
-          <!-- Usage Status Indicator -->
-          <div id="usagePillContainer" class="page-shell-usage-pill"></div>
+      <!-- ================= FEATURE COVERAGE ================= -->
+      <section id="feature-strip" class="feature-strip hp-features" aria-labelledby="hp-features-title">
+        <div class="hp-container">
+          <div class="hp-features__head">
+            <h2 id="hp-features-title" class="hp-h2" data-i18n="homepage.featureStrip.title">What's included</h2>
+          </div>
+          <div class="hp-features__grid">
+            <a class="hp-feature-card" href="/performance-hub.html">
+              <span class="hp-feature-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              </span>
+              <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.performance.title">Performance</h3>
+              <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.performance.desc">Core Web Vitals & load speed</p>
+              <span class="hp-feature-card__go"><span data-i18n="homepage.featureStrip.open">Open analyzer</span> <span aria-hidden="true">&rarr;</span></span>
+            </a>
+            <a class="hp-feature-card" href="/seo-analyzer.html">
+              <span class="hp-feature-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              </span>
+              <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.seo.title">SEO</h3>
+              <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.seo.desc">Meta tags & structured data</p>
+              <span class="hp-feature-card__go"><span data-i18n="homepage.featureStrip.open">Open analyzer</span> <span aria-hidden="true">&rarr;</span></span>
+            </a>
+            <a class="hp-feature-card" href="/accessibility-analyzer.html">
+              <span class="hp-feature-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><path d="M10.5 8.5h3M8 13h8M8 13v7M16 13v7"/></svg>
+              </span>
+              <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.accessibility.title">Accessibility</h3>
+              <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.accessibility.desc">WCAG compliance checks</p>
+              <span class="hp-feature-card__go"><span data-i18n="homepage.featureStrip.open">Open analyzer</span> <span aria-hidden="true">&rarr;</span></span>
+            </a>
+            <a class="hp-feature-card" href="/security-analyzer.html">
+              <span class="hp-feature-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </span>
+              <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.security.title">Security</h3>
+              <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.security.desc">Headers & SSL validation</p>
+              <span class="hp-feature-card__go"><span data-i18n="homepage.featureStrip.open">Open analyzer</span> <span aria-hidden="true">&rarr;</span></span>
+            </a>
+            <a class="hp-feature-card" href="/enhanced-fonts.html">
+              <span class="hp-feature-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              </span>
+              <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.typography.title">Typography</h3>
+              <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.typography.desc">Font loading & consistency</p>
+              <span class="hp-feature-card__go"><span data-i18n="homepage.featureStrip.open">Open analyzer</span> <span aria-hidden="true">&rarr;</span></span>
+            </a>
+          </div>
+        </div>
+      </section>
 
-          <!-- Subhead repeated below form (full-width context line) -->
-          <p class="hero-subhead home-hero__subtext" data-i18n="homepage.hero.subhead">Performance, SEO, accessibility, security, and typography diagnostics in one scan.</p>
-          <p style="text-align: center; margin-top: 0.75rem; font-size: 0.8125rem; color: var(--text-muted, #9CA3AF);">
-            Found a bug in our reports? <a href="/auth.html" style="color: var(--accent-primary, #2DD4BF); font-weight: 600; text-decoration: none;">Sign up</a> and report it to earn a free report unlock.
+      <!-- ================= PRO CTA ================= -->
+      <section class="pro-upsell hp-cta" aria-labelledby="hp-cta-title">
+        <div class="hp-cta__band">
+          <div class="hp-container">
+            <div class="hp-cta__inner">
+              <div>
+                <h2 id="hp-cta-title" class="hp-h2" data-i18n="homepage.proUpsell.title">Unlock Pro Reports</h2>
+                <ul class="hp-cta__bullets">
+                  <li class="hp-cta__bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span data-i18n="homepage.proUpsell.bullet1">PDF export</span>
+                  </li>
+                  <li class="hp-cta__bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span data-i18n="homepage.proUpsell.bullet2">Client-ready fixes</span>
+                  </li>
+                  <li class="hp-cta__bullet">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span data-i18n="homepage.proUpsell.bullet3">Saved reports</span>
+                  </li>
+                </ul>
+              </div>
+              <div class="hp-cta__actions">
+                <button type="button" class="pro-upsell__cta" id="openPricingModal" data-i18n="homepage.proUpsell.cta">See pricing</button>
+                <a href="/assets/sample-seo-report.pdf" target="_blank" rel="noopener" class="hp-textlink" data-i18n="homepage.whatYouGet.sampleReport">View a sample PDF report &rarr;</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= FOOTER BAR ================= -->
+      <footer class="homepage-footer-bar">
+        <div class="hp-container">
+          <p class="homepage-footer-bar__text">
+            <span data-i18n="homepage.footer.needHelp">Need help?</span>
+            <a href="mailto:support@sitemechanic.io" class="homepage-footer-bar__link" data-i18n="homepage.footer.contactSupport">Contact support</a>
+            <span class="sm-version-badge">v2.0</span>
           </p>
         </div>
-
-
-        <!-- What You'll Get Panel - Below Dial Strip -->
-        <aside class="hero-right">
-          <div class="home-hero__checklist-inner">
-            <img class="home-hero__checklist-chart"
-                 src="/assets/SM_graphic_03_mini_chart_module.png?v=20260112.2"
-                 alt="" aria-hidden="true" loading="lazy" />
-            <ul class="hero-right__list">
-              <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet1">Issue severity ranking</li>
-              <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet2">Actionable fixes</li>
-              <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet3">Score breakdowns</li>
-              <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet4">Code snippets</li>
-            </ul>
-          </div>
-        </aside>
-
-        <!-- Example URL Chips -->
-        <div class="example-chips">
-          <span class="example-chips__label" data-i18n="homepage.exampleUrls.label">Try:</span>
-          <button type="button" class="example-chip" data-url="example.com" data-i18n="homepage.exampleUrls.example1">example.com</button>
-          <button type="button" class="example-chip" data-url="wikipedia.org" data-i18n="homepage.exampleUrls.example2">wikipedia.org</button>
-          <button type="button" class="example-chip" data-url="github.com" data-i18n="homepage.exampleUrls.example3">github.com</button>
-        </div>
-
-        <!-- What's Included Link -->
-        <a href="#feature-strip" class="whats-included-link">
-          <span data-i18n="homepage.hero.whatsIncluded">What's included</span>
-          <span class="whats-included-link__arrow">&darr;</span>
-        </a>
-      </section>
-
-      <!-- Feature Strip -->
-      <section id="feature-strip" class="feature-strip">
-        <h2 class="feature-strip__title" data-i18n="homepage.featureStrip.title">What's included</h2>
-        <div class="feature-strip__grid">
-          <div class="feature-strip__item">
-            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.performance.title">Performance</h3>
-            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.performance.desc">Core Web Vitals & load speed</p>
-          </div>
-          <div class="feature-strip__item">
-            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.seo.title">SEO</h3>
-            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.seo.desc">Meta tags & structured data</p>
-          </div>
-          <div class="feature-strip__item">
-            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.accessibility.title">Accessibility</h3>
-            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.accessibility.desc">WCAG compliance checks</p>
-          </div>
-          <div class="feature-strip__item">
-            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.security.title">Security</h3>
-            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.security.desc">Headers & SSL validation</p>
-          </div>
-          <div class="feature-strip__item">
-            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.typography.title">Typography</h3>
-            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.typography.desc">Font loading & consistency</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Pro Upsell Block -->
-      <section class="pro-upsell">
-        <div class="pro-upsell__card">
-          <div class="pro-upsell__content">
-            <h2 class="pro-upsell__title" data-i18n="homepage.proUpsell.title">Unlock Pro Reports</h2>
-            <div class="pro-upsell__bullets">
-              <span class="pro-upsell__bullet" data-i18n="homepage.proUpsell.bullet1">PDF export</span>
-              <span class="pro-upsell__bullet" data-i18n="homepage.proUpsell.bullet2">Client-ready fixes</span>
-              <span class="pro-upsell__bullet" data-i18n="homepage.proUpsell.bullet3">Saved reports</span>
-            </div>
-          </div>
-          <button type="button" class="pro-upsell__cta" id="openPricingModal" data-i18n="homepage.proUpsell.cta">See pricing</button>
-        </div>
-      </section>
-
-      <!-- Homepage Footer Bar -->
-      <div class="homepage-footer-bar">
-        <p class="homepage-footer-bar__text">
-          <span data-i18n="homepage.footer.needHelp">Need help?</span>
-          <a href="mailto:support@sitemechanic.io" class="homepage-footer-bar__link" data-i18n="homepage.footer.contactSupport">Contact support</a>
-          <span class="sm-version-badge">v2.0</span>
-        </p>
-      </div>
+      </footer>
 
       <!-- Results Container (appears after scan) -->
       <section id="dashboardResults" class="card" style="display: none; max-width: var(--container-hero, 1120px); margin: 0 auto; padding: 0 var(--swiss-section-gap, 20px);">
         <!-- Results will be dynamically inserted here -->
       </section>
-
-      <!-- Unified Loading Container -->
-      <div id="loadingContainer" class="loading-container" role="status" aria-live="polite" style="display: none;">
-        <div class="loading-content">
-          <div class="loading-icon">
-            <div class="terminal-cursor">?</div>
-          </div>
-          <h2 class="loading-title">Running audit...</h2>
-          <div class="loading-steps">
-            <div class="loading-step" data-step="init">
-              <span class="step-icon">?</span>
-              <span class="step-text">1. Connecting to site...</span>
-            </div>
-            <div class="loading-step" data-step="seo">
-              <span class="step-icon">?</span>
-              <span class="step-text">2. Analyzing SEO...</span>
-            </div>
-            <div class="loading-step" data-step="performance">
-              <span class="step-icon">?</span>
-              <span class="step-text">3. Checking performance...</span>
-            </div>
-            <div class="loading-step" data-step="accessibility">
-              <span class="step-icon">?</span>
-              <span class="step-text">4. Auditing accessibility...</span>
-            </div>
-            <div class="loading-step" data-step="security">
-              <span class="step-icon">?</span>
-              <span class="step-text">5. Scanning security...</span>
-            </div>
-            <div class="loading-step" data-step="compile">
-              <span class="step-icon">?</span>
-              <span class="step-text">6. Compiling results...</span>
-            </div>
-          </div>
-          <div class="loading-progress">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <div class="progress-bar" style="flex: 1;">
-                <div class="progress-fill" id="progressFill"></div>
-              </div>
-              <span id="progressPercent" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-primary, #00ff41); min-width: 50px; text-align: right;">0%</span>
-            </div>
-            <div class="progress-text">
-              <span id="progressTime">Estimated time: 30-60s</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Error Message -->
       <div id="errorMessage" class="error-message" style="display: none;"></div>

@@ -5,11 +5,14 @@
   "homepage": {
     "hero": {
       "headline": "Scan any website.\nGet prioritized fixes — and shareable reports.",
-      "subhead": "Performance, SEO, accessibility, security, and typography diagnostics in one scan.",
+      "subhead": "One scan checks performance, SEO, accessibility, security, and typography — and ranks what to fix first.",
       "placeholder": "yourwebsite.com",
-      "helperText": "Most scans finish in ~30 seconds",
-      "button": "Analyze",
-      "whatsIncluded": "What's included"
+      "helperText": "Most scans take about 30 seconds.",
+      "button": "Scan site",
+      "whatsIncluded": "What's included",
+      "eyebrow": "Website diagnostics",
+      "bugPrompt": "Spotted a bug in a report?",
+      "bugPromptCta": "Sign up and report it — we'll unlock one report free."
     },
     "whatYouGet": {
       "title": "What you'll get",
@@ -21,7 +24,7 @@
       "sampleReport": "View a sample PDF report →"
     },
     "exampleUrls": {
-      "label": "Try:",
+      "label": "Try an example:",
       "example1": "example.com",
       "example2": "wikipedia.org",
       "example3": "github.com"
@@ -47,7 +50,8 @@
       "typography": {
         "title": "Typography",
         "desc": "Font loading & consistency"
-      }
+      },
+      "open": "Open analyzer"
     },
     "proUpsell": {
       "title": "Unlock Pro Reports",
@@ -59,6 +63,14 @@
     "footer": {
       "needHelp": "Need help?",
       "contactSupport": "Contact support"
+    },
+    "value": {
+      "title": "One scan. A complete picture of your site's health.",
+      "desc": "Site Mechanic checks performance, SEO, accessibility, security, and typography in parallel. The results become one ranked fix list — most critical first, with the context you need to act on each.",
+      "exportNote": "Save reports to your account, share them by link, or export client-ready PDFs with Pro."
+    },
+    "preview": {
+      "siteHealth": "Site health"
     }
   },
   "nav": {
@@ -3739,9 +3751,7 @@
       "fail": "Fail",
       "metric": "Metric",
       "value": "Value",
-      "mode": "Mode",
       "coreMetrics": "CORE METRICS",
-      "url": "URL",
       "generated": "Generated",
       "noDiagnostics": "No diagnostics reported.",
       "howToImprove": "How to improve",
