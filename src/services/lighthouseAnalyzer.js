@@ -13,6 +13,16 @@ class LighthouseAnalyzer {
     this.failureCount = 0;
     this.circuitOpen = false;
     this.circuitOpenTime = null;
+    // Serializes Lighthouse runs. This is a singleton sharing one
+    // `this.chrome`: concurrent runs would reuse/kill each other's Chrome,
+    // and each extra Lighthouse Chrome risks OOMing the container.
+    this._queue = Promise.resolve();
+  }
+
+  async analyzeWithLighthouse(url, options = {}) {
+    const run = this._queue.then(() => this._analyzeSerialized(url, options));
+    this._queue = run.then(() => {}, () => {});
+    return run;
   }
 
   async launchChrome() {
@@ -46,7 +56,7 @@ class LighthouseAnalyzer {
     return this.chrome;
   }
 
-  async analyzeWithLighthouse(url, options = {}) {
+  async _analyzeSerialized(url, options = {}) {
     // Circuit breaker: skip if too many recent failures
     const cbConfig = appConfig.lighthouse?.circuitBreaker || {};
     if (cbConfig.enabled && this.circuitOpen) {

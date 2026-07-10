@@ -91,6 +91,12 @@ services:
       - SCAN_TIMEOUT=${SCAN_TIMEOUT:-60000}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
 
+      # Browser pool — 2 warm Chromes max; Lighthouse launches its own on top.
+      # 5 idle pooled Chromes alone used ~1.4G and OOM-killed the container.
+      - BROWSER_POOL_MIN=${BROWSER_POOL_MIN:-1}
+      - BROWSER_POOL_MAX=${BROWSER_POOL_MAX:-2}
+      - BROWSER_POOL_MAX_USES=${BROWSER_POOL_MAX_USES:-25}
+
       # AI (optional)
       - AI_ENABLED=${AI_ENABLED:-false}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
@@ -122,7 +128,7 @@ services:
       resources:
         limits:
           cpus: '2'
-          memory: 2G
+          memory: 4G
         reservations:
           cpus: '0.5'
           memory: 512M

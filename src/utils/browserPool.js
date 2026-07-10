@@ -22,6 +22,10 @@ const logger = createLogger('BrowserPool');
 
 class BrowserPool {
   constructor(options = {}) {
+    // Recycle browsers after this many scans: long-lived Chromes accumulate
+    // memory and eventually OOM the container (2-4G cgroup limit in prod).
+    this.maxUses = options.maxUses || parseInt(process.env.BROWSER_POOL_MAX_USES || '25', 10);
+
     const poolOptions = {
       min: options.min || parseInt(process.env.BROWSER_POOL_MIN || '1', 10),
       max: options.max || parseInt(process.env.BROWSER_POOL_MAX || '5', 10),
@@ -194,9 +198,17 @@ class BrowserPool {
     logger.debug('📤 Releasing browser back to pool');
 
     try {
+      // Recycle browsers that have served enough requests instead of
+      // returning them to the pool — prevents slow memory bloat.
+      if (browser._poolRequestCount >= this.maxUses) {
+        logger.info(`♻️ Recycling browser after ${browser._poolRequestCount} uses`);
+        await this.pool.destroy(browser);
+        return;
+      }
+
       // Clean up pages before returning to pool
       const pages = await browser.pages();
-      
+
       // Close all pages except the first one (usually about:blank)
       for (let i = 1; i < pages.length; i++) {
         try {
