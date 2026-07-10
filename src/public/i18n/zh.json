@@ -312,7 +312,8 @@
         "accessibilityIssuesCritical": "网站排斥残障用户。可能违反无障碍法律。",
         "fontOptimization": "字体加载问题",
         "fontOptimizationDesc": "字体可能导致布局偏移或渲染缓慢。"
-      }
+      },
+      "insightsTitle": "洞察"
     },
     "loading": {
       "connectingToTarget": "正在连接目标...",

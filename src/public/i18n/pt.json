@@ -313,7 +313,8 @@
         "accessibilityIssuesCritical": "O site exclui usuários com deficiências. Pode violar leis ADA/WCAG.",
         "fontOptimization": "Problemas de carregamento de fontes",
         "fontOptimizationDesc": "Fontes podem causar mudanças de layout ou renderização lenta."
-      }
+      },
+      "insightsTitle": "Conclusões"
     },
     "loading": {
       "connectingToTarget": "Conectando ao alvo...",

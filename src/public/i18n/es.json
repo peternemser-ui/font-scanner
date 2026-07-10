@@ -313,7 +313,8 @@
         "siteGreatShape": "¡Su sitio está en excelente forma! Considere ejecutar un análisis competitivo para encontrar oportunidades de optimización.",
         "fixFirst": "Solucione {issue} primero — esta es su mejora de mayor impacto.",
         "reviewAndImprove": "Revise y mejore {issue} para aumentar su puntuación general."
-      }
+      },
+      "insightsTitle": "Conclusiones"
     },
     "loading": {
       "connectingToTarget": "Conectando al objetivo...",

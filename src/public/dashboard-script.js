@@ -605,7 +605,7 @@ function displayDashboard(data) {
         border-radius: 12px;
         margin-bottom: 1.5rem;
       ">
-        <h3 style="color: var(--text-primary); margin: 0 0 0.75rem 0; font-size: 1rem; font-weight: 700;">${t('dashboard.results.insights', 'Insights')}</h3>
+        <h3 style="color: var(--text-primary); margin: 0 0 0.75rem 0; font-size: 1rem; font-weight: 700;">${t('dashboard.results.insightsTitle', 'Insights')}</h3>
         <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8;">
           ${generateInsights(scores, data)}
         </ul>

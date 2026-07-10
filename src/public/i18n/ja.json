@@ -313,7 +313,8 @@
         "accessibilityIssuesCritical": "サイトは障害のあるユーザーを排除しています。アクセシビリティ法に違反する可能性があります。",
         "fontOptimization": "フォント読み込みの問題",
         "fontOptimizationDesc": "フォントがレイアウトシフトや遅いレンダリングを引き起こす可能性があります。"
-      }
+      },
+      "insightsTitle": "インサイト"
     },
     "loading": {
       "connectingToTarget": "ターゲットに接続中...",

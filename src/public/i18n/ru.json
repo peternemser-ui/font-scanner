@@ -310,7 +310,8 @@
         "accessibilityIssuesCritical": "Сайт исключает пользователей с ограниченными возможностями. Возможно нарушение законодательства ADA/WCAG.",
         "fontOptimization": "Проблемы загрузки шрифтов",
         "fontOptimizationDesc": "Шрифты могут вызывать сдвиги макета или замедлять рендеринг."
-      }
+      },
+      "insightsTitle": "Выводы"
     },
     "loading": {
       "connectingToTarget": "Подключение к цели...",

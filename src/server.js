@@ -489,8 +489,12 @@ app.use(express.static(path.join(__dirname, 'public'), {
                 '.woff', '.woff2', '.ttf', '.eot', '.otf'].includes(ext)) {
       // Images & fonts: 30 days — rarely change, cache-busted via query string
       res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+    } else if (ext === '.json') {
+      // Locale files: always revalidate (ETag 304 when unchanged) so copy
+      // changes ship immediately instead of lagging cached CSS/HTML
+      res.setHeader('Cache-Control', 'no-cache');
     } else {
-      // Everything else (JSON locale files, maps, etc.): 1 hour
+      // Everything else (maps, etc.): 1 hour
       res.setHeader('Cache-Control', 'public, max-age=3600');
     }
   }

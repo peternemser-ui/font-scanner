@@ -281,7 +281,8 @@
         "fontsNeedsWork": "Les polices doivent être optimisées — Trop de fichiers de polices ou mauvaise stratégie de chargement.",
         "runFontScan": "Lancer l'analyse des polices",
         "fontsNotScanned": "Polices non encore analysées"
-      }
+      },
+      "insightsTitle": "Points clés"
     },
     "loading": {
       "connectingToTarget": "Connexion à la cible...",

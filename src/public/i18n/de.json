@@ -313,7 +313,8 @@
         "accessibilityIssuesCritical": "Website schließt Menschen mit Behinderungen aus. Kann gegen Barrierefreiheitsgesetze verstoßen.",
         "fontOptimization": "Probleme beim Laden von Schriften",
         "fontOptimizationDesc": "Schriften können Layoutverschiebungen oder langsames Rendering verursachen."
-      }
+      },
+      "insightsTitle": "Erkenntnisse"
     },
     "loading": {
       "connectingToTarget": "Verbindung zum Ziel wird hergestellt...",

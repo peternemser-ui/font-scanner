@@ -985,7 +985,6 @@ body.scan-complete .pro-upsell,
 body.scan-complete .homepage-footer-bar,
 body.scan-complete .sample-report-link,
 body.scan-complete .example-chips,
-body.scan-complete .hp-hero__visual,
 body.scan-complete .hp-value,
 body.scan-complete .hp-signup-note,
 body.scan-complete .hp-eyebrow {
@@ -1140,4 +1139,32 @@ body[data-page="dashboard"] #dashboardResults {
   body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta:active {
     transform: none;
   }
+}
+
+/* ------------------------------------------------------------
+   Box harmony (post-scan / light theme): legacy white-theme rules
+   draw mismatched frames around the hero and results. One clean
+   card for results; the hero stays frameless on the page surface.
+   ------------------------------------------------------------ */
+body[data-page="dashboard"] .homepage-hero {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body[data-page="dashboard"] #dashboardResults {
+  background: var(--hp-surface) !important;
+  border: 1px solid var(--hp-line) !important;
+  border-radius: var(--hp-radius-lg) !important;
+  box-shadow: var(--hp-shadow-card) !important;
+  padding-top: 28px !important;
+  padding-bottom: 28px !important;
+}
+
+/* Inner generated section: no second frame inside the results card */
+body[data-page="dashboard"] #dashboardResults .dashboard-animate-in,
+body[data-page="dashboard"] #dashboardResults > .section {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }

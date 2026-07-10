@@ -317,7 +317,8 @@
         "siteGreatShape": "Your site is in great shape! Consider running a competitive analysis to find optimization opportunities.",
         "fixFirst": "Fix {issue} first — this is your highest-impact improvement.",
         "reviewAndImprove": "Review and improve {issue} to boost your overall score."
-      }
+      },
+      "insightsTitle": "Insights"
     },
     "loading": {
       "connectingToTarget": "Connecting to target...",
