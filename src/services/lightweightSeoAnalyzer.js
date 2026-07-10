@@ -89,15 +89,42 @@ class LightweightSEOAnalyzer {
   }
 
   /**
+   * Fetch HTML through the shared stealth browser pool.
+   * Bot-protected sites (Cloudflare etc.) 403 the plain HTTP request in
+   * fetchHTML while letting the stealth headless browser through — the
+   * same browser every other analyzer already uses successfully.
+   */
+  async fetchHTMLViaBrowser(url) {
+    const browserPool = require('../utils/browserPool');
+    return browserPool.execute(async (browser) => {
+      const page = await browser.newPage();
+      try {
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
+        return await page.content();
+      } finally {
+        await page.close().catch(() => {});
+      }
+    }, { timeoutMs: 30000 });
+  }
+
+  /**
    * Perform lightweight SEO analysis
    */
   async analyzeSEO(url) {
     logger.info('Starting lightweight SEO analysis (fallback mode)', { url });
 
     try {
-      // Fetch HTML
-      const html = await this.fetchHTML(url);
-      
+      // Fetch HTML — plain HTTP first (fastest), stealth browser on block
+      let html;
+      try {
+        html = await this.fetchHTML(url);
+      } catch (fetchError) {
+        logger.warn('Plain HTTP fetch failed, retrying via stealth browser', {
+          url, error: fetchError.message
+        });
+        html = await this.fetchHTMLViaBrowser(url);
+      }
+
       // Parse with JSDOM
       const dom = new JSDOM(html);
       const document = dom.window.document;
