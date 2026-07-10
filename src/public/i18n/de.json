@@ -5,11 +5,14 @@
   "homepage": {
     "hero": {
       "headline": "Analysieren Sie jede Website.\nErhalten Sie priorisierte Korrekturen.",
-      "subhead": "Diagnose für Leistung, SEO, Barrierefreiheit, Sicherheit und Typografie in einem Scan.",
+      "subhead": "Ein Scan prüft Performance, SEO, Barrierefreiheit, Sicherheit und Typografie — und ordnet, was zuerst zu beheben ist.",
       "placeholder": "https://beispiel.de",
-      "helperText": "Die meisten Scans sind in ~30 Sekunden abgeschlossen",
-      "button": "Analysieren",
-      "whatsIncluded": "Was enthalten ist"
+      "helperText": "Die meisten Scans dauern etwa 30 Sekunden.",
+      "button": "Website scannen",
+      "whatsIncluded": "Was enthalten ist",
+      "eyebrow": "Website-Diagnose",
+      "bugPrompt": "Einen Fehler in einem Bericht entdeckt?",
+      "bugPromptCta": "Registrieren Sie sich und melden Sie ihn — wir schalten einen Bericht kostenlos frei."
     },
     "whatYouGet": {
       "title": "Was Sie erhalten",
@@ -21,7 +24,7 @@
       "sampleReport": "Beispiel-PDF-Bericht ansehen →"
     },
     "exampleUrls": {
-      "label": "Testen Sie:",
+      "label": "Beispiel ausprobieren:",
       "example1": "example.com",
       "example2": "wikipedia.org",
       "example3": "github.com"
@@ -47,7 +50,8 @@
       "typography": {
         "title": "Typografie",
         "desc": "Schriftladen & Konsistenz"
-      }
+      },
+      "open": "Analyse öffnen"
     },
     "proUpsell": {
       "title": "Pro-Berichte freischalten",
@@ -59,6 +63,14 @@
     "footer": {
       "needHelp": "Brauchen Sie Hilfe?",
       "contactSupport": "Support kontaktieren"
+    },
+    "value": {
+      "title": "Ein Scan. Ein vollständiges Bild der Gesundheit Ihrer Website.",
+      "desc": "Site Mechanic prüft Performance, SEO, Barrierefreiheit, Sicherheit und Typografie parallel. Aus den Ergebnissen entsteht eine priorisierte Korrekturliste — das Kritischste zuerst, mit dem nötigen Kontext zum Handeln.",
+      "exportNote": "Speichern Sie Berichte in Ihrem Konto, teilen Sie sie per Link oder exportieren Sie mit Pro kundenfertige PDFs."
+    },
+    "preview": {
+      "siteHealth": "Website-Gesundheit"
     }
   },
   "nav": {
