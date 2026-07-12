@@ -114,6 +114,19 @@ function parsePuppeteerError(error) {
     return new ServiceUnavailableError('Browser connection lost. Please try again.');
   }
 
+  // Scanner overloaded: pool couldn't serve the request in time
+  if (message.includes('Browser pool execute timed out') ||
+      message.includes('Browser pool acquisition failed')) {
+    return new TimeoutError('The analysis timed out because the scanner is busy. Please try again in a minute.');
+  }
+
+  // Browser crashed mid-scan (renderer killed, e.g. under memory pressure)
+  if (message.includes('Requesting main frame too early') ||
+      message.includes('Target crashed') ||
+      message.includes('Session closed')) {
+    return new ServiceUnavailableError('The scanning browser crashed while analyzing this site. Please try again.');
+  }
+
   if (message.includes('Protocol error')) {
     return new AppError('Browser protocol error occurred. Please try again.', 500);
   }
@@ -197,9 +210,11 @@ function logError(error, context = {}) {
  */
 // eslint-disable-next-line no-unused-vars
 function errorMiddleware(err, req, res, next) {
-  // Parse special error types
+  // Parse special error types. Only raw errors (no statusCode) — typed
+  // AppErrors already carry an intentional status and message, and their
+  // text could false-match the keyword patterns.
   let error = err;
-  if (err.message && (err.message.includes('net::') || err.name === 'TimeoutError')) {
+  if (err.message && !err.statusCode) {
     error = parsePuppeteerError(err);
   }
 

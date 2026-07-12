@@ -9,6 +9,9 @@
  * - 5x higher throughput
  */
 
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const GenericPool = require('generic-pool');
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
@@ -20,11 +23,27 @@ puppeteer.use(StealthPlugin());
 
 const logger = createLogger('BrowserPool');
 
+// Chromium scratch entries in os.tmpdir() that leak when a browser dies
+// without a clean browser.close() (OOM kill, crash, abandoned scan).
+// On a tmpfs /tmp these leaks consume the container's memory limit.
+const CHROMIUM_TMP_PATTERNS = [
+  /^puppeteer_dev_profile-/,
+  /^puppeteer_dev_chrome_profile-/,
+  /^\.?org\.chromium\.Chromium\./,
+];
+
+/** Age (ms) after which an untracked Chromium tmp entry is considered orphaned. */
+const ORPHAN_TMP_MAX_AGE_MS = 60 * 60 * 1000;
+
 class BrowserPool {
   constructor(options = {}) {
     // Recycle browsers after this many scans: long-lived Chromes accumulate
     // memory and eventually OOM the container (2-4G cgroup limit in prod).
     this.maxUses = options.maxUses || parseInt(process.env.BROWSER_POOL_MAX_USES || '25', 10);
+
+    // Temp profile dirs of live browsers — everything else matching
+    // CHROMIUM_TMP_PATTERNS in os.tmpdir() is a leak candidate.
+    this._liveProfileDirs = new Set();
 
     const poolOptions = {
       min: options.min || parseInt(process.env.BROWSER_POOL_MIN || '1', 10),
@@ -89,14 +108,20 @@ class BrowserPool {
             const duration = Date.now() - startTime;
             logger.info(`✅ Browser instance created in ${duration}ms`);
 
-            // Track browser disconnection
-            browser.on('disconnected', () => {
-              logger.warn('⚠️ Browser disconnected from pool');
-            });
-
             // Add metadata
             browser._poolCreatedAt = Date.now();
             browser._poolRequestCount = 0;
+            browser._poolProfileDir = this._extractProfileDir(browser);
+            if (browser._poolProfileDir) {
+              this._liveProfileDirs.add(browser._poolProfileDir);
+            }
+
+            // Track browser disconnection (crash / OOM kill). The profile
+            // dir won't be cleaned by browser.close() in that case.
+            browser.on('disconnected', () => {
+              logger.warn('⚠️ Browser disconnected from pool');
+              this._removeProfileDir(browser);
+            });
 
             return browser;
           } catch (error) {
@@ -123,6 +148,8 @@ class BrowserPool {
             }
           } catch (error) {
             logger.warn('Error closing browser:', error.message);
+          } finally {
+            await this._removeProfileDir(browser);
           }
         },
 
@@ -148,6 +175,18 @@ class BrowserPool {
       logger.debug('📊 Browser pool stats:', stats);
     }, 60000); // Log stats every minute
 
+    // Reap leaked Chromium tmp entries: once at startup (no pool browsers
+    // exist yet, so anything matching is stale) and hourly thereafter.
+    this._sweepOrphanedTmp({ maxAgeMs: 0 }).catch((err) =>
+      logger.warn('Startup tmp sweep failed:', err.message));
+    this._tmpSweepInterval = setInterval(() => {
+      this._sweepOrphanedTmp().catch((err) =>
+        logger.warn('Tmp sweep failed:', err.message));
+    }, ORPHAN_TMP_MAX_AGE_MS);
+    // Don't let the sweep timer keep the process alive (tests, scripts)
+    if (this._tmpSweepInterval.unref) this._tmpSweepInterval.unref();
+    if (this._statsInterval.unref) this._statsInterval.unref();
+
     // Handle pool errors
     this.pool.on('factoryCreateError', (error) => {
       logger.error('Factory create error:', error);
@@ -156,6 +195,78 @@ class BrowserPool {
     this.pool.on('factoryDestroyError', (error) => {
       logger.error('Factory destroy error:', error);
     });
+  }
+
+  /**
+   * Get the --user-data-dir Chromium was launched with, if it's a
+   * temp profile we're responsible for cleaning up.
+   * @private
+   */
+  _extractProfileDir(browser) {
+    try {
+      const args = browser.process()?.spawnargs || [];
+      const arg = args.find((a) => a.startsWith('--user-data-dir='));
+      if (!arg) return null;
+      const dir = arg.slice('--user-data-dir='.length);
+      // Only manage puppeteer-generated temp profiles, never a user-config dir
+      const inTmp = path.resolve(dir).startsWith(path.resolve(os.tmpdir()));
+      return inTmp && CHROMIUM_TMP_PATTERNS.some((re) => re.test(path.basename(dir)))
+        ? dir
+        : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Delete a dead browser's temp profile dir. puppeteer only removes it on a
+   * clean browser.close(); OOM-killed or crashed browsers leak it — fatal on
+   * a tmpfs /tmp where the leak counts against the container memory limit.
+   * @private
+   */
+  async _removeProfileDir(browser) {
+    const dir = browser._poolProfileDir;
+    if (!dir) return;
+    browser._poolProfileDir = null;
+    this._liveProfileDirs.delete(dir);
+    try {
+      await fs.promises.rm(dir, { recursive: true, force: true, maxRetries: 3 });
+    } catch (error) {
+      logger.warn(`Failed to remove browser profile dir ${dir}:`, error.message);
+    }
+  }
+
+  /**
+   * Remove Chromium tmp entries that no live pool browser owns.
+   * @private
+   */
+  async _sweepOrphanedTmp({ maxAgeMs = ORPHAN_TMP_MAX_AGE_MS } = {}) {
+    const tmpDir = os.tmpdir();
+    let entries;
+    try {
+      entries = await fs.promises.readdir(tmpDir);
+    } catch {
+      return;
+    }
+
+    const now = Date.now();
+    let removed = 0;
+    for (const name of entries) {
+      if (!CHROMIUM_TMP_PATTERNS.some((re) => re.test(name))) continue;
+      const fullPath = path.join(tmpDir, name);
+      if (this._liveProfileDirs.has(fullPath)) continue;
+      try {
+        const stat = await fs.promises.stat(fullPath);
+        if (now - stat.mtimeMs < maxAgeMs) continue;
+        await fs.promises.rm(fullPath, { recursive: true, force: true, maxRetries: 3 });
+        removed++;
+      } catch {
+        // Entry vanished or is busy — next sweep will get it
+      }
+    }
+    if (removed > 0) {
+      logger.info(`🧹 Swept ${removed} orphaned Chromium tmp entr${removed === 1 ? 'y' : 'ies'}`);
+    }
   }
 
   /**
@@ -240,16 +351,43 @@ class BrowserPool {
   async execute(fn, { timeoutMs = 120000 } = {}) {
     const browser = await this.acquire();
 
+    let timer;
+    const work = Promise.resolve().then(() => fn(browser));
+    // If we abandon `work` on timeout, its eventual rejection must not
+    // become an unhandled rejection.
+    work.catch(() => {});
+
     try {
       const result = await Promise.race([
-        fn(browser),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Browser pool execute timed out after ${timeoutMs}ms`)), timeoutMs)
-        )
+        work,
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error(`Browser pool execute timed out after ${timeoutMs}ms`)), timeoutMs);
+        })
       ]);
-      return result;
-    } finally {
       await this.release(browser);
+      return result;
+    } catch (error) {
+      // A timed-out task is still driving this browser, and a crashed-target
+      // error means it can't reliably open new pages (e.g. "Requesting main
+      // frame too early!" after the kernel OOM-kills renderers). Returning it
+      // to the pool poisons every subsequent scan — destroy it instead.
+      const message = error?.message || '';
+      const poisoned =
+        message.includes('execute timed out') ||
+        message.includes('Requesting main frame too early') ||
+        message.includes('Target crashed') ||
+        message.includes('Session closed') ||
+        message.includes('browser has disconnected');
+      if (poisoned) {
+        logger.warn(`☠️ Destroying poisoned browser after error: ${message}`);
+        await this.pool.destroy(browser).catch((destroyError) =>
+          logger.error('Failed to destroy poisoned browser:', destroyError.message));
+      } else {
+        await this.release(browser);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -276,6 +414,7 @@ class BrowserPool {
   async drain() {
     logger.info('🌊 Draining browser pool...');
     clearInterval(this._statsInterval);
+    clearInterval(this._tmpSweepInterval);
 
     try {
       await this.pool.drain();

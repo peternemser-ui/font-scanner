@@ -123,7 +123,10 @@ services:
       - NET_BIND_SERVICE
     read_only: false
     tmpfs:
-      - /tmp
+      # Cap /tmp: an uncapped tmpfs defaults to half the host RAM and counts
+      # against the 4G container memory limit — leaked Chromium profiles
+      # (~85MB each) filled it to 3.7G on 2026-07-11 and OOM-starved scans.
+      - /tmp:size=1g,mode=1777
     deploy:
       resources:
         limits:

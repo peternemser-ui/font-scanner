@@ -8,7 +8,6 @@
 
 const competitiveCWVAnalyzer = require('./competitiveCoreWebVitalsAnalyzer');
 const { createLogger } = require('../utils/logger');
-const browserPool = require('../utils/browserPool');
 const { roundTo, formatNumber, formatDuration } = require('../utils/formatHelpers');
 
 const logger = createLogger('CoreWebVitalsService');
@@ -166,7 +165,9 @@ class CoreWebVitalsService {
       return results;
     } catch (error) {
       logger.error('Core Web Vitals analysis failed:', error);
-      throw new Error(`CWV analysis failed: ${error.message}`);
+      // Rethrow the original error: wrapping in a plain Error strips the
+      // name/type the controller's parsePuppeteerError relies on.
+      throw error;
     }
   }
   
