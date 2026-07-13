@@ -14,9 +14,10 @@
    CSS VARIABLES (Swiss-Minimal Tokens)
    ======================================== */
 :root {
-  /* Typography - Inter (body and headings), DM Serif Text for page titles */
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  --font-serif: "DM Serif Text", Georgia, serif;
+  /* Typography — Hanken Grotesk body, Schibsted Grotesk display */
+  --font-sans: "Hanken Grotesk", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Schibsted Grotesk", "Hanken Grotesk", -apple-system, "Segoe UI", sans-serif;
+  --font-serif: var(--font-display, "Schibsted Grotesk", "Hanken Grotesk", sans-serif);
   
   /* Colors - Swiss Minimal (Light Mode Default) */
   --color-bg: #F7F7F5;

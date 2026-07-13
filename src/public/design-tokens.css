@@ -7,6 +7,10 @@
  * <link rel="stylesheet" href="/design-tokens.css">
  */
 
+/* "Precision Instrument" type system — loaded site-wide from the SSOT so
+   every page/report inherits it (must precede all other rules). */
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 :root {
   /* ========================================
      COLORS - SEMANTIC SYSTEM
@@ -118,9 +122,14 @@
      TYPOGRAPHY
      ======================================== */
   
-  /* Font Families */
-  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  /* Font Families — "Precision Instrument" type system (site-wide) */
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Courier New', monospace;
+  --font-sans: 'Hanken Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Schibsted Grotesk', 'Hanken Grotesk', -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: var(--font-display);            /* legacy alias → new display face */
+  --font-family-sans: var(--font-sans);         /* alias caught by a few components */
+  --font-family-mono: var(--font-mono);
+  --sm-font: var(--font-sans);                  /* pricing modal alias */
   
   /* Font Sizes */
   --text-xs: 0.75rem;     /* 12px */
@@ -380,12 +389,12 @@ html[data-theme="light"] {
   --color-error: #ef4444;
   --color-info: #3b82f6;
 
-  /* Backgrounds - Light mode */
-  --bg-base: #ffffff;
-  --bg-elevated: #f9fafb;
+  /* Backgrounds - Light mode (warm paper canvas, white cards) */
+  --bg-base: #fbfaf6;
+  --bg-elevated: #f4f1ea;
   --bg-card: #ffffff;
-  --bg-input: #f3f4f6;
-  --bg-overlay: rgba(255, 255, 255, 0.95);
+  --bg-input: #f4f1ea;
+  --bg-overlay: rgba(251, 250, 246, 0.95);
 
   /* Borders - Light mode */
   --border-color: rgba(0, 0, 0, 0.1);
@@ -479,12 +488,12 @@ html[data-theme="dark"],
 
 /* --- Light theme --- */
 html[data-theme="light"] {
-  /* Core Surfaces */
-  --r-bg: #FFFFFF;
+  /* Core Surfaces (warm paper canvas, white cards) */
+  --r-bg: #FBFAF6;
   --r-surface-1: #FFFFFF;
-  --r-surface-2: #F8FAFC;
-  --r-border: rgba(0, 0, 0, 0.10);
-  --r-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --r-surface-2: #F5F2EA;
+  --r-border: rgba(26, 22, 15, 0.10);
+  --r-shadow: 0 1px 3px rgba(26, 22, 15, 0.08);
 
   /* Text */
   --r-text: #111827;
@@ -736,15 +745,24 @@ html[data-theme="print"] .report-scope {
 }
 
 /* ========================================
-   FONT LOADING
+   GLOBAL TYPOGRAPHY
+   The "Precision Instrument" faces (Schibsted Grotesk / Hanken Grotesk /
+   JetBrains Mono) are loaded via the @import at the top of this file, so
+   they reach every page/report that includes design-tokens.css. Legacy
+   per-page Inter <link> tags remain as a harmless fallback.
    ======================================== */
 
-/* Inter is loaded via <link> tags in each HTML page's <head>.
-   (A trailing @import here was invalid CSS — @import must precede all
-   other rules — so it was ignored by browsers and has been removed.) */
-
-/* JetBrains Mono (existing) */
-/* Already loaded in styles.css - no need to duplicate */
+/* Body defaults to Hanken Grotesk via --font-sans on <body> in styles.css.
+   Headings pick up the Schibsted Grotesk display face site-wide; any
+   component that sets its own font-family still wins (higher specificity). */
+h1, h2, h3, h4, h5,
+.report-header__title,
+.report-header h1,
+.section-title,
+.card__title {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
 
 /* ========================================
    UTILITY CLASSES
