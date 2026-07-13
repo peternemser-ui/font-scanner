@@ -1663,7 +1663,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const ssImg = resultsContent.querySelector('.perf-hub-screenshot');
       if (ssImg) {
         ssImg.addEventListener('error', function() {
-          this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'Screenshot unavailable') + '</div>';
+          this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'This site blocks automated screenshots') + '</div>';
         });
       }
     }
@@ -1905,7 +1905,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const ssImg = resultsContent.querySelector('.perf-hub-screenshot');
       if (ssImg) {
         ssImg.addEventListener('error', function() {
-          this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'Screenshot unavailable') + '</div>';
+          this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'This site blocks automated screenshots') + '</div>';
         });
       }
     }
@@ -2949,7 +2949,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const ssImg = resultsContent.querySelector('.perf-hub-screenshot');
       if (ssImg) {
         ssImg.addEventListener('error', function() {
-          this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'Screenshot unavailable') + '</div>';
+          this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'This site blocks automated screenshots') + '</div>';
         });
       }
     }

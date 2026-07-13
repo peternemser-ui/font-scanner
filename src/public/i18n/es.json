@@ -2831,7 +2831,7 @@
     "notAvailable": "N/A",
     "copyFailed": "Error al copiar",
     "url": "URL",
-    "screenshotUnavailable": "Captura de pantalla no disponible",
+    "screenshotUnavailable": "Este sitio bloquea las capturas de pantalla automáticas",
     "unique": "unico",
     "pleaseWait": "Por favor espera...",
     "difficulty": {
@@ -3377,7 +3377,7 @@
     "common": {
       "pageScreenshot": "Captura de Pantalla",
       "openFullSize": "Abrir tamaño completo",
-      "screenshotUnavailable": "Captura no disponible",
+      "screenshotUnavailable": "Este sitio bloquea las capturas de pantalla automáticas",
       "exportShare": "Exportar y Compartir",
       "downloadReports": "Descarga informes, exporta datos y comparte resultados.",
       "exportPdf": "Exportar PDF",
@@ -8000,7 +8000,7 @@
       "exportAsFormats": "Exportar como JSON, CSV o Sitemap XML",
       "excellentSiteStructure": "¡Excelente estructura del sitio!",
       "goodCrawlabilityMessage": "Su sitio tiene buena rastreabilidad y estructura. Siga monitoreando para mantener el éxito.",
-      "screenshotUnavailable": "Captura no disponible",
+      "screenshotUnavailable": "Este sitio bloquea las capturas de pantalla automáticas",
       "siteCrawlerResults": "Resultados del rastreador",
       "pagesDiscovered": "Páginas descubiertas",
       "crawlTime": "Tiempo de rastreo",

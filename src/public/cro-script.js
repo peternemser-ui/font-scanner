@@ -679,7 +679,7 @@ function attachCROScreenshotRetry(imgEl, baseUrl, options = {}) {
 
     const msg = document.createElement('div');
     msg.setAttribute('data-sm-screenshot-fallback', 'true');
-    msg.textContent = t('reports.common.screenshotUnavailable', 'Screenshot unavailable');
+    msg.textContent = t('reports.common.screenshotUnavailable', 'This site blocks automated screenshots');
     msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); text-align: center;';
     wrapper.appendChild(msg);
   };

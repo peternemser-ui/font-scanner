@@ -61,7 +61,7 @@
    */
   const common = {
     pageScreenshot: () => t('reports.common.pageScreenshot', 'Page Screenshot'),
-    screenshotUnavailable: () => t('reports.common.screenshotUnavailable', 'Screenshot unavailable'),
+    screenshotUnavailable: () => t('reports.common.screenshotUnavailable', 'This site blocks automated screenshots'),
     exportShare: () => t('reports.common.exportShare', 'Export & Share'),
     downloadReports: () => t('reports.common.downloadReports', 'Download reports, export data, and share results.'),
     exportPdf: () => t('reports.common.exportPdf', 'Export PDF'),

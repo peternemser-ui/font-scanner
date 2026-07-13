@@ -15,6 +15,24 @@ function getReportsDirAbsolute() {
   return path.resolve(process.cwd(), config.reports.dir);
 }
 
+/**
+ * Build a fallback screenshot URL via WordPress mShots.
+ *
+ * Some sites (e.g. cars.com and other Akamai/PerimeterX-protected domains)
+ * return HTTP 403 to our servers, so our own headless capture is blocked.
+ * mShots renders the page from WordPress.com infrastructure that these sites
+ * generally do not block, giving users a real thumbnail instead of an empty
+ * placeholder. The generated image is served over HTTPS, which the app CSP
+ * (`imgSrc: 'self' data: https:`) already permits.
+ *
+ * @param {string} url - Public URL of the analyzed page
+ * @returns {string|null} mShots image URL, or null if url is missing
+ */
+function buildMshotsFallbackUrl(url) {
+  if (!url) return null;
+  return `https://s0.wp.com/mshots/v1/${encodeURIComponent(url)}?w=1200&h=675`;
+}
+
 async function fileExists(filePath) {
   try {
     await fs.access(filePath);
@@ -72,7 +90,7 @@ async function ensureReportScreenshot({ url, reportId, requestId, filename = 'sc
           // Skip screenshot — a placeholder is better than a misleading error page
           const botCheck = await detectBotProtection(page, response);
           if (botCheck.isDetected) {
-            logger.warn('Screenshot skipped — site blocked headless browser', {
+            logger.warn('Screenshot blocked by site — using mShots fallback', {
               reportId, url, reason: botCheck.reason,
             });
             return { blocked: true };
@@ -98,9 +116,10 @@ async function ensureReportScreenshot({ url, reportId, requestId, filename = 'sc
         }
       });
 
-      // If site actively blocked us, don't retry — it won't change
+      // If site actively blocked us, don't retry — it won't change.
+      // Fall back to an mShots thumbnail rendered from external infra.
       if (result && result.blocked) {
-        return null;
+        return buildMshotsFallbackUrl(url);
       }
 
       // Guard: sometimes puppeteer returns without writing (rare). Ensure file exists.
@@ -110,7 +129,7 @@ async function ensureReportScreenshot({ url, reportId, requestId, filename = 'sc
           await new Promise(r => setTimeout(r, 1000));
           continue;
         }
-        return null;
+        return buildMshotsFallbackUrl(url);
       }
 
       return `/reports/${encodeURIComponent(reportId)}/${encodeURIComponent(filename)}`;
@@ -126,13 +145,14 @@ async function ensureReportScreenshot({ url, reportId, requestId, filename = 'sc
         await new Promise(r => setTimeout(r, 1000));
         continue;
       }
-      return null;
+      return buildMshotsFallbackUrl(url);
     }
   }
-  return null;
+  return buildMshotsFallbackUrl(url);
 }
 
 module.exports = {
   ensureReportScreenshot,
   getReportsDirAbsolute,
+  buildMshotsFallbackUrl,
 };

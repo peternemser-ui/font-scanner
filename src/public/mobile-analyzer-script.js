@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const pageScreenshotLabel = t('reports.common.pageScreenshot', 'Page Screenshot');
-    const screenshotUnavailableLabel = t('reports.common.screenshotUnavailable', 'Screenshot unavailable');
+    const screenshotUnavailableLabel = t('reports.common.screenshotUnavailable', 'This site blocks automated screenshots');
     const screenshotHtml = screenshotUrl ? `
       <div class="screenshot-section" style="margin-bottom: 1.5rem;">
         <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">

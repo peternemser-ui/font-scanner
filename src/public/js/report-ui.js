@@ -519,7 +519,7 @@
             link.innerHTML = `
               <div style="padding: 3rem; text-align: center; color: var(--color-text-muted, #6b7280);">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">📷</div>
-                <div>Screenshot unavailable</div>
+                <div>This site blocks automated screenshots</div>
               </div>
             `;
           }

@@ -356,7 +356,7 @@ function displayPerformanceResults(results) {
     const ssImg = screenshotSection.querySelector('.screenshot-item__img');
     if (ssImg) {
       ssImg.addEventListener('error', function() {
-        this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + (window.t?.('reports.performance.screenshotUnavailable', 'Screenshot unavailable') || 'Screenshot unavailable') + '</div>';
+        this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + (window.t?.('reports.performance.screenshotUnavailable', 'This site blocks automated screenshots') || 'This site blocks automated screenshots') + '</div>';
       });
     }
 

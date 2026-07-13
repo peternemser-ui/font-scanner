@@ -978,7 +978,7 @@ async function displayAccessibilityResults(resultData) {
     const ssImg = screenshotSection.querySelector('.screenshot-item__img');
     if (ssImg) {
       ssImg.addEventListener('error', function() {
-        this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'Screenshot unavailable') + '</div>';
+        this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'This site blocks automated screenshots') + '</div>';
       });
     }
     reportScope.appendChild(screenshotSection);
