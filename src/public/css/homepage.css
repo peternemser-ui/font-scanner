@@ -1,72 +1,97 @@
 /* ============================================================
-   HOMEPAGE v3 — editorial technical SaaS landing
+   HOMEPAGE v4 — "Precision Instrument"
+   Editorial, light-first landing inspired by block.xyz/ai:
+   warm-paper canvas, big confident display type, generous
+   whitespace, hairline separation, and monospaced technical
+   marks (labels / metrics) as the diagnostics-brand signature.
+
    Scope: everything is gated on body[data-page="dashboard"] so
    this file cannot leak into other pages. Loads LAST in the
-   cascade (after styles.css / spacing-fixes.css) so it wins
-   without !important wherever specificity allows.
-   Theme model: dark is the site default; light via body.white-theme.
+   cascade so it wins without !important wherever specificity
+   allows. Theme model: dark is the site default; light via
+   body.white-theme. Both palettes are tuned; light is the star.
    ============================================================ */
 
 body[data-page="dashboard"] {
+  /* Type system */
+  --hp-font-display: 'Schibsted Grotesk', 'Hanken Grotesk', system-ui, sans-serif;
+  --hp-font-sans: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --hp-font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Menlo', monospace;
+
   /* Brand + status color tokens (homepage scope) */
   --hp-red: #dd3838;                 /* Site Mechanic brand red (logo-red.svg) */
   --hp-red-hover: #c22f2f;
-  --hp-red-soft: rgba(221, 56, 56, 0.12);
+  --hp-red-soft: rgba(221, 56, 56, 0.10);
   --hp-red-text: #f0625c;            /* red for text/links on dark bg (contrast) */
-  --hp-green: #22a34a;               /* positive indicators only */
+  --hp-green: #2bb35a;               /* positive indicators only */
   --hp-amber: #e8930c;               /* score visualizations only */
 
-  /* Layout tokens */
-  --hp-container: 1200px;            /* wide container for visuals/cards */
-  --hp-copy-max: 640px;              /* readable text measure */
-  --hp-pad-x: clamp(20px, 4.5vw, 48px);
-  --hp-band-y: clamp(56px, 8vw, 104px);
+  /* Layout tokens — roomier than v3 to breathe like the reference */
+  --hp-container: 1200px;
+  --hp-copy-max: 640px;
+  --hp-pad-x: clamp(22px, 5vw, 56px);
+  --hp-band-y: clamp(72px, 10vw, 148px);
 
-  /* Surfaces (dark default) */
-  --hp-bg: #0b0d10;
-  --hp-band-raised: #12151a;
-  --hp-surface: #171b21;
-  --hp-surface-2: #1e242c;
-  --hp-line: rgba(255, 255, 255, 0.09);
-  --hp-line-strong: rgba(255, 255, 255, 0.16);
+  /* Surfaces (dark default — warm near-black) */
+  --hp-bg: #100f0d;
+  --hp-band-raised: #16150f;
+  --hp-surface: #1a1813;
+  --hp-surface-2: #221f19;
+  --hp-line: rgba(255, 248, 235, 0.10);
+  --hp-line-strong: rgba(255, 248, 235, 0.18);
 
   /* Text */
-  --hp-text: #f4f6f8;
-  --hp-text-2: #b9c2cc;
-  --hp-text-3: #8b95a1;
+  --hp-text: #f7f4ee;
+  --hp-text-2: #c2bcb0;
+  --hp-text-3: #8f887b;
+  --hp-ink: #f7f4ee;                 /* high-contrast surface for solid marks */
+  --hp-ink-on: #100f0d;
 
-  /* Controls — radii derive from the design-token scale */
-  --hp-control-h: 56px;
+  /* Controls */
+  --hp-control-h: 58px;
   --hp-radius: var(--radius-lg, 12px);
   --hp-radius-lg: var(--radius-xl, 16px);
-  --hp-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.35);
-  --hp-shadow-pop: 0 24px 64px rgba(0, 0, 0, 0.5);
+  --hp-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.4);
+  --hp-shadow-pop: 0 30px 80px rgba(0, 0, 0, 0.55);
   --hp-focus-ring: 0 0 0 3px rgba(240, 98, 92, 0.4);
 
+  /* Atmosphere accents */
+  --hp-glow: radial-gradient(60% 55% at 78% 12%, rgba(221, 56, 56, 0.14), transparent 70%);
+
   background: var(--hp-bg);
+  font-family: var(--hp-font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
+/* -------- LIGHT — the block.xyz-inspired star -------- */
 body.white-theme[data-page="dashboard"] {
   --hp-red-text: #c22f2f;
-  --hp-bg: #ffffff;
-  --hp-band-raised: #faf8f5;         /* warm neutral */
+  --hp-red-soft: rgba(221, 56, 56, 0.08);
+
+  --hp-bg: #fbfaf6;                  /* warm paper */
+  --hp-band-raised: #f2efe7;         /* warm sand */
   --hp-surface: #ffffff;
-  --hp-surface-2: #f6f4f1;
-  --hp-line: rgba(17, 24, 39, 0.10);
-  --hp-line-strong: rgba(17, 24, 39, 0.18);
-  --hp-text: #171b21;
-  --hp-text-2: #414b57;
-  --hp-text-3: #6b7583;
-  --hp-shadow-card: 0 1px 2px rgba(17, 24, 39, 0.06), 0 12px 32px rgba(17, 24, 39, 0.08);
-  --hp-shadow-pop: 0 24px 64px rgba(17, 24, 39, 0.14);
-  --hp-focus-ring: 0 0 0 3px rgba(221, 56, 56, 0.3);
+  --hp-surface-2: #f5f2ea;
+  --hp-line: rgba(26, 22, 15, 0.12);
+  --hp-line-strong: rgba(26, 22, 15, 0.20);
+
+  --hp-text: #1a160f;               /* warm near-black ink */
+  --hp-text-2: #565048;
+  --hp-text-3: #8b8579;
+  --hp-ink: #1a160f;
+  --hp-ink-on: #fbfaf6;
+
+  --hp-shadow-card: 0 1px 2px rgba(26, 22, 15, 0.05), 0 16px 40px rgba(26, 22, 15, 0.08);
+  --hp-shadow-pop: 0 30px 80px rgba(26, 22, 15, 0.14);
+  --hp-focus-ring: 0 0 0 3px rgba(221, 56, 56, 0.28);
+  --hp-glow: radial-gradient(60% 55% at 80% 8%, rgba(221, 56, 56, 0.10), transparent 68%);
 
   background: var(--hp-bg) !important; /* the legacy white-theme body rule uses !important */
 }
 
 /* ------------------------------------------------------------
-   Page shell: release the 1120px straitjacket. Bands go full
-   bleed; each band manages its own inner container.
+   Page shell: full-bleed bands, each manages its own container.
    ------------------------------------------------------------ */
 body[data-page="dashboard"] .page-shell {
   max-width: none;
@@ -81,53 +106,65 @@ body[data-page="dashboard"] .hp-container {
 }
 
 /* ------------------------------------------------------------
-   Graph-paper background: keep the technical grid concept but
-   confine it to the hero and fade it out before content bands.
+   Technical grid (global body::after) — hold it faint and let it
+   dissolve before the content bands begin.
    ------------------------------------------------------------ */
 body[data-page="dashboard"]::after {
-  opacity: 0.16;
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0, rgba(0, 0, 0, 0.55) 420px, transparent 900px);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0, rgba(0, 0, 0, 0.55) 420px, transparent 900px);
+  opacity: 0.10;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0, rgba(0, 0, 0, 0.4) 460px, transparent 860px);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0, rgba(0, 0, 0, 0.4) 460px, transparent 860px);
 }
 
 body.white-theme[data-page="dashboard"]::after {
-  opacity: 0.28;
+  opacity: 0.22;
 }
 
-/* ------------------------------------------------------------
-   Shared type
-   ------------------------------------------------------------ */
+/* ============================================================
+   SHARED TYPE
+   ============================================================ */
+/* Monospaced technical eyebrow with a red tick — the instrument mark */
 body[data-page="dashboard"] .hp-eyebrow {
-  margin: 0 0 14px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  font-family: var(--hp-font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--hp-red-text);
+  color: var(--hp-text-3);
+}
+
+body[data-page="dashboard"] .hp-eyebrow::before {
+  content: "";
+  width: 22px;
+  height: 2px;
+  background: var(--hp-red);
+  flex-shrink: 0;
 }
 
 body[data-page="dashboard"] .hp-h2 {
-  margin: 0 0 12px;
-  font-family: var(--font-serif, 'DM Serif Text', Georgia, serif);
-  font-size: clamp(1.75rem, 2.6vw, 2.375rem);
-  font-weight: 400;
-  line-height: 1.18;
-  letter-spacing: -0.01em;
+  margin: 0 0 16px;
+  font-family: var(--hp-font-display);
+  font-size: clamp(1.9rem, 3vw, 2.85rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.028em;
   color: var(--hp-text);
 }
 
 body[data-page="dashboard"] .hp-lead {
-  margin: 0 0 20px;
+  margin: 0 0 22px;
   max-width: var(--hp-copy-max);
-  font-size: 1.0625rem;
-  line-height: 1.65;
+  font-size: 1.09rem;
+  line-height: 1.68;
   color: var(--hp-text-2);
 }
 
 /* Red text links.
-   The :not() chain mirrors styles.css's global dark-theme anchor rule
-   (body:not(.white-theme) a:not(.btn):not(.nav-link):not(.action-card-button))
-   so these tie on specificity and win by source order (this file loads last). */
+   The :not() chain mirrors styles.css's global dark-theme anchor rule so
+   these tie on specificity and win by source order (this file loads last). */
 body[data-page="dashboard"] a.hp-textlink:not(.btn):not(.nav-link):not(.action-card-button),
 body[data-page="dashboard"] .hp-signup-note a:not(.btn):not(.nav-link),
 body[data-page="dashboard"] a.homepage-footer-bar__link:not(.btn):not(.nav-link) {
@@ -137,10 +174,12 @@ body[data-page="dashboard"] a.homepage-footer-bar__link:not(.btn):not(.nav-link)
 body[data-page="dashboard"] .hp-textlink {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   min-height: 44px;
-  font-size: 1rem;
-  font-weight: 600;
+  font-family: var(--hp-font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   color: var(--hp-red-text);
   text-decoration: none;
   border-radius: 6px;
@@ -148,7 +187,7 @@ body[data-page="dashboard"] .hp-textlink {
 
 body[data-page="dashboard"] .hp-textlink:hover {
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 4px;
 }
 
 body[data-page="dashboard"] .hp-textlink:focus-visible {
@@ -161,59 +200,71 @@ body[data-page="dashboard"] .hp-textlink:focus-visible {
    ============================================================ */
 body[data-page="dashboard"] .hp-hero {
   position: relative;
-  padding: clamp(40px, 6vw, 88px) 0 clamp(48px, 6vw, 96px);
+  padding: clamp(52px, 8vw, 116px) 0 clamp(56px, 8vw, 120px);
+  overflow: clip;
+}
+
+/* Warm accent glow — atmosphere without clutter */
+body[data-page="dashboard"] .hp-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--hp-glow);
+  pointer-events: none;
+  z-index: 0;
 }
 
 body[data-page="dashboard"] .hp-hero__grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  gap: clamp(32px, 4.5vw, 72px);
+  gap: clamp(36px, 5vw, 84px);
   align-items: center;
 }
 
-/* Left column — explicit left alignment (legacy .homepage-hero rules
-   center-align text; this column must read editorial-left on desktop) */
 body[data-page="dashboard"] .hp-hero__copy {
   text-align: left;
   min-width: 0;
 }
 
+/* Big, tight, confident display headline — the block.xyz signature */
 body[data-page="dashboard"] .hp-hero__headline {
-  margin: 0 0 18px;
-  max-width: 620px;
-  text-align: left; /* global h1 rule centers */
-  font-family: var(--font-serif, 'DM Serif Text', Georgia, serif);
-  font-size: clamp(2.125rem, 3.6vw, 3.625rem); /* ~58px at 1440+, 34px at 390 */
-  font-weight: 400;
-  line-height: 1.12;
-  letter-spacing: -0.015em;
+  margin: 0 0 22px;
+  max-width: 15ch;
+  text-align: left;
+  font-family: var(--hp-font-display);
+  font-size: clamp(2.5rem, 5.2vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.015;
+  letter-spacing: -0.038em;
   color: var(--hp-text);
   white-space: pre-line;
 }
 
 body[data-page="dashboard"] .hp-hero__subhead {
-  margin: 0 0 28px;
+  margin: 0 0 34px;
   max-width: var(--hp-copy-max);
-  font-size: clamp(1.0625rem, 1.4vw, 1.1875rem);
-  line-height: 1.6;
+  font-size: clamp(1.09rem, 1.4vw, 1.24rem);
+  line-height: 1.62;
   color: var(--hp-text-2);
 }
 
 /* --- Scan form: the strongest interaction on the page --- */
 body[data-page="dashboard"] .hp-form {
   max-width: 640px;
-  margin: 0 0 12px;
+  margin: 0 0 14px;
 }
 
 body[data-page="dashboard"] .hp-form__row {
   display: flex;
   gap: 8px;
-  padding: 6px;
+  padding: 7px;
   background: var(--hp-surface);
   border: 1px solid var(--hp-line-strong);
   border-radius: var(--hp-radius-lg);
   box-shadow: var(--hp-shadow-card);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 body[data-page="dashboard"] .hp-form__row:focus-within {
@@ -225,16 +276,19 @@ body[data-page="dashboard"] .hp-form__input {
   flex: 1;
   min-width: 0;
   height: var(--hp-control-h);
-  padding: 0 18px;
+  padding: 0 20px;
   border: none;
   border-radius: calc(var(--hp-radius-lg) - 6px);
   background: transparent;
-  font-size: 1.125rem;
+  font-family: var(--hp-font-mono);
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
   color: var(--hp-text);
 }
 
 body[data-page="dashboard"] .hp-form__input::placeholder {
   color: var(--hp-text-3);
+  font-family: var(--hp-font-mono);
 }
 
 body[data-page="dashboard"] .hp-form__input:focus {
@@ -246,17 +300,18 @@ body[data-page="dashboard"] .hp-form__button {
   align-items: center;
   justify-content: center;
   height: var(--hp-control-h);
-  min-width: 148px;
-  padding: 0 32px;
+  min-width: 150px;
+  padding: 0 34px;
   border: none;
   border-radius: calc(var(--hp-radius-lg) - 6px);
   background: var(--hp-red);
   color: #ffffff;
-  font-size: 1.125rem;
+  font-family: var(--hp-font-sans);
+  font-size: 1.06rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.005em;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition: background-color 0.18s ease, transform 0.1s ease;
 }
 
 body[data-page="dashboard"] .hp-form__button:hover {
@@ -264,7 +319,7 @@ body[data-page="dashboard"] .hp-form__button:hover {
 }
 
 body[data-page="dashboard"] .hp-form__button:active {
-  transform: scale(0.98);
+  transform: scale(0.985);
 }
 
 body[data-page="dashboard"] .hp-form__button:focus-visible {
@@ -278,8 +333,8 @@ body[data-page="dashboard"] .hp-form__button:disabled {
   cursor: wait;
 }
 
-/* Legacy styles.css paints #dashboardAnalyzeButton cyan (bg, border, glow)
-   with !important (the shared analyzer-button rule) — counter it, scoped. */
+/* Legacy styles.css paints #dashboardAnalyzeButton cyan with !important —
+   counter it, scoped, in brand red. */
 body[data-page="dashboard"] #dashboardAnalyzeButton {
   background: var(--hp-red) !important;
   color: #ffffff !important;
@@ -296,8 +351,6 @@ body[data-page="dashboard"] #dashboardAnalyzeButton:disabled {
   color: var(--hp-text-3) !important;
 }
 
-/* Legacy rule outlines the focused button cyan — keep a visible ring
-   but in page-neutral color (works on both themes, offset from red bg) */
 body[data-page="dashboard"] #dashboardAnalyzeButton:focus {
   outline: 2px solid var(--hp-text) !important;
   outline-offset: 2px !important;
@@ -309,7 +362,7 @@ body[data-page="dashboard"] .hp-form__meta {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 18px;
-  margin: 0 0 18px;
+  margin: 0 0 22px;
   min-height: 28px;
 }
 
@@ -320,7 +373,9 @@ body[data-page="dashboard"] .hp-form__meta .page-shell-usage-pill {
 
 body[data-page="dashboard"] .hp-form__helper {
   margin: 0;
-  font-size: 0.9375rem;
+  font-family: var(--hp-font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
   color: var(--hp-text-3);
 }
 
@@ -330,12 +385,14 @@ body[data-page="dashboard"] .hp-hero .example-chips {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin: 0 0 22px;
+  margin: 0 0 26px;
   max-width: 640px;
 }
 
 body[data-page="dashboard"] .hp-hero .example-chips__label {
-  font-size: 0.9375rem;
+  font-family: var(--hp-font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
   color: var(--hp-text-3);
   margin-right: 2px;
 }
@@ -345,20 +402,21 @@ body[data-page="dashboard"] .hp-hero .example-chip {
   align-items: center;
   min-height: 44px;
   padding: 0 18px;
-  font-size: 0.9375rem;
+  font-family: var(--hp-font-mono);
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--hp-text-2);
-  background: var(--hp-surface);
-  border: 1px solid var(--hp-line);
+  background: transparent;
+  border: 1px solid var(--hp-line-strong);
   border-radius: 999px;
   cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
 }
 
 body[data-page="dashboard"] .hp-hero .example-chip:hover {
   border-color: var(--hp-red);
   color: var(--hp-red-text);
-  background: var(--hp-surface);
+  background: var(--hp-red-soft);
 }
 
 body[data-page="dashboard"] .hp-hero .example-chip:focus-visible {
@@ -369,14 +427,13 @@ body[data-page="dashboard"] .hp-hero .example-chip:focus-visible {
 /* Secondary actions under the form */
 body[data-page="dashboard"] .hp-hero .sample-report-link {
   margin: 0;
-  font-size: 1rem;
 }
 
 body[data-page="dashboard"] .hp-signup-note {
-  margin: 14px 0 0;
+  margin: 16px 0 0;
   max-width: var(--hp-copy-max);
-  font-size: 0.875rem;
-  line-height: 1.5;
+  font-size: 0.9rem;
+  line-height: 1.55;
   color: var(--hp-text-3);
 }
 
@@ -414,8 +471,8 @@ body[data-page="dashboard"] .hp-browser {
 body[data-page="dashboard"] .hp-browser__bar {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
+  gap: 7px;
+  padding: 12px 16px;
   background: var(--hp-surface-2);
   border-bottom: 1px solid var(--hp-line);
 }
@@ -429,8 +486,10 @@ body[data-page="dashboard"] .hp-browser__dot {
 
 body[data-page="dashboard"] .hp-browser__url {
   margin-left: 10px;
-  padding: 4px 12px;
-  font-size: 0.8125rem;
+  padding: 5px 14px;
+  font-family: var(--hp-font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.01em;
   color: var(--hp-text-3);
   background: var(--hp-bg);
   border: 1px solid var(--hp-line);
@@ -440,21 +499,21 @@ body[data-page="dashboard"] .hp-browser__url {
 body[data-page="dashboard"] .hp-browser__body {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: clamp(20px, 2.4vw, 30px);
+  gap: 22px;
+  padding: clamp(22px, 2.6vw, 32px);
 }
 
 /* Overall score ring (SVG) — header row above the category bars */
 body[data-page="dashboard"] .hp-score {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding-bottom: 18px;
+  gap: 18px;
+  padding-bottom: 20px;
   border-bottom: 1px solid var(--hp-line);
 }
 
 body[data-page="dashboard"] .hp-score__ring {
-  width: 92px;
+  width: 96px;
   flex-shrink: 0;
   height: auto;
 }
@@ -469,15 +528,16 @@ body[data-page="dashboard"] .hp-score__ring .hp-ring-value {
 
 body[data-page="dashboard"] .hp-score__ring text {
   fill: var(--hp-text);
-  font-family: var(--font-sans, Inter, sans-serif);
-  font-size: 26px;
-  font-weight: 700;
+  font-family: var(--hp-font-mono);
+  font-size: 25px;
+  font-weight: 600;
 }
 
 body[data-page="dashboard"] .hp-score__label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-family: var(--hp-font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--hp-text-3);
 }
@@ -486,7 +546,7 @@ body[data-page="dashboard"] .hp-score__label {
 body[data-page="dashboard"] .hp-cats {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 13px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -510,7 +570,7 @@ body[data-page="dashboard"] .hp-cat__name {
 }
 
 body[data-page="dashboard"] .hp-cat__track {
-  height: 8px;
+  height: 7px;
   background: var(--hp-line);
   border-radius: 999px;
   overflow: hidden;
@@ -528,15 +588,16 @@ body[data-page="dashboard"] .hp-cat__fill--warn {
 }
 
 body[data-page="dashboard"] .hp-cat__score {
-  font-size: 0.875rem;
-  font-weight: 700;
+  font-family: var(--hp-font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--hp-text);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
 /* ============================================================
-   BANDS (value / features / CTA) — full-bleed with inner container
+   BANDS — full-bleed, hairline separation (block.xyz calm)
    ============================================================ */
 body[data-page="dashboard"] .hp-band {
   position: relative;
@@ -552,8 +613,6 @@ body[data-page="dashboard"] .hp-band--raised {
 /* ------------------------------------------------------------
    PRODUCT VALUE band
    ------------------------------------------------------------ */
-/* neutralize legacy .hero-right card styling (class kept for the
-   body.scan-complete hide rule) */
 body[data-page="dashboard"] .hp-value .hero-right {
   max-width: none;
   margin: 0;
@@ -567,7 +626,7 @@ body[data-page="dashboard"] .hp-value .hero-right {
 body[data-page="dashboard"] .hp-value__grid {
   display: grid;
   grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
-  gap: clamp(32px, 5vw, 80px);
+  gap: clamp(36px, 5.5vw, 88px);
   align-items: center;
 }
 
@@ -576,17 +635,17 @@ body[data-page="dashboard"] .hp-doc {
   display: block;
   max-width: 460px;
   margin: 0 auto;
-  padding: clamp(22px, 2.6vw, 34px);
+  padding: clamp(24px, 2.8vw, 36px);
   background: var(--hp-surface);
   border: 1px solid var(--hp-line-strong);
   border-radius: var(--hp-radius-lg);
   box-shadow: var(--hp-shadow-pop);
   text-decoration: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 body[data-page="dashboard"] .hp-doc:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
 }
 
 body[data-page="dashboard"] .hp-doc:focus-visible {
@@ -610,9 +669,10 @@ body[data-page="dashboard"] .hp-doc__logo {
 }
 
 body[data-page="dashboard"] .hp-doc__badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-family: var(--hp-font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--hp-red-text);
   border: 1px solid currentColor;
@@ -643,8 +703,9 @@ body[data-page="dashboard"] .hp-doc__foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-family: var(--hp-font-mono);
+  font-size: 0.82rem;
+  font-weight: 500;
   color: var(--hp-red-text);
 }
 
@@ -652,15 +713,15 @@ body[data-page="dashboard"] .hp-doc__foot {
 body[data-page="dashboard"] .hp-benefits {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px 24px;
-  margin: 26px 0 0;
+  gap: 20px 26px;
+  margin: 30px 0 0;
   padding: 0;
   list-style: none;
 }
 
 body[data-page="dashboard"] .hp-benefit {
   display: flex;
-  gap: 12px;
+  gap: 13px;
   align-items: flex-start;
 }
 
@@ -669,9 +730,9 @@ body[data-page="dashboard"] .hp-benefit__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
   background: var(--hp-red-soft);
   color: var(--hp-red-text);
 }
@@ -686,11 +747,11 @@ body[data-page="dashboard"] .hp-benefit__text {
   font-weight: 600;
   line-height: 1.4;
   color: var(--hp-text);
-  padding-top: 8px;
+  padding-top: 9px;
 }
 
 body[data-page="dashboard"] .hp-value__note {
-  margin: 24px 0 0;
+  margin: 26px 0 0;
   font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--hp-text-3);
@@ -698,9 +759,8 @@ body[data-page="dashboard"] .hp-value__note {
 }
 
 /* ------------------------------------------------------------
-   FEATURE COVERAGE — 5 linked cards
+   FEATURE COVERAGE — 5 linked cards, editorial hairline style
    ------------------------------------------------------------ */
-/* neutralize legacy .feature-strip constraints */
 body[data-page="dashboard"] .hp-features.feature-strip {
   max-width: none;
   margin: 0;
@@ -710,45 +770,68 @@ body[data-page="dashboard"] .hp-features.feature-strip {
 
 body[data-page="dashboard"] .hp-features__head {
   max-width: var(--hp-copy-max);
-  margin-bottom: clamp(24px, 3vw, 40px);
+  margin-bottom: clamp(30px, 3.5vw, 52px);
 }
 
 body[data-page="dashboard"] .hp-features__grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
+  gap: 0;
+  border-top: 1px solid var(--hp-line-strong);
 }
 
+/* Cards share hairlines like an index/table — a block.xyz-ish register.
+   A colored top accent draws in on hover. */
 body[data-page="dashboard"] .hp-feature-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 22px 20px;
-  background: var(--hp-surface);
-  border: 1px solid var(--hp-line);
-  border-radius: var(--hp-radius);
+  gap: 14px;
+  padding: 30px 24px 26px;
+  background: transparent;
+  border-right: 1px solid var(--hp-line);
+  border-radius: 0;
   text-decoration: none;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: background 0.2s ease;
+}
+
+body[data-page="dashboard"] .hp-features__grid > .hp-feature-card:last-child {
+  border-right: none;
+}
+
+body[data-page="dashboard"] .hp-feature-card::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--hp-red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.24s ease;
 }
 
 body[data-page="dashboard"] .hp-feature-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--hp-line-strong);
-  box-shadow: var(--hp-shadow-card);
+  background: var(--hp-surface-2);
+}
+
+body[data-page="dashboard"] .hp-feature-card:hover::before {
+  transform: scaleX(1);
 }
 
 body[data-page="dashboard"] .hp-feature-card:focus-visible {
   outline: none;
-  box-shadow: var(--hp-focus-ring);
+  box-shadow: inset var(--hp-focus-ring);
 }
 
 body[data-page="dashboard"] .hp-feature-card__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
   background: var(--hp-red-soft);
   color: var(--hp-red-text);
 }
@@ -760,8 +843,10 @@ body[data-page="dashboard"] .hp-feature-card__icon svg {
 
 body[data-page="dashboard"] .hp-feature-card .feature-strip__item-title {
   margin: 0;
-  font-size: 1.0625rem;
+  font-family: var(--hp-font-display);
+  font-size: 1.12rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--hp-text);
 }
 
@@ -774,16 +859,17 @@ body[data-page="dashboard"] .hp-feature-card .feature-strip__item-desc {
 
 body[data-page="dashboard"] .hp-feature-card__go {
   margin-top: auto;
-  padding-top: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
+  padding-top: 8px;
+  font-family: var(--hp-font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+  font-weight: 500;
   color: var(--hp-red-text);
 }
 
 /* ------------------------------------------------------------
    PRO CTA band
    ------------------------------------------------------------ */
-/* neutralize legacy .pro-upsell */
 body[data-page="dashboard"] .hp-cta.pro-upsell {
   max-width: none;
   margin: 0;
@@ -799,15 +885,15 @@ body[data-page="dashboard"] .hp-cta__band {
 body[data-page="dashboard"] .hp-cta__inner {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  gap: clamp(24px, 4vw, 64px);
+  gap: clamp(28px, 4vw, 72px);
   align-items: center;
 }
 
 body[data-page="dashboard"] .hp-cta__bullets {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 22px;
-  margin: 18px 0 0;
+  gap: 12px 24px;
+  margin: 22px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -815,7 +901,7 @@ body[data-page="dashboard"] .hp-cta__bullets {
 body[data-page="dashboard"] .hp-cta__bullet {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   font-size: 1rem;
   font-weight: 500;
   color: var(--hp-text-2);
@@ -832,7 +918,7 @@ body[data-page="dashboard"] .hp-cta__actions {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 14px;
+  gap: 16px;
   justify-self: end;
 }
 
@@ -843,15 +929,16 @@ body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta {
   align-items: center;
   justify-content: center;
   height: var(--hp-control-h);
-  padding: 0 40px;
+  padding: 0 44px;
   border: none !important;
   border-radius: var(--hp-radius);
   background: var(--hp-red) !important;
   color: #ffffff !important;
-  font-size: 1.125rem;
+  font-family: var(--hp-font-sans);
+  font-size: 1.06rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition: background-color 0.18s ease, transform 0.1s ease;
 }
 
 body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta:hover {
@@ -859,7 +946,7 @@ body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta:hover {
 }
 
 body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta:active {
-  transform: scale(0.98);
+  transform: scale(0.985);
 }
 
 body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta:focus-visible {
@@ -871,13 +958,14 @@ body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta:focus-visible {
    FOOTER bar (homepage-scoped)
    ------------------------------------------------------------ */
 body[data-page="dashboard"] .homepage-footer-bar {
-  padding: 36px 0;
+  padding: 40px 0;
   text-align: center;
+  border-top: 1px solid var(--hp-line);
 }
 
 body[data-page="dashboard"] .homepage-footer-bar__text {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--hp-text-2);
 }
 
@@ -902,7 +990,9 @@ body[data-page="dashboard"] .homepage-footer-bar__link:focus-visible {
 }
 
 body[data-page="dashboard"] .sm-version-badge {
-  font-size: 0.8125rem;
+  font-family: var(--hp-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
   color: var(--hp-text-3);
 }
 
@@ -974,9 +1064,31 @@ body[data-page="dashboard"] .hp-doc__dot--high { background: var(--hp-red); }
 body[data-page="dashboard"] .hp-doc__dot--med  { background: var(--hp-amber); }
 body[data-page="dashboard"] .hp-doc__dot--ok   { background: var(--hp-green); }
 
+/* ============================================================
+   ENTRANCE — one orchestrated staggered reveal on load
+   ============================================================ */
+@keyframes hpRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+body[data-page="dashboard"] .hp-hero__copy > *,
+body[data-page="dashboard"] .hp-hero__visual {
+  animation: hpRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body[data-page="dashboard"] .hp-hero__copy > .hp-eyebrow      { animation-delay: 0.02s; }
+body[data-page="dashboard"] .hp-hero__copy > .hp-hero__headline { animation-delay: 0.09s; }
+body[data-page="dashboard"] .hp-hero__copy > .hp-hero__subhead  { animation-delay: 0.17s; }
+body[data-page="dashboard"] .hp-hero__copy > .hp-form           { animation-delay: 0.24s; }
+body[data-page="dashboard"] .hp-hero__copy > .hp-form__meta     { animation-delay: 0.30s; }
+body[data-page="dashboard"] .hp-hero__copy > .example-chips     { animation-delay: 0.35s; }
+body[data-page="dashboard"] .hp-hero__copy > .sample-report-link,
+body[data-page="dashboard"] .hp-hero__copy > .hp-signup-note    { animation-delay: 0.40s; }
+body[data-page="dashboard"] .hp-hero__visual                    { animation-delay: 0.30s; }
+
 /* ------------------------------------------------------------
-   Post-scan state: hide marketing sections (moved from the old
-   inline <style> block in dashboard.html — behavior contract
+   Post-scan state: hide marketing sections (behavior contract
    with dashboard-script.js's body.scan-complete toggle)
    ------------------------------------------------------------ */
 body.scan-complete .hero-right,
@@ -1002,8 +1114,6 @@ body[data-page="dashboard"] #dashboardResults {
 
 /* ============================================================
    RESPONSIVE
-   1440+: full design | 1024–1279: tighter hero | 768–1023: hero
-   stacks | <768: single column, stacked form
    ============================================================ */
 @media (max-width: 1279px) {
   body[data-page="dashboard"] .hp-hero__grid {
@@ -1011,7 +1121,8 @@ body[data-page="dashboard"] #dashboardResults {
   }
 }
 
-/* 1024-1140: five feature cards don't fit — drop to 3 columns */
+/* 1024-1140: five feature cards get cramped — drop to 3 columns and
+   restore full hairline borders around the now-wrapping cells */
 @media (max-width: 1140px) and (min-width: 1024px) {
   body[data-page="dashboard"] .hp-features__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1021,18 +1132,22 @@ body[data-page="dashboard"] #dashboardResults {
 @media (max-width: 1023px) {
   body[data-page="dashboard"] .hp-hero__grid {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 44px;
   }
 
-  /* Stacked hero: deliberately centered composition */
   body[data-page="dashboard"] .hp-hero__copy {
     text-align: center;
-    max-width: 640px;
+    max-width: 660px;
     margin: 0 auto;
+  }
+
+  body[data-page="dashboard"] .hp-hero__copy > .hp-eyebrow {
+    justify-content: center;
   }
 
   body[data-page="dashboard"] .hp-hero__headline {
     text-align: center;
+    max-width: none;
   }
 
   body[data-page="dashboard"] .hp-hero__headline,
@@ -1056,11 +1171,16 @@ body[data-page="dashboard"] #dashboardResults {
 
   body[data-page="dashboard"] .hp-value__grid {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 44px;
   }
 
   body[data-page="dashboard"] .hp-features__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* wrapping grid: every cell keeps its right hairline; add row rhythm */
+  body[data-page="dashboard"] .hp-feature-card {
+    border-bottom: 1px solid var(--hp-line);
   }
 
   body[data-page="dashboard"] .hp-cta__inner {
@@ -1092,7 +1212,6 @@ body[data-page="dashboard"] #dashboardResults {
     height: 52px;
   }
 
-  /* Match the stacked Analyze button height (52px) */
   body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta {
     height: 52px;
     width: 100%;
@@ -1115,6 +1234,13 @@ body[data-page="dashboard"] #dashboardResults {
 
   body[data-page="dashboard"] .hp-features__grid {
     grid-template-columns: 1fr;
+    border-top: none;
+  }
+
+  body[data-page="dashboard"] .hp-feature-card {
+    border-right: none;
+    border-top: 1px solid var(--hp-line);
+    border-bottom: none;
   }
 
   body[data-page="dashboard"] .hp-doc {
@@ -1122,15 +1248,21 @@ body[data-page="dashboard"] #dashboardResults {
   }
 }
 
-/* Reduced motion: strip transforms/transitions */
+/* Reduced motion: no transforms, no entrance animation */
 @media (prefers-reduced-motion: reduce) {
   body[data-page="dashboard"] .hp-form__button,
   body[data-page="dashboard"] .hp-doc,
   body[data-page="dashboard"] .hp-feature-card,
+  body[data-page="dashboard"] .hp-feature-card::before,
   body[data-page="dashboard"] .hp-cta__actions .pro-upsell__cta,
   body[data-page="dashboard"] .hp-form__row,
   body[data-page="dashboard"] .hp-hero .example-chip {
     transition: none;
+  }
+
+  body[data-page="dashboard"] .hp-hero__copy > *,
+  body[data-page="dashboard"] .hp-hero__visual {
+    animation: none;
   }
 
   body[data-page="dashboard"] .hp-doc:hover,
@@ -1142,9 +1274,8 @@ body[data-page="dashboard"] #dashboardResults {
 }
 
 /* ------------------------------------------------------------
-   Box harmony (post-scan / light theme): legacy white-theme rules
-   draw mismatched frames around the hero and results. One clean
-   card for results; the hero stays frameless on the page surface.
+   Box harmony (post-scan / light theme): one clean card for
+   results; the hero stays frameless on the page surface.
    ------------------------------------------------------------ */
 body[data-page="dashboard"] .homepage-hero {
   background: transparent !important;
@@ -1161,7 +1292,6 @@ body[data-page="dashboard"] #dashboardResults {
   padding-bottom: 28px !important;
 }
 
-/* Inner generated section: no second frame inside the results card */
 body[data-page="dashboard"] #dashboardResults .dashboard-animate-in,
 body[data-page="dashboard"] #dashboardResults > .section {
   border: none !important;
