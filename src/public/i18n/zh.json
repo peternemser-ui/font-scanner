@@ -110,7 +110,8 @@
       "scrollLeft": "向左滚动导航",
       "scrollRight": "向右滚动导航",
       "closeMenu": "关闭导航菜单"
-    }
+    },
+    "managePlan": "管理套餐"
   },
   "userMenu": {
     "ariaLabel": "用户菜单",
@@ -181,7 +182,8 @@
     "couldNotReach": "无法访问该网站",
     "connectionRefused": "连接被拒绝",
     "portalSessionFailed": "创建门户会话失败",
-    "billingPortalFailed": "无法打开计费门户，请重试。"
+    "billingPortalFailed": "无法打开计费门户，请重试。",
+    "analysisTimeout": "分析在 5 分钟后超时。该网站可能过慢或过于复杂。请改用快速扫描。"
   },
   "shell": {
     "pleaseEnterUrl": "请输入网址",
@@ -328,6 +330,94 @@
     "runningAudit": "正在运行审计...",
     "scan": {
       "runAudit": "运行审计"
+    },
+    "pleaseEnterValidUrl": "请输入有效的网址",
+    "exploreByCategory": "按类别浏览",
+    "clientReadyReports": "可直接交付客户的报告",
+    "copyLink": "复制链接",
+    "copied": "已复制！",
+    "viewFix": "查看修复方法",
+    "noCriticalIssuesFound": "未发现严重问题",
+    "siteInGoodShape": "您的网站状况良好！",
+    "score": "得分",
+    "viewDetails": "查看详情",
+    "error": "错误",
+    "reportSubtitle": "全面的网站分析",
+    "severityCritical": "严重",
+    "severityWarning": "警告",
+    "fixNow": "立即修复",
+    "review": "查看",
+    "issueCount": "{{count}} 个问题",
+    "noIssuesFoundGoodShape": "未发现严重或警告级别的问题。您的网站状况良好！",
+    "noPriorityIssues": "没有需要显示的优先问题。",
+    "categories": {
+      "performanceUx": "性能与用户体验",
+      "performanceUxDesc": "速度、Core Web Vitals、移动端",
+      "seoIndexing": "SEO 与索引",
+      "seoIndexingDesc": "元数据、结构、可抓取性",
+      "accessibility": "无障碍访问",
+      "accessibilityDesc": "WCAG 合规性、违规项",
+      "securityTrust": "安全与信任",
+      "securityTrustDesc": "SSL、标头、漏洞",
+      "fonts": "字体",
+      "fontsDesc": "字体加载、优化"
+    },
+    "recommendations": {
+      "seoLabel": "SEO",
+      "seoAdvice": "优化元标签、标题和内容",
+      "performanceLabel": "性能",
+      "performanceAdvice": "优化图片、压缩资源并利用缓存",
+      "accessibilityLabel": "无障碍访问",
+      "accessibilityAdvice": "修复颜色对比度、添加 ARIA 标签并改善键盘导航",
+      "securityLabel": "安全",
+      "securityAdvice": "添加安全标头、启用 HTTPS 并修复漏洞",
+      "typographyLabel": "排版",
+      "typographyAdvice": "优化字体加载并改善排版层次",
+      "allGood": "太棒了！所有方面表现均良好。请继续保持！"
+    },
+    "issues": {
+      "seoCritical": "整体 SEO 健康状况处于严重级别",
+      "seoNeedsImprovement": "SEO 有待改进",
+      "performanceCritical": "页面加载速度严重过慢",
+      "performanceNeedsImprovement": "页面性能有待提升",
+      "accessibilityCritical": "检测到重大无障碍访问障碍",
+      "accessibilityNeedsImprovement": "无障碍访问有待改进",
+      "securityCritical": "检测到安全漏洞",
+      "securityNeedsImprovement": "安全标头有待加强",
+      "typographyNeedsImprovement": "字体加载可能影响性能"
+    },
+    "guide": {
+      "excellentWork": "做得非常好！",
+      "allCategoriesGood": "您的网站在所有类别中表现良好。运行详细扫描以获取更深入的洞察。",
+      "clickEachCategory": "点击每个类别，查看需要修复的内容及其重要性。",
+      "fixesCount": "{{count}} 项修复",
+      "whyItMatters": "为什么重要：",
+      "viewFullReport": "查看完整报告",
+      "seoWhy": "搜索引擎需要清晰的信号来为您的页面排名。SEO 不佳意味着自然流量减少。",
+      "seoAction1": "为每个页面添加唯一的标题标签（50-60 个字符）",
+      "seoAction2": "撰写有吸引力的元描述（150-160 个字符）",
+      "seoAction3": "使用正确的标题层次结构（H1 → H2 → H3）",
+      "seoAction4": "为所有图片添加替代文本",
+      "performanceWhy": "加载缓慢的页面会流失访客。每延迟一秒，转化率就会降低 7%。",
+      "performanceAction1": "压缩图片并以 WebP 格式提供",
+      "performanceAction2": "通过正确的标头启用浏览器缓存",
+      "performanceAction3": "压缩 CSS、JavaScript 和 HTML",
+      "performanceAction4": "为首屏以下的图片实现懒加载",
+      "accessibilityWhy": "无障碍访问问题会排斥 15% 的用户，并带来法律责任（ADA/WCAG）。",
+      "accessibilityAction1": "确保颜色对比度至少为 4.5:1",
+      "accessibilityAction2": "为交互元素添加 ARIA 标签",
+      "accessibilityAction3": "使所有功能均可通过键盘访问",
+      "accessibilityAction4": "为屏幕阅读器添加跳转至内容链接",
+      "securityWhy": "缺少安全标头会使您的网站容易遭受 XSS、点击劫持和数据窃取。",
+      "securityAction1": "添加 Content-Security-Policy 标头",
+      "securityAction2": "启用 HSTS（Strict-Transport-Security）",
+      "securityAction3": "设置 X-Content-Type-Options: nosniff",
+      "securityAction4": "配置 X-Frame-Options 以防止点击劫持",
+      "typographyWhy": "字体加载不当会导致布局偏移和渲染缓慢，损害 Core Web Vitals。",
+      "typographyAction1": "为网页字体使用 font-display: swap",
+      "typographyAction2": "在 <head> 中预加载关键字体",
+      "typographyAction3": "将字体系列限制在最多 2-3 种",
+      "typographyAction4": "对字体进行子集化，仅包含所需字符"
     }
   },
   "loader": {
@@ -527,7 +617,11 @@
     "mayTake20To45Seconds": "可能需要20-45秒",
     "mayTake30To60Seconds": "可能需要30-60秒",
     "mayTakeTime": "对于复杂网站，可能需要30-60秒",
-    "scanTiming": "扫描时间"
+    "scanTiming": "扫描时间",
+    "analyzingCitationsReviews": "正在分析引用与评论",
+    "checkingDirectories": "正在检查目录、多地点、声誉……",
+    "compilingGeoSeo": "正在汇编 GEO SEO 洞察……",
+    "analyzingGeoSeo": "GEO SEO 分析器"
   },
   "common": {
     "error": "错误",
@@ -1509,7 +1603,8 @@
           "recommendations": "建议"
         }
       },
-      "unlockToView": "解锁查看："
+      "unlockToView": "解锁查看：",
+      "structuredDataQuickWins": "结构化数据快速优化"
     },
     "fixes": {
       "previewIntro": "修复包预览：",
@@ -2766,7 +2861,8 @@
       "excelExportFailed": "导出 Excel 失败。请尝试 CSV 导出。",
       "noResultsToExport": "没有可导出的结果。请先运行扫描。",
       "pdfNotAvailable": "PDF 导出不可用。请刷新页面。"
-    }
+    },
+    "overallScore": "SEO 得分"
   },
   "pricing": {
     "title": "升级至 Site Mechanic Pro",
@@ -2853,7 +2949,12 @@
     "monthlyDesc": "无限扫描 + 250份报告",
     "proAnnual": "专业版年付",
     "annualDesc": "无限扫描 + 无限报告",
-    "save60": "节省$60"
+    "save60": "节省$60",
+    "page": {
+      "paymentCanceled": "支付已取消。未产生任何费用。",
+      "paymentSuccess": "支付成功！正在跳转至您的账户……",
+      "alreadyPro": "您已拥有 Pro！正在跳转至您的账户……"
+    }
   },
   "auth": {
     "welcomeBack": "欢迎回来",
@@ -2895,9 +2996,44 @@
     "accountAndBilling": "账户与账单",
     "logoutFailed": "退出登录失败，请重试。",
     "pro": "Pro",
-    "payAsYouGo": "按需付费"
+    "payAsYouGo": "按需付费",
+    "notAvailable": "N/A",
+    "unknownSite": "未知",
+    "expand": "展开",
+    "passwordChanged": "密码修改成功！",
+    "compareComingSoon": "对比功能即将推出！",
+    "billing": {
+      "paymentSuccess": "支付成功！您的套餐已更新。",
+      "checkoutCanceled": "结账已取消。未产生任何费用。",
+      "proActivated": "支付成功！您的 Pro 功能现已启用。",
+      "dayPass": "日通行证",
+      "monthly": "按月",
+      "yearly": "按年",
+      "cancelsOn": "将于 {{date}} 取消",
+      "hoursLeft": "剩余 {{hours}} 小时",
+      "syncedPurchases": "已同步 {{count}} 项新购买"
+    },
+    "usage": {
+      "scansCount": "{{used}} / {{limit}} 次扫描"
+    },
+    "errors": {
+      "loadFailed": "加载账户数据失败。",
+      "loginToRefresh": "请登录以刷新",
+      "refreshFailed": "刷新失败：{{message}}",
+      "billingPortalFailed": "无法打开账单管理页面",
+      "passwordsNoMatch": "两次输入的新密码不一致",
+      "passwordMinLength": "密码长度至少为 8 个字符",
+      "passwordUppercase": "密码必须包含一个大写字母",
+      "passwordLowercase": "密码必须包含一个小写字母",
+      "passwordNumber": "密码必须包含一个数字",
+      "changePasswordFailed": "修改密码失败"
+    }
   },
   "reports": {
+    "print": {
+      "header": "Site Mechanic 报告",
+      "confidential": "机密"
+    },
     "modeLabels": {
       "full": "Lighthouse审计",
       "cwv": "核心Web指标",
@@ -3236,6 +3372,15 @@
       "noResourceBreakdown": "资源分解不可用。",
       "partial": "部分",
       "diagnostic": "诊断",
+      "checkoutUnavailable": "结账暂时不可用。",
+      "reportUnlocked": "报告已解锁！",
+      "proActivated": "Pro 订阅已激活！",
+      "proActivatedUnlocking": "Pro 订阅已激活！正在解锁高级内容...",
+      "runScanFirstToBuy": "请先运行扫描以购买此报告。",
+      "runScanFirst": "请先运行扫描。",
+      "paymentServiceError": "支付服务错误。请稍后重试。",
+      "unlockReport5Usd": "解锁报告（5 美元）",
+      "scoreLabel": "{{label}}：{{score}}/100",
       "suggestions": "建议：",
       "suggestionWait": "稍等片刻后重试",
       "suggestionSpecificPage": "尝试测试某个具体页面而非首页",
@@ -3245,7 +3390,31 @@
       "analysisFailedRetry": "分析失败，请重试。",
       "exportAndShare": "导出并分享结果（Pro）",
       "downloadCsv": "下载 CSV",
-      "proExportLocked": "Pro 导出已锁定"
+      "proExportLocked": "Pro 导出已锁定",
+      "pro": "PRO",
+      "thisReportOnly": "仅此报告",
+      "allReports": "所有报告",
+      "whatsIncluded": "包含内容：",
+      "pagesScanned": "已扫描页面",
+      "recommendedAction": "推荐操作",
+      "stepN": "第 {{n}} 步",
+      "noDataAvailable": "本板块无可用数据。",
+      "excelExportSuccess": "Excel 导出已成功下载",
+      "proBadge": "PRO",
+      "proSectionLocked": "此板块包含在 Pro 报告中。请使用下方的解锁报告选项进行查看。",
+      "sectionLoadError": "此板块无法加载。请尝试刷新页面。",
+      "markHelpful": "标记为有帮助",
+      "markNotHelpful": "标记为无帮助",
+      "helpful": "有帮助",
+      "notHelpful": "无帮助",
+      "sinceLastScan": "自上次扫描以来",
+      "topPct": "前 {{pct}}%",
+      "betterThan": "优于 {{pct}}%",
+      "statusLabels": {
+        "excellent": "优秀",
+        "good": "良好",
+        "critical": "严重"
+      }
     },
     "fonts": {
       "title": "字体与排版报告",
@@ -3639,7 +3808,9 @@
       "fontFixes": "字体修复",
       "improvementsFound": "项改进",
       "fontDisplayIssueDetected": "检测到字体显示问题",
-      "moreIssues": "个其他问题"
+      "moreIssues": "个其他问题",
+      "stability": "稳定性",
+      "typography": "排版"
     },
     "seo": {
       "title": "SEO分析报告"
@@ -3930,7 +4101,10 @@
       "thirdPartyScriptsAnalysis": "第三方脚本分析",
       "totalExternalScripts": "外部脚本总数",
       "withSri": "含SRI",
-      "coverage": "覆盖率"
+      "coverage": "覆盖率",
+      "recommendationsLoadError": "无法加载建议。",
+      "cspLabel": "CSP（Content Security Policy）",
+      "hstsLabel": "HSTS（HTTP Strict Transport Security）"
     },
     "accessibility": {
       "title": "无障碍报告",
@@ -4357,7 +4531,8 @@
         "ttfb": "首字节时间",
         "connectionTime": "连接时间",
         "cacheHitRate": "缓存命中率",
-        "uncachedResources": "未缓存的资源"
+        "uncachedResources": "未缓存的资源",
+        "title": "诊断"
       },
       "report": {
         "recommendations.noneTitle": "性能优秀",
@@ -4710,7 +4885,11 @@
           "description": "网络字体加载未优化。使用font-display策略和预加载。",
           "impact": "改善文本显示延迟"
         }
-      }
+      },
+      "additionalChecks": "附加检查",
+      "diagnostic": "诊断",
+      "noAdditionalChecks": "无可用的附加检查。",
+      "excelTitle": "Site Mechanic - 性能报告"
     },
     "status": {
       "excellent": "优秀",
@@ -4885,7 +5064,11 @@
       "recommendationsAvailable": "{{count}}条建议可用",
       "understandingScoresTitle": "了解您的评分",
       "passingCwvTitle": "通过的核心网页指标",
-      "failingCwvTitle": "未通过的核心网页指标"
+      "failingCwvTitle": "未通过的核心网页指标",
+      "includedMobileDesktop": "移动端与桌面端 CWV 指标",
+      "includedRankingImpact": "Google 排名影响分析",
+      "includedMetricBreakdowns": "详细的指标细分",
+      "includedRecommendations": "可操作的建议"
     },
     "performanceHub": {
       "quickScanTitle": "速度和用户体验报告：快速扫描",
@@ -4924,7 +5107,8 @@
         "accessibilityDesc": "WCAG合规性、屏幕阅读器兼容性、颜色对比度",
         "fonts": "字体分析",
         "fontsDesc": "字体加载性能、网页字体优化、排版"
-      }
+      },
+      "exploreToolsHelper": "扫描可免费运行。每个工具内均提供可选的付费导出（PDF/分享/数据）。"
     },
     "mobile": {
       "title": "移动端测试报告",
@@ -5500,7 +5684,14 @@
         "recommendedFix": "推荐修复",
         "missingSecurityAttributes": "缺少安全属性",
         "addRelNoopener": "添加 rel=\"noopener\""
-      }
+      },
+      "scanFailed": "分析链接失败。请重试。",
+      "noBrokenLinks": "未发现失效链接。所有链接均正常。",
+      "noRedirects": "未检测到重定向。",
+      "noWorkingLinks": "未发现有效链接。",
+      "noExternalLinks": "未发现外部链接。",
+      "noAnchorData": "无可用的锚文本数据。",
+      "noRecommendations": "目前暂无建议。"
     },
     "brand": {
       "analysisFailed": "分析失败",
@@ -6844,6 +7035,13 @@
           "category": "类别",
           "trackers": "跟踪器"
         }
+      },
+      "factors": {
+        "bannerPresent": "存在 Cookie 横幅",
+        "compliantLibrary": "使用合规的同意管理库",
+        "rejectOption": "提供便捷的拒绝选项",
+        "granularConsent": "提供精细化的同意选项",
+        "noPreConsentCookies": "同意前无非必要 Cookie"
       }
     },
     "hosting": {
@@ -7098,7 +7296,13 @@
       "visit": "访问",
       "proTip": "专业提示",
       "proTipText": "显示的价格为年付起始价格。月付通常贵20-30%。匹配百分比表示提供商与您的需求的契合程度。选择主机时，请考虑您的流量需求、支持要求和扩展计划。",
-      "pdfSubtitle": "主机性能与基础设施分析"
+      "pdfSubtitle": "主机性能与基础设施分析",
+      "invalidResponse": "分析返回了无效数据。请重试。",
+      "budgetOptionsHidden": "已隐藏 {{count}} 个经济型方案，因其不适合此层级",
+      "noPricingData": "本次扫描无可用的定价数据。",
+      "noSavingsFound": "未检测到此网站的节省机会。",
+      "noRecommendedHosts": "本次扫描无可用的主机推荐。",
+      "noProviderComparison": "本次扫描无可用的服务商对比数据。"
     },
     "ipReputation": {
       "title": "IP信誉分析",
@@ -7271,6 +7475,22 @@
         "ports.noneBody": "扫描期间未发现开放端口，或未执行端口扫描。",
         "recommendations.noneTitle": "信誉状况良好",
         "recommendations.noneBody": "您的 IP 信誉良好。请继续监控变化并保持安全最佳实践。"
+      },
+      "guide": {
+        "difficultyIntermediate": "中级",
+        "time15to30": "15-30 分钟",
+        "adminAccess": "管理员权限",
+        "verifyApplied": "验证更改是否已正确应用",
+        "testFunctionality": "测试功能",
+        "monitorIssues": "监控问题"
+      },
+      "defaultSteps": {
+        "reviewIssue": "查看当前问题并了解其影响",
+        "researchFix": "针对您的环境研究具体的修复方法",
+        "implementAction": "实施推荐的操作",
+        "testFix": "测试以验证修复是否正常工作",
+        "setUpMonitoring": "设置监控以防止再次发生",
+        "documentChange": "记录此更改以供日后参考"
       }
     },
     "geoSeo": {
@@ -7390,6 +7610,13 @@
           "addGbpLinks": "添加谷歌商家资料链接",
           "includeSocial": "包含Facebook、Instagram或LinkedIn",
           "placeIconsFooter": "将图标放在页脚以提高可见性"
+        },
+        "time": {
+          "5min": "5 分钟",
+          "10min": "10 分钟",
+          "15min": "15 分钟",
+          "20min": "20 分钟",
+          "30min": "30 分钟"
         }
       },
       "report": {
@@ -7451,7 +7678,21 @@
         },
         "recommendations.noneTitle": "本地 SEO 表现良好",
         "recommendations.noneBody": "您的网站遵循了本地 SEO 最佳实践。请继续监控您的本地存在和 NAP 一致性以保持排名。"
-      }
+      },
+      "citationsDirectoryAnalysis": "引用与目录分析",
+      "citationsDesc": "引用是指您的商家在外部目录和平台上的提及。一致的引用有助于提升本地搜索排名。",
+      "noDirectoryLinks": "页面上未检测到目录链接",
+      "directoryBadges": "检测到的目录徽章",
+      "noDirectoryBadges": "未检测到目录徽章",
+      "geoContentPages": "地理内容页面",
+      "multiLocationAnalysis": "多地点与地理页面分析",
+      "multiLocationDesc": "多地点信号有助于搜索引擎将您的商家与特定地理区域关联，并提供相关搜索结果。",
+      "locationLandingPages": "地点着陆页",
+      "noLocationPages": "未检测到地点着陆页",
+      "reviewsReputationAnalysis": "评论与声誉分析",
+      "reviewsDesc": "评论和声誉信号会影响本地搜索排名和客户信任。展示评分并链接到评论平台可提升可信度。",
+      "totalReviews": "评论总数",
+      "noReviewPlatformLinks": "未检测到评论平台链接。建议链接到 Google、Yelp 或行业专属的评论网站。"
     },
     "crawler": {
       "title": "网站爬虫报告",
@@ -7643,6 +7884,18 @@
         "sectionsOnlyOnePage": "{{count}}个分区仅有1个页面",
         "multipleUrlFormats": "检测到多种URL格式（{{count}}种类型）",
         "wellOrganizedStructure": "网站结构组织良好"
+      },
+      "hostingTypes": {
+        "managedWordPress": "托管式 WordPress",
+        "webOpsPlatform": "WebOps 平台",
+        "jamstack": "JAMstack",
+        "edgePlatform": "边缘平台",
+        "paas": "PaaS",
+        "cloudInfrastructure": "云基础设施",
+        "edgeCdn": "边缘/CDN",
+        "ecommerce": "电子商务",
+        "websiteBuilder": "网站构建器",
+        "sharedHosting": "共享主机"
       }
     },
     "siteCrawler": {
@@ -7957,7 +8210,8 @@
       },
       "healthScore": "标签健康评分",
       "totalIssues": "Total Issues",
-      "performanceScore": "性能评分"
+      "performanceScore": "性能评分",
+      "noPerformanceData": "本页面无可用的脚本性能数据。"
     },
     "metrics": {
       "seo": "SEO",
@@ -8615,7 +8869,8 @@
       "justNow": "刚刚",
       "minutesAgo": "{n}分钟前",
       "hoursAgo": "{n}小时前",
-      "daysAgo": "{n}天前"
+      "daysAgo": "{n}天前",
+      "unknown": "日期未知"
     },
     "loadMoreRemaining": "加载更多（剩余{n}个）",
     "reportTypes": {
@@ -8811,6 +9066,11 @@
         "issue": "问题",
         "stepByStep": "分步修复指南"
       }
+    },
+    "lighthouse": {
+      "unavailableTitle": "性能指标暂时不可用",
+      "unavailableMessage": "性能指标暂时不可用。报告的其他板块不受影响。",
+      "retryButton": "重试分析"
     }
   },
   "grades": {
@@ -9678,5 +9938,35 @@
       "ip-reputation": "IP 信誉",
       "competitive": "竞争分析"
     }
+  },
+  "bugReport": {
+    "trigger": "发现数据问题？报告问题即可获得一次免费解锁",
+    "drawerTitle": "报告问题",
+    "categoryLabel": "属于哪类问题？",
+    "categories": {
+      "wrongData": "数据错误",
+      "missingSection": "缺少板块",
+      "displayIssue": "显示问题",
+      "crashError": "崩溃 / 错误",
+      "other": "其他"
+    },
+    "descriptionPlaceholder": "描述问题所在（至少 30 个字符）……",
+    "submitBtn": "提交报告",
+    "successTitle": "报告已提交！",
+    "successMsg": "如果我们确认此问题属实，您将获得一次免费报告解锁。",
+    "loginRequired": "登录后即可报告问题并获得免费报告解锁",
+    "signIn": "登录",
+    "limitReached": "您已达到每日报告上限",
+    "duplicateDetected": "最近已提交过类似的报告",
+    "tokenBalance": "有 {{count}} 个奖励代币可用",
+    "redeemToken": "使用奖励代币",
+    "tokenRedeemed": "已使用奖励代币解锁报告！",
+    "tokenExpiry": "{{date}} 到期"
+  },
+  "rateLimit": {
+    "blocked": "由于请求过多，您已被暂时封禁。请等待 ",
+    "exceeded": "您已达到请求上限。升级可获得更高上限，或稍后重试，请等待 ",
+    "exceededPro": "您已达到请求上限。请稍后重试，请等待 ",
+    "upgradeLink": "升级以获得更高上限"
   }
 }

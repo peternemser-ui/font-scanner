@@ -110,7 +110,8 @@
       "scrollLeft": "ナビゲーションを左にスクロール",
       "scrollRight": "ナビゲーションを右にスクロール",
       "closeMenu": "ナビゲーションメニューを閉じる"
-    }
+    },
+    "managePlan": "プランを管理"
   },
   "userMenu": {
     "ariaLabel": "ユーザーメニュー",
@@ -181,7 +182,8 @@
     "couldNotReach": "サイトに到達できませんでした",
     "connectionRefused": "接続が拒否されました",
     "portalSessionFailed": "ポータルセッションの作成に失敗しました",
-    "billingPortalFailed": "請求ポータルを開けませんでした。もう一度お試しください。"
+    "billingPortalFailed": "請求ポータルを開けませんでした。もう一度お試しください。",
+    "analysisTimeout": "5分後に分析がタイムアウトしました。ウェブサイトが遅すぎるか複雑すぎる可能性があります。代わりにクイックスキャンをお試しください。"
   },
   "shell": {
     "pleaseEnterUrl": "URLを入力してください",
@@ -328,6 +330,94 @@
     "runningAudit": "監査を実行中...",
     "scan": {
       "runAudit": "監査を実行"
+    },
+    "pleaseEnterValidUrl": "有効なURLを入力してください",
+    "exploreByCategory": "カテゴリー別に見る",
+    "clientReadyReports": "クライアント提出可能なレポート",
+    "copyLink": "リンクをコピー",
+    "copied": "コピーしました！",
+    "viewFix": "修正方法を見る",
+    "noCriticalIssuesFound": "重大な問題は見つかりませんでした",
+    "siteInGoodShape": "サイトは良好な状態です！",
+    "score": "スコア",
+    "viewDetails": "詳細を見る",
+    "error": "エラー",
+    "reportSubtitle": "総合的なウェブサイト分析",
+    "severityCritical": "重大",
+    "severityWarning": "警告",
+    "fixNow": "今すぐ修正",
+    "review": "確認",
+    "issueCount": "{{count}}件の問題",
+    "noIssuesFoundGoodShape": "重大な問題や警告は見つかりませんでした。サイトは良好な状態です！",
+    "noPriorityIssues": "表示する優先度の高い問題はありません。",
+    "categories": {
+      "performanceUx": "パフォーマンスとUX",
+      "performanceUxDesc": "速度、Core Web Vitals、モバイル",
+      "seoIndexing": "SEOとインデックス登録",
+      "seoIndexingDesc": "メタデータ、構造、クロール性",
+      "accessibility": "アクセシビリティ",
+      "accessibilityDesc": "WCAG準拠、違反",
+      "securityTrust": "セキュリティと信頼性",
+      "securityTrustDesc": "SSL、ヘッダー、脆弱性",
+      "fonts": "フォント",
+      "fontsDesc": "フォントの読み込み、最適化"
+    },
+    "recommendations": {
+      "seoLabel": "SEO",
+      "seoAdvice": "メタタグ、見出し、コンテンツ最適化を改善します",
+      "performanceLabel": "パフォーマンス",
+      "performanceAdvice": "画像を最適化し、リソースを圧縮し、キャッシュを活用します",
+      "accessibilityLabel": "アクセシビリティ",
+      "accessibilityAdvice": "色のコントラストを修正し、ARIAラベルを追加し、キーボード操作を改善します",
+      "securityLabel": "セキュリティ",
+      "securityAdvice": "セキュリティヘッダーを追加し、HTTPSを有効にし、脆弱性を修正します",
+      "typographyLabel": "タイポグラフィ",
+      "typographyAdvice": "フォントの読み込みを最適化し、タイポグラフィの階層を改善します",
+      "allGood": "素晴らしい！すべての領域が良好に機能しています。この調子を維持しましょう！"
+    },
+    "issues": {
+      "seoCritical": "SEOの総合的な状態が重大です",
+      "seoNeedsImprovement": "SEOの改善が必要です",
+      "performanceCritical": "ページの読み込み速度が致命的に遅い状態です",
+      "performanceNeedsImprovement": "ページのパフォーマンスを改善できます",
+      "accessibilityCritical": "重大なアクセシビリティの障壁が検出されました",
+      "accessibilityNeedsImprovement": "アクセシビリティの改善が必要です",
+      "securityCritical": "セキュリティの脆弱性が検出されました",
+      "securityNeedsImprovement": "セキュリティヘッダーを強化できます",
+      "typographyNeedsImprovement": "フォントの読み込みがパフォーマンスに影響する可能性があります"
+    },
+    "guide": {
+      "excellentWork": "素晴らしい成果です！",
+      "allCategoriesGood": "サイトはすべてのカテゴリーで良好に機能しています。さらに詳しい分析には詳細スキャンを実行してください。",
+      "clickEachCategory": "各カテゴリーをクリックすると、修正すべき点とその重要性を確認できます。",
+      "fixesCount": "{{count}}件の修正",
+      "whyItMatters": "重要な理由：",
+      "viewFullReport": "完全なレポートを見る",
+      "seoWhy": "検索エンジンがページを評価するには明確なシグナルが必要です。SEOが不十分だとオーガニックトラフィックが減少します。",
+      "seoAction1": "各ページに固有のタイトルタグ（50〜60文字）を追加します",
+      "seoAction2": "魅力的なメタディスクリプション（150〜160文字）を作成します",
+      "seoAction3": "適切な見出し階層（H1 → H2 → H3）を使用します",
+      "seoAction4": "すべての画像に代替テキストを追加します",
+      "performanceWhy": "ページが遅いと訪問者を失います。1秒の遅延ごとにコンバージョンが7%減少します。",
+      "performanceAction1": "画像を圧縮しWebP形式で配信します",
+      "performanceAction2": "適切なヘッダーでブラウザキャッシュを有効にします",
+      "performanceAction3": "CSS、JavaScript、HTMLを圧縮します",
+      "performanceAction4": "ファーストビュー以下の画像に遅延読み込みを実装します",
+      "accessibilityWhy": "アクセシビリティの問題は15%のユーザーを排除し、法的責任（ADA/WCAG）を生じさせます。",
+      "accessibilityAction1": "色のコントラスト比を少なくとも4.5:1に確保します",
+      "accessibilityAction2": "インタラクティブな要素にARIAラベルを追加します",
+      "accessibilityAction3": "すべての機能をキーボードで操作可能にします",
+      "accessibilityAction4": "スクリーンリーダー向けにコンテンツへスキップするリンクを追加します",
+      "securityWhy": "セキュリティヘッダーが欠けていると、サイトがXSS、クリックジャッキング、データ盗難に対して脆弱になります。",
+      "securityAction1": "Content-Security-Policyヘッダーを追加します",
+      "securityAction2": "HSTS（Strict-Transport-Security）を有効にします",
+      "securityAction3": "X-Content-Type-Options: nosniff を設定します",
+      "securityAction4": "クリックジャッキングを防ぐためX-Frame-Optionsを設定します",
+      "typographyWhy": "フォントの読み込みが不適切だとレイアウトのずれや描画の遅延が生じ、Core Web Vitalsを損ないます。",
+      "typographyAction1": "ウェブフォントに font-display: swap を使用します",
+      "typographyAction2": "重要なフォントを<head>内でプリロードします",
+      "typographyAction3": "フォントファミリーを最大2〜3種類に制限します",
+      "typographyAction4": "必要な文字のみを含むようフォントをサブセット化します"
     }
   },
   "loader": {
@@ -527,7 +617,11 @@
     "mayTake20To45Seconds": "20〜45秒かかる場合があります",
     "mayTake30To60Seconds": "30〜60秒かかる場合があります",
     "mayTakeTime": "複雑なサイトの場合、30〜60秒かかることがあります",
-    "scanTiming": "スキャン時間"
+    "scanTiming": "スキャン時間",
+    "analyzingCitationsReviews": "サイテーションとレビューを分析中",
+    "checkingDirectories": "ディレクトリ、複数拠点、評判を確認中...",
+    "compilingGeoSeo": "GEO SEOインサイトを集計中...",
+    "analyzingGeoSeo": "GEO SEOアナライザー"
   },
   "common": {
     "error": "エラー",
@@ -1509,7 +1603,8 @@
           "recommendations": "推奨事項"
         }
       },
-      "unlockToView": "ロック解除して表示："
+      "unlockToView": "ロック解除して表示：",
+      "structuredDataQuickWins": "構造化データのクイックウィン"
     },
     "fixes": {
       "previewIntro": "修正パックのプレビュー：",
@@ -2792,7 +2887,8 @@
       "excelExportFailed": "Excelのエクスポートに失敗しました。CSVエクスポートをお試しください。",
       "noResultsToExport": "エクスポートする結果がありません。まずスキャンを実行してください。",
       "pdfNotAvailable": "PDFエクスポートは利用できません。ページを更新してください。"
-    }
+    },
+    "overallScore": "SEOスコア"
   },
   "pricing": {
     "title": "Site Mechanic Proにアップグレード",
@@ -2879,7 +2975,12 @@
     "monthlyDesc": "無制限スキャン + 250レポート",
     "proAnnual": "プロ年額",
     "annualDesc": "無制限スキャン + 無制限レポート",
-    "save60": "$60節約"
+    "save60": "$60節約",
+    "page": {
+      "paymentCanceled": "お支払いがキャンセルされました。料金は請求されていません。",
+      "paymentSuccess": "お支払いが完了しました！アカウントにリダイレクトしています...",
+      "alreadyPro": "すでにProをご利用中です！アカウントにリダイレクトしています..."
+    }
   },
   "auth": {
     "welcomeBack": "おかえりなさい",
@@ -2921,9 +3022,44 @@
     "accountAndBilling": "アカウントと請求",
     "logoutFailed": "ログアウトに失敗しました。もう一度お試しください。",
     "pro": "Pro",
-    "payAsYouGo": "従量課金"
+    "payAsYouGo": "従量課金",
+    "notAvailable": "N/A",
+    "unknownSite": "不明",
+    "expand": "展開",
+    "passwordChanged": "パスワードが正常に変更されました！",
+    "compareComingSoon": "比較機能は近日公開予定です！",
+    "billing": {
+      "paymentSuccess": "お支払いが完了しました！プランが更新されました。",
+      "checkoutCanceled": "購入手続きがキャンセルされました。料金は請求されていません。",
+      "proActivated": "お支払いが完了しました！Pro機能が有効になりました。",
+      "dayPass": "デイパス",
+      "monthly": "月額",
+      "yearly": "年額",
+      "cancelsOn": "{{date}}に解約されます",
+      "hoursLeft": "残り{{hours}}時間",
+      "syncedPurchases": "{{count}}件の新しい購入を同期しました"
+    },
+    "usage": {
+      "scansCount": "{{used}} / {{limit}} スキャン"
+    },
+    "errors": {
+      "loadFailed": "アカウントデータの読み込みに失敗しました。",
+      "loginToRefresh": "更新するにはログインしてください",
+      "refreshFailed": "更新に失敗しました：{{message}}",
+      "billingPortalFailed": "請求ポータルを開けませんでした",
+      "passwordsNoMatch": "新しいパスワードが一致しません",
+      "passwordMinLength": "パスワードは8文字以上である必要があります",
+      "passwordUppercase": "パスワードには大文字を含める必要があります",
+      "passwordLowercase": "パスワードには小文字を含める必要があります",
+      "passwordNumber": "パスワードには数字を含める必要があります",
+      "changePasswordFailed": "パスワードの変更に失敗しました"
+    }
   },
   "reports": {
+    "print": {
+      "header": "Site Mechanic レポート",
+      "confidential": "機密"
+    },
     "modeLabels": {
       "full": "Lighthouse監査",
       "cwv": "Core Web Vitals",
@@ -3262,6 +3398,15 @@
       "noResourceBreakdown": "リソース内訳は利用できません。",
       "partial": "一部",
       "diagnostic": "診断",
+      "checkoutUnavailable": "現在、チェックアウトはご利用いただけません。",
+      "reportUnlocked": "レポートのロックが解除されました！",
+      "proActivated": "Proサブスクリプションが有効になりました！",
+      "proActivatedUnlocking": "Proサブスクリプションが有効になりました！プレミアムコンテンツのロックを解除しています...",
+      "runScanFirstToBuy": "このレポートを購入するには、まずスキャンを実行してください。",
+      "runScanFirst": "まずスキャンを実行してください。",
+      "paymentServiceError": "決済サービスエラーです。後でもう一度お試しください。",
+      "unlockReport5Usd": "レポートのロックを解除（5米ドル）",
+      "scoreLabel": "{{label}}：{{score}}/100",
       "suggestions": "提案:",
       "suggestionWait": "しばらく待ってからもう一度お試しください",
       "suggestionSpecificPage": "ホームページの代わりに特定のページをテストしてください",
@@ -3271,7 +3416,31 @@
       "analysisFailedRetry": "分析に失敗しました。もう一度お試しください。",
       "exportAndShare": "結果をエクスポート・共有 (Pro)",
       "downloadCsv": "CSV をダウンロード",
-      "proExportLocked": "Pro エクスポートはロックされています"
+      "proExportLocked": "Pro エクスポートはロックされています",
+      "pro": "PRO",
+      "thisReportOnly": "このレポートのみ",
+      "allReports": "すべてのレポート",
+      "whatsIncluded": "含まれる内容：",
+      "pagesScanned": "スキャンしたページ数",
+      "recommendedAction": "推奨される対応",
+      "stepN": "ステップ{{n}}",
+      "noDataAvailable": "このセクションに利用可能なデータはありません。",
+      "excelExportSuccess": "Excelエクスポートが正常にダウンロードされました",
+      "proBadge": "PRO",
+      "proSectionLocked": "このセクションはProレポートに含まれています。下の「レポートをアンロック」オプションを使用して表示してください。",
+      "sectionLoadError": "このセクションを読み込めませんでした。ページを再読み込みしてください。",
+      "markHelpful": "役に立ったとしてマーク",
+      "markNotHelpful": "役に立たなかったとしてマーク",
+      "helpful": "役に立った",
+      "notHelpful": "役に立たなかった",
+      "sinceLastScan": "前回のスキャン以降",
+      "topPct": "上位{{pct}}%",
+      "betterThan": "{{pct}}%より優れています",
+      "statusLabels": {
+        "excellent": "優秀",
+        "good": "良好",
+        "critical": "重大"
+      }
     },
     "status": {
       "excellent": "優秀",
@@ -3671,7 +3840,9 @@
       "fontFixes": "フォントの修正",
       "improvementsFound": "件の改善点が見つかりました",
       "fontDisplayIssueDetected": "フォント表示の問題を検出",
-      "moreIssues": "件のその他の問題"
+      "moreIssues": "件のその他の問題",
+      "stability": "安定性",
+      "typography": "タイポグラフィ"
     },
     "seo": {
       "title": "SEO分析レポート"
@@ -3962,7 +4133,10 @@
       "report": {
         "recommendations.noneTitle": "堅固なセキュリティ体制",
         "recommendations.noneBody": "サイトはセキュリティのベストプラクティスに従っています。新しい脆弱性の監視を継続してください。"
-      }
+      },
+      "recommendationsLoadError": "改善提案を読み込めませんでした。",
+      "cspLabel": "CSP（Content Security Policy）",
+      "hstsLabel": "HSTS（HTTP Strict Transport Security）"
     },
     "accessibility": {
       "title": "アクセシビリティレポート",
@@ -4389,7 +4563,8 @@
         "ttfb": "最初のバイトまでの時間",
         "connectionTime": "接続時間",
         "cacheHitRate": "キャッシュヒット率",
-        "uncachedResources": "キャッシュされていないリソース"
+        "uncachedResources": "キャッシュされていないリソース",
+        "title": "診断"
       },
       "report": {
         "recommendations.noneTitle": "優秀なパフォーマンス",
@@ -4745,7 +4920,11 @@
       },
       "interactionToNextPaint": "Interaction to Next Paint (INP)",
       "totalBlockingTime": "Total Blocking Time (TBT)",
-      "timeToInteractive": "Time to Interactive (TTI)"
+      "timeToInteractive": "Time to Interactive (TTI)",
+      "additionalChecks": "追加チェック",
+      "diagnostic": "診断",
+      "noAdditionalChecks": "利用可能な追加チェックはありません。",
+      "excelTitle": "Site Mechanic - パフォーマンスレポート"
     },
     "cwv": {
       "title": "Core Web Vitals",
@@ -4862,15 +5041,15 @@
           "recommendations": "Core Web Vitals分析に基づき、読み込み速度、インタラクティブ性、視覚的安定性の最も効果的な改善を推奨します。",
           "coreVitals": "これら3つのメトリクスは、Googleがランキングシグナルとして使用する公式のCore Web Vitalsです。LCPは読み込みパフォーマンス、INPはインタラクティブ性の応答性、CLSは視覚的安定性を測定します。各メトリクスはモバイル（70%ウェイト）とデスクトップ（30%ウェイト）の値を並べて表示します。",
           "additionalMetrics": "3つのCore Web Vitalsに加えて、これらの追加メトリクスはページパフォーマンスのより深い洞察を提供します。First Contentful Paint (FCP)は最初の可視コンテンツの表示速度、Speed Index (SI)はコンテンツの視覚的表示速度、Time to Interactive (TTI)はページが完全にインタラクティブになるタイミングを測定します。",
-          "bestPractices": "このセクションではGoogleの\\"
+          "bestPractices": "このセクションでは、Core Web Vitalsスコアを改善するためのGoogleの推奨ベストプラクティスを提供します。"
         },
         "desktop": {
-          "passedDesc": "すべてのデスクトップCore Web VitalsがGoogleの\\",
-          "failedDesc": "1つ以上のデスクトップメトリクスがGoogleの\\"
+          "passedDesc": "すべてのデスクトップCore Web VitalsがGoogleの推奨しきい値を満たしています。",
+          "failedDesc": "1つ以上のデスクトップメトリクスがGoogleの推奨しきい値を下回っています。"
         },
         "mobile": {
-          "passedDesc": "すべてのモバイルCore Web VitalsがGoogleの\\",
-          "failedDesc": "1つ以上のモバイルメトリクスがGoogleの\\"
+          "passedDesc": "すべてのモバイルCore Web VitalsがGoogleの推奨しきい値を満たしています。",
+          "failedDesc": "1つ以上のモバイルメトリクスがGoogleの推奨しきい値を下回っています。"
         },
         "comparison": {
           "context": "比較コンテキスト",
@@ -4921,7 +5100,11 @@
       "failingCwvTitle": "不合格の Core Web Vitals",
       "ttfbName": "Time to First Byte",
       "tbtName": "Total Blocking Time",
-      "spiName": "Speed Index"
+      "spiName": "Speed Index",
+      "includedMobileDesktop": "モバイルとデスクトップのCWV指標",
+      "includedRankingImpact": "Googleランキングへの影響分析",
+      "includedMetricBreakdowns": "詳細な指標の内訳",
+      "includedRecommendations": "実行可能な改善提案"
     },
     "performanceHub": {
       "quickScanTitle": "速度とUXレポート：クイックスキャン",
@@ -4960,7 +5143,8 @@
         "accessibilityDesc": "WCAGコンプライアンス、スクリーンリーダー互換性、色のコントラスト",
         "fonts": "フォント分析",
         "fontsDesc": "フォント読み込みパフォーマンス、Webフォント最適化、タイポグラフィ"
-      }
+      },
+      "exploreToolsHelper": "スキャンは無料で実行できます。任意の有料エクスポート（PDF/共有/データ）は各ツール内で利用できます。"
     },
     "mobile": {
       "title": "モバイルテストレポート",
@@ -5536,7 +5720,14 @@
         "recommendedFix": "推奨される修正",
         "missingSecurityAttributes": "欠落しているセキュリティ属性",
         "addRelNoopener": "rel=\"noopener\"を追加"
-      }
+      },
+      "scanFailed": "リンクの分析に失敗しました。もう一度お試しください。",
+      "noBrokenLinks": "リンク切れは見つかりませんでした。すべてのリンクは正常です。",
+      "noRedirects": "リダイレクトは検出されませんでした。",
+      "noWorkingLinks": "有効なリンクは見つかりませんでした。",
+      "noExternalLinks": "外部リンクは見つかりませんでした。",
+      "noAnchorData": "アンカーテキストのデータはありません。",
+      "noRecommendations": "現時点で改善提案はありません。"
     },
     "brand": {
       "analysisFailed": "分析に失敗しました",
@@ -6907,6 +7098,13 @@
           "category": "カテゴリ",
           "trackers": "トラッカー"
         }
+      },
+      "factors": {
+        "bannerPresent": "Cookieバナーあり",
+        "compliantLibrary": "準拠した同意ライブラリを使用",
+        "rejectOption": "簡単な拒否オプションが利用可能",
+        "granularConsent": "詳細な同意オプション",
+        "noPreConsentCookies": "同意前の非必須Cookieなし"
       }
     },
     "hosting": {
@@ -7161,7 +7359,13 @@
       "visit": "訪問",
       "proTip": "プロのヒント",
       "proTipText": "表示価格は年間契約の開始価格です。月額契約は通常20〜30%高くなります。適合度はプロバイダーがお客様の要件にどれだけ合っているかを示します。ホストを選ぶ際は、トラフィックニーズ、サポート要件、スケーリング計画を考慮してください。",
-      "pdfSubtitle": "ホスティングパフォーマンスとインフラストラクチャ分析"
+      "pdfSubtitle": "ホスティングパフォーマンスとインフラストラクチャ分析",
+      "invalidResponse": "分析で無効なデータが返されました。もう一度お試しください。",
+      "budgetOptionsHidden": "{{count}}件の低価格オプションは、このティアには不十分なため非表示になっています",
+      "noPricingData": "このスキャンの価格データはありません。",
+      "noSavingsFound": "このサイトで節約できる機会は検出されませんでした。",
+      "noRecommendedHosts": "このスキャンで利用可能なホスティングの推奨はありません。",
+      "noProviderComparison": "このスキャンのプロバイダー比較データはありません。"
     },
     "ipReputation": {
       "title": "IP評価分析",
@@ -7334,6 +7538,22 @@
         "ports.noneBody": "スキャン中にオープンポートは見つかりませんでした。またはポートスキャンが実行されませんでした。",
         "recommendations.noneTitle": "良好なレピュテーション",
         "recommendations.noneBody": "IPはクリーンなレピュテーションを維持しています。変更を引き続き監視し、セキュリティのベストプラクティスを維持してください。"
+      },
+      "guide": {
+        "difficultyIntermediate": "中級",
+        "time15to30": "15〜30分",
+        "adminAccess": "管理者アクセス権",
+        "verifyApplied": "変更が正しく適用されたことを確認します",
+        "testFunctionality": "機能をテストします",
+        "monitorIssues": "問題がないか監視します"
+      },
+      "defaultSteps": {
+        "reviewIssue": "現在の問題を確認し、その影響を理解します",
+        "researchFix": "お使いの環境に合った具体的な修正方法を調べます",
+        "implementAction": "推奨される対応を実施します",
+        "testFix": "修正が正しく機能することをテストして確認します",
+        "setUpMonitoring": "再発を防ぐための監視を設定します",
+        "documentChange": "今後の参考のために変更内容を記録します"
       }
     },
     "geoSeo": {
@@ -7453,6 +7673,13 @@
           "addGbpLinks": "Googleビジネスプロフィールへのリンクを追加",
           "includeSocial": "Facebook、Instagram、LinkedInを含める",
           "placeIconsFooter": "フッターにアイコンを配置して視認性を向上"
+        },
+        "time": {
+          "5min": "5分",
+          "10min": "10分",
+          "15min": "15分",
+          "20min": "20分",
+          "30min": "30分"
         }
       },
       "report": {
@@ -7514,7 +7741,21 @@
         },
         "recommendations.noneTitle": "優れたローカルSEO",
         "recommendations.noneBody": "サイトはローカルSEOのベストプラクティスに従っています。持続的なランキングのために、ローカルプレゼンスとNAPの一貫性を引き続き監視してください。"
-      }
+      },
+      "citationsDirectoryAnalysis": "サイテーションとディレクトリ分析",
+      "citationsDesc": "サイテーションとは、外部のディレクトリやプラットフォーム上でのビジネスへの言及です。一貫したサイテーションはローカル検索の順位を高めます。",
+      "noDirectoryLinks": "ページ上にディレクトリリンクは検出されませんでした",
+      "directoryBadges": "検出されたディレクトリバッジ",
+      "noDirectoryBadges": "ディレクトリバッジは検出されませんでした",
+      "geoContentPages": "地域コンテンツページ",
+      "multiLocationAnalysis": "複数拠点と地域ページの分析",
+      "multiLocationDesc": "複数拠点のシグナルは、検索エンジンがビジネスを特定の地域と関連付け、関連性の高い結果を表示するのに役立ちます。",
+      "locationLandingPages": "拠点別ランディングページ",
+      "noLocationPages": "拠点別ランディングページは検出されませんでした",
+      "reviewsReputationAnalysis": "レビューと評判の分析",
+      "reviewsDesc": "レビューと評判のシグナルは、ローカル検索の順位と顧客の信頼に影響します。評価を表示しレビュープラットフォームへリンクすることで信頼性が向上します。",
+      "totalReviews": "レビュー総数",
+      "noReviewPlatformLinks": "レビュープラットフォームへのリンクは検出されませんでした。Google、Yelp、または業界特化型のレビューサイトへのリンクを検討してください。"
     },
     "crawler": {
       "title": "サイトクローラーレポート",
@@ -7706,6 +7947,18 @@
         "sectionsOnlyOnePage": "{{count}}セクションが1ページのみ",
         "multipleUrlFormats": "複数のURL形式が検出されました（{{count}}タイプ）",
         "wellOrganizedStructure": "整理されたサイト構造です"
+      },
+      "hostingTypes": {
+        "managedWordPress": "マネージドWordPress",
+        "webOpsPlatform": "WebOpsプラットフォーム",
+        "jamstack": "JAMstack",
+        "edgePlatform": "エッジプラットフォーム",
+        "paas": "PaaS",
+        "cloudInfrastructure": "クラウドインフラストラクチャ",
+        "edgeCdn": "エッジ/CDN",
+        "ecommerce": "Eコマース",
+        "websiteBuilder": "ウェブサイトビルダー",
+        "sharedHosting": "共有ホスティング"
       }
     },
     "siteCrawler": {
@@ -8020,7 +8273,8 @@
       },
       "healthScore": "タグヘルススコア",
       "totalIssues": "問題の合計数",
-      "performanceScore": "パフォーマンススコア"
+      "performanceScore": "パフォーマンススコア",
+      "noPerformanceData": "このページのスクリプトパフォーマンスデータはありません。"
     },
     "metrics": {
       "seo": "SEO",
@@ -8678,7 +8932,8 @@
       "justNow": "たった今",
       "minutesAgo": "{n}分前",
       "hoursAgo": "{n}時間前",
-      "daysAgo": "{n}日前"
+      "daysAgo": "{n}日前",
+      "unknown": "日付不明"
     },
     "loadMoreRemaining": "さらに読み込む（残り{n}件）",
     "reportTypes": {
@@ -8767,7 +9022,7 @@
         "network": "ネットワークパフォーマンス指標は、サーバーの応答速度とコンテンツ配信速度を測定します。Time to First Byte（TTFB）はサーバー処理速度を示し、DNSルックアップとSSLネゴシエーション時間は接続のオーバーヘッドを明らかにします。これらの指標の最適化には、サーバー設定とネットワークインフラの両方への注意が必要です。",
         "caching": "効果的なキャッシュはサーバー負荷を軽減し、再訪問時のパフォーマンスを劇的に向上させます。適切に設定されたキャッシュヘッダーにより、ブラウザは静的リソースを保存して再利用できます。このセクションでは、キャッシュ戦略を評価し、より長いキャッシュ期間が有効なリソースを特定します。",
         "recommendations": "パフォーマンス分析に基づき、これらの推奨事項は最もインパクトのある改善を対象としています。高優先度の項目から対応することで、読み込み時間とCore Web Vitalsスコアに最大の効果をもたらします。",
-        "dimensionalGrades": "このセクションでは、サイトの多次元的なビューを提供します\\",
+        "dimensionalGrades": "このセクションでは、パフォーマンス、アクセシビリティ、ベストプラクティス、SEOにわたるサイトの多次元的なビューを提供します。",
         "crossBrowser": "このセクションでは、デスクトップとモバイル環境間のパフォーマンスを比較します。モバイルユーザーは、ネットワーク状況やデバイスの制約により、パフォーマンスが低下することがよくあります。デスクトップとモバイルの差を理解することで、訪問者が最も多く使用するプラットフォームの最適化を優先できます。"
       },
       "resources": {
@@ -8877,6 +9132,11 @@
         "issue": "問題",
         "stepByStep": "ステップ別修正ガイド"
       }
+    },
+    "lighthouse": {
+      "unavailableTitle": "パフォーマンス指標は一時的に利用できません",
+      "unavailableMessage": "パフォーマンス指標は一時的に利用できません。他のレポートセクションには影響ありません。",
+      "retryButton": "分析を再試行"
     }
   },
   "grades": {
@@ -9744,5 +10004,35 @@
       "ip-reputation": "IPレピュテーション",
       "competitive": "競合分析"
     }
+  },
+  "bugReport": {
+    "trigger": "データの問題を見つけましたか？報告して無料アンロックを獲得しましょう",
+    "drawerTitle": "問題を報告",
+    "categoryLabel": "問題の種類は何ですか？",
+    "categories": {
+      "wrongData": "誤ったデータ",
+      "missingSection": "欠落しているセクション",
+      "displayIssue": "表示の問題",
+      "crashError": "クラッシュ / エラー",
+      "other": "その他"
+    },
+    "descriptionPlaceholder": "問題の内容を説明してください（30文字以上）...",
+    "submitBtn": "報告を送信",
+    "successTitle": "報告が送信されました！",
+    "successMsg": "このバグが確認された場合、レポートの無料アンロックを獲得できます。",
+    "loginRequired": "サインインしてバグを報告し、レポートの無料アンロックを獲得しましょう",
+    "signIn": "サインイン",
+    "limitReached": "1日のレポート上限に達しました",
+    "duplicateDetected": "同様の報告が最近送信されています",
+    "tokenBalance": "{{count}}個のリワードトークンが利用可能です",
+    "redeemToken": "リワードトークンを使用",
+    "tokenRedeemed": "リワードトークンでレポートがアンロックされました！",
+    "tokenExpiry": "{{date}}に期限切れ"
+  },
+  "rateLimit": {
+    "blocked": "リクエストが多すぎるため、一時的にブロックされています。しばらくお待ちください ",
+    "exceeded": "リクエストの上限に達しました。より高い上限にはアップグレードするか、次の時間の後に再度お試しください ",
+    "exceededPro": "リクエストの上限に達しました。次の時間の後に再度お試しください ",
+    "upgradeLink": "より高い上限にアップグレード"
   }
 }

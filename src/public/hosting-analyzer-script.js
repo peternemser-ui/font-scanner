@@ -22,6 +22,25 @@ function t(key, fallback, params = {}) {
   return value;
 }
 
+// Escape untrusted strings for HTML text/attribute contexts
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Only allow http(s) URLs inside href attributes (rejects javascript: etc.)
+function safeHostingHref(url) {
+  if (typeof url !== 'string') return '#';
+  const trimmed = url.trim();
+  if (!/^https?:\/\//i.test(trimmed)) return '#';
+  return escapeHtml(trimmed);
+}
+
 // Function to get analysis steps with current translations
 // Called at runtime to ensure i18n is loaded
 function getAnalysisSteps() {
@@ -309,9 +328,9 @@ function filterProviders(filter) {
       btn.style.borderColor = 'rgba(0, 255, 65, 0.4)';
       btn.style.color = '#22c55e';
     } else {
-      btn.style.background = 'rgba(255, 255, 255, 0.05)';
-      btn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-      btn.style.color = '#808080';
+      btn.style.background = 'var(--r-surface-2, #F8FAFC)';
+      btn.style.borderColor = 'var(--r-border, rgba(0,0,0,0.10))';
+      btn.style.color = 'var(--r-text-faint, #64748B)';
     }
   });
 
@@ -330,9 +349,12 @@ function initializeCharts() {
     return;
   }
 
-  // Chart.js dark theme defaults
-  Chart.defaults.color = '#808080';
-  Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+  // Chart.js theme-aware defaults from report tokens
+  const rootStyles = getComputedStyle(document.documentElement);
+  const chartTextColor = rootStyles.getPropertyValue('--r-text-muted').trim() || '#6B7280';
+  const chartGridColor = rootStyles.getPropertyValue('--r-border').trim() || 'rgba(0, 0, 0, 0.10)';
+  Chart.defaults.color = chartTextColor;
+  Chart.defaults.borderColor = chartGridColor;
 
   // Get top 8 providers for charts
   const POPULAR_PROVIDERS = getPopularProviders();
@@ -377,7 +399,7 @@ function initializeCharts() {
         scales: {
           y: {
             beginAtZero: true,
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            grid: { color: chartGridColor },
             ticks: {
               callback: (value) => value === 0 ? t('reports.hosting.pricing.free', 'FREE') : '$' + value
             }
@@ -436,7 +458,7 @@ function initializeCharts() {
           x: {
             min: 4.0,
             max: 5.0,
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            grid: { color: chartGridColor },
             ticks: { stepSize: 0.2 }
           },
           y: {
@@ -527,7 +549,7 @@ function initializeCharts() {
         scales: {
           y: {
             beginAtZero: true,
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            grid: { color: chartGridColor },
             title: {
               display: true,
               text: t('reports.hosting.charts.higherBetterValue', 'Higher = Better Value'),
@@ -633,7 +655,7 @@ function renderPopularProviders() {
       </div>
 
       ${provider.url ? `
-        <a href="${provider.url}" target="_blank" rel="noopener noreferrer"
+        <a href="${safeHostingHref(provider.url)}" target="_blank" rel="noopener noreferrer"
            style="display: block; background: linear-gradient(135deg, #06b6d4, #0099cc); color: #000; text-decoration: none; padding: 0.65rem; border-radius: 6px; text-align: center; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease;"
            class="hosting-provider-link">
           ${t('reports.hosting.visitProvider', 'Visit {{name}}', { name: provider.name })} →
@@ -688,6 +710,10 @@ async function analyzeHosting() {
     return;
   }
 
+  // Prevent double-scans while a scan is running
+  const analyzeButton = document.getElementById('analyzeButton');
+  if (analyzeButton) analyzeButton.disabled = true;
+
   // Setup UI
   const resultsDiv = document.getElementById('results');
   const errorMessage = document.getElementById('errorMessage');
@@ -738,10 +764,17 @@ async function analyzeHosting() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      let errorData = {};
+      try {
+        errorData = await response.json();
+      } catch (parseError) {
+        // Non-JSON error response (e.g. HTML error page from a proxy)
+        errorData = {};
+      }
       if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = errorData.scansLimit || 10;
         loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+        if (quickBrowse) quickBrowse.classList.remove('hidden');
         return;
       }
       throw new Error(errorData.message || errorData.error || t('reports.hosting.analysisFailedSimple', 'Hosting analysis failed'));
@@ -769,7 +802,13 @@ async function analyzeHosting() {
 
     // Show results after animation completes
     setTimeout(() => {
-      displayHostingResults(results);
+      const rendered = displayHostingResults(results);
+      if (!rendered) {
+        // Invalid data: do not unhide results or mark the report ready
+        showError(t('reports.hosting.invalidResponse', 'The analysis returned invalid data. Please try again.'));
+        if (quickBrowse) quickBrowse.classList.remove('hidden');
+        return;
+      }
       resultsDiv.classList.remove('hidden');
       window.__REPORT_READY__ = true;
       window.dispatchEvent(new CustomEvent('scan:completed'));
@@ -780,12 +819,14 @@ async function analyzeHosting() {
     console.error('Hosting analysis error:', error);
     loader.showError(t('reports.hosting.analysisFailed', 'Hosting analysis failed: {{message}}', { message: error.message }));
     if (quickBrowse) quickBrowse.classList.remove('hidden');
+  } finally {
+    if (analyzeButton) analyzeButton.disabled = false;
   }
 }
 
 // Display complete hosting results
 function displayHostingResults(data) {
-  if (!data || typeof data !== 'object' || data.error || typeof data === 'string') { console.error('[Hosting] received invalid data:', data?.error || data); return; }
+  if (!data || typeof data !== 'object' || data.error || typeof data === 'string') { console.error('[Hosting] received invalid data:', data?.error || data); return false; }
   const resultsContent = document.getElementById('resultsContent');
   resultsContent.innerHTML = '';
 
@@ -913,13 +954,13 @@ function displayHostingResults(data) {
   // Screenshot Section
   const screenshotHTML = screenshotUrl ? `
     <div class="screenshot-section" style="margin-bottom: 1.5rem;">
-      <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
+      <h3 style="color: var(--r-text, #111827); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
         ${t('reports.common.pageScreenshot', 'Page Screenshot')}
       </h3>
-      <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
+      <div class="screenshot-item" style="background: var(--r-surface-2, #F8FAFC); border: 1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius: 8px; overflow: hidden;">
         <img
           src="${screenshotUrl}"
-          alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url: data.hostname || data.url || '' })}"
+          alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url: escapeHtml(data.hostname || data.url || '') })}"
           class="screenshot-item__img"
           style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
           data-action="open-lightbox"
@@ -939,7 +980,7 @@ function displayHostingResults(data) {
       <div style="background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
         <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
           <span style="color: #22c55e;">${t('reports.common.analyzed', 'Analyzed')}:</span>
-          <span style="color: var(--r-text, #111827);">${data.hostname || data.url || 'N/A'}</span>
+          <span style="color: var(--r-text, #111827);">${escapeHtml(data.hostname || data.url || 'N/A')}</span>
           <span style="color: #22c55e;">${t('reports.common.timestamp', 'timestamp')}:</span>
           <span style="color: var(--r-text, #111827);">${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString()}</span>
         </div>
@@ -988,7 +1029,7 @@ function displayHostingResults(data) {
                 ${trafficIndicators.slice(0, 6).map(ind => `
                   <div style="background: var(--r-surface-2, #F8FAFC); padding: 0.4rem 0.75rem; border-radius: 6px; display: flex; align-items: center; gap: 0.4rem;">
                     <span>${ind.icon || '•'}</span>
-                    <span style="color: var(--r-text, #111827); font-size: 0.85rem;">${ind.signal}</span>
+                    <span style="color: var(--r-text, #111827); font-size: 0.85rem;">${escapeHtml(ind.signal)}</span>
                   </div>
                 `).join('')}
               </div>
@@ -1012,8 +1053,8 @@ function displayHostingResults(data) {
             <span style="font-size: 1.25rem;">◉</span>
             <div>
               <div style="color: #ffa500; font-weight: 600; margin-bottom: 0.25rem;">${t('reports.hosting.trafficAppropriateRecommendations', 'Traffic-Appropriate Recommendations')}</div>
-              <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">${tierWarning.message}</div>
-              ${tierWarning.hiddenCount ? `<div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-top: 0.5rem;">(${tierWarning.hiddenCount} budget options hidden as inadequate for this tier)</div>` : ''}
+              <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">${escapeHtml(tierWarning.message)}</div>
+              ${tierWarning.hiddenCount ? `<div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-top: 0.5rem;">(${t('reports.hosting.budgetOptionsHidden', '{{count}} budget options hidden as inadequate for this tier', { count: tierWarning.hiddenCount })})</div>` : ''}
             </div>
           </div>
         </div>
@@ -1046,7 +1087,7 @@ function displayHostingResults(data) {
                 <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.5rem;">${t('reports.hosting.detectionSignals', 'Detection Signals')}</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
                   ${cms.matchedPatterns.slice(0, 5).map(p => `
-                    <span style="background: rgba(153, 51, 255, 0.2); color: #8b5cf6; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-family: monospace;">${p}</span>
+                    <span style="background: rgba(153, 51, 255, 0.2); color: #8b5cf6; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-family: monospace;">${escapeHtml(p)}</span>
                   `).join('')}
                 </div>
               </div>
@@ -1064,18 +1105,18 @@ function displayHostingResults(data) {
             <div style="font-size: 3rem;">${currentHost ? '🏢' : '❓'}</div>
             <div>
               <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.currentHost', 'Current Host')}</div>
-              <div style="font-size: 1.5rem; font-weight: bold; color: var(--r-text, #111827);">${currentHost?.name || t('reports.hosting.notDetected', 'Not Detected')}</div>
+              <div style="font-size: 1.5rem; font-weight: bold; color: var(--r-text, #111827);">${currentHost?.name ? escapeHtml(currentHost.name) : t('reports.hosting.notDetected', 'Not Detected')}</div>
             </div>
           </div>
           ${currentHost ? `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem;">
               <div style="background: var(--r-surface-2, #F8FAFC); padding: 0.75rem; border-radius: 6px;">
                 <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.category', 'Category')}</div>
-                <div style="font-size: 1rem; font-weight: 600; color: #22c55e;">${currentHost.category}</div>
+                <div style="font-size: 1rem; font-weight: 600; color: #22c55e;">${escapeHtml(currentHost.category)}</div>
               </div>
               <div style="background: var(--r-surface-2, #F8FAFC); padding: 0.75rem; border-radius: 6px;">
                 <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.detectedVia', 'Detected Via')}</div>
-                <div style="font-size: 1rem; font-weight: 600; color: #06b6d4;">${currentHost.detectedVia}</div>
+                <div style="font-size: 1rem; font-weight: 600; color: #06b6d4;">${escapeHtml(currentHost.detectedVia)}</div>
               </div>
             </div>
           ` : `
@@ -1119,6 +1160,13 @@ function displayHostingResults(data) {
         </div>
       </div>
     `;
+  } else {
+    html += `
+      <div class="section" style="margin-bottom: 2rem;">
+        <h3 style="color: #ffa500; margin: 0 0 0.5rem 0;">💰 ${t('reports.hosting.pricingOverview', 'Pricing Overview')}</h3>
+        <p style="color: var(--r-text-muted, #6B7280); padding: 1rem 0;">${t('reports.hosting.noPricingData', 'Pricing data is not available for this scan.')}</p>
+      </div>
+    `;
   }
 
   // Savings Opportunities
@@ -1149,6 +1197,13 @@ function displayHostingResults(data) {
             </div>
           `).join('')}
         </div>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="section" style="margin-bottom: 2rem;">
+        <h3 style="color: #22c55e; margin: 0 0 1rem 0;">💸 ${t('reports.hosting.potentialSavings', 'Potential Savings Opportunities')}</h3>
+        <p style="color: var(--r-text-muted, #6B7280); padding: 1rem 0;">${t('reports.hosting.noSavingsFound', 'No savings opportunities detected for this site.')}</p>
       </div>
     `;
   }
@@ -1243,7 +1298,7 @@ function displayHostingResults(data) {
               ` : ''}
               
               ${host.url ? `
-                <a href="${host.url}" target="_blank" rel="noopener noreferrer"
+                <a href="${safeHostingHref(host.url)}" target="_blank" rel="noopener noreferrer"
                    style="display: block; background: linear-gradient(135deg, #06b6d4, #0099cc); color: #000; text-decoration: none; padding: 0.75rem; border-radius: 6px; text-align: center; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease;"
                    class="hosting-provider-link">
                   ${t('reports.hosting.visitProvider', 'Visit {{name}}', { name: host.name })} →
@@ -1252,6 +1307,13 @@ function displayHostingResults(data) {
             </div>
           `).join('')}
         </div>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="section" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--r-text, #111827); margin: 0 0 1rem 0;">🏆 ${t('reports.hosting.topRecommendedHosts', 'Top Recommended Hosts')}</h3>
+        <p style="color: var(--r-text-muted, #6B7280); padding: 1rem 0;">${t('reports.hosting.noRecommendedHosts', 'No host recommendations are available for this scan.')}</p>
       </div>
     `;
   }
@@ -1306,7 +1368,7 @@ function displayHostingResults(data) {
                   </td>
                   <td style="text-align: center;">
                     ${provider.url ? `
-                      <a href="${provider.url}" target="_blank" rel="noopener noreferrer"
+                      <a href="${safeHostingHref(provider.url)}" target="_blank" rel="noopener noreferrer"
                          style="display: inline-block; background: rgba(0, 217, 255, 0.2); color: #06b6d4; text-decoration: none; padding: 0.4rem 0.75rem; border-radius: 4px; font-size: 0.8rem; font-weight: 500; border: 1px solid rgba(0, 217, 255, 0.4); transition: all 0.2s ease;"
                          class="hosting-table-link">
                         ${t('reports.hosting.visit', 'Visit')} →
@@ -1321,6 +1383,13 @@ function displayHostingResults(data) {
         <div style="margin-top: 1rem; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">
           <strong>◎ ${t('reports.hosting.proTip', 'Pro Tip')}:</strong> ${t('reports.hosting.proTipText', 'Prices shown are starting prices with annual billing. Monthly billing is typically 20-30% higher. Match % indicates how well the provider fits your requirements. Consider your traffic needs, support requirements, and scaling plans when choosing a host.')}
         </div>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="section" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--r-text, #111827); margin: 0 0 1rem 0;">📝 ${t('reports.hosting.completeProviderComparison', 'Complete Provider Comparison')}</h3>
+        <p style="color: var(--r-text-muted, #6B7280); padding: 1rem 0;">${t('reports.hosting.noProviderComparison', 'Provider comparison data is not available for this scan.')}</p>
       </div>
     `;
   }
@@ -1399,10 +1468,12 @@ function displayHostingResults(data) {
     });
     resultsContent.insertAdjacentHTML('beforeend', proBlockHtml);
   } else {
-    const opts = { context: 'hosting-analysis', features: ['pdf', 'excel', 'csv', 'share'], title: 'Unlock Report', subtitle: 'PDF export, share link, export data, and fix packs for this scan.' };
+    const opts = { context: 'hosting-analysis', features: ['pdf', 'excel', 'csv', 'share'], title: t('reports.common.unlockReport', 'Unlock Report'), subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.') };
     const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
     resultsContent.insertAdjacentHTML('beforeend', '<div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div>');
   }
+
+  return true;
 }
 
 // Get category icon - Classic Emoji Style
@@ -1452,7 +1523,6 @@ function initHostingPDFExport() {
       urlInputSelector: '#urlInput, input[type="url"], input[type="text"]',
       filename: `hosting-analysis-${new Date().toISOString().split('T')[0]}.pdf`
     });
-  } else {
   }
 }
 

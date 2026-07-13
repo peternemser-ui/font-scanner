@@ -57,7 +57,7 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
   const validReportTypes = [
     'seo', 'performance', 'accessibility', 'security', 'fonts', 'tag-intelligence',
     'core-web-vitals', 'ip-reputation', 'broken-links', 'geo-seo', 'local-seo',
-    'gdpr', 'mobile', 'cro', 'site-crawler', 'brand-consistency', 'competitive'
+    'gdpr', 'mobile', 'cro', 'site-crawler', 'brand-consistency', 'competitive', 'hosting'
   ];
   // Normalize legacy 'local-seo' to 'geo-seo'
   const normalizedReportType = reportType === 'local-seo' ? 'geo-seo' : reportType;
@@ -87,6 +87,7 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
     'site-crawler': 'site-crawler',
     'brand-consistency': 'brand-consistency',
     competitive: 'competitive-analysis',
+    hosting: 'hosting-analyzer',
   };
 
   const resolvedReportId = resolveReportId({
@@ -271,7 +272,7 @@ const generatePDF = asyncHandler(async (req, res) => {
   const validReportTypes = [
     'seo', 'performance', 'accessibility', 'security', 'fonts', 'tag-intelligence',
     'core-web-vitals', 'ip-reputation', 'broken-links', 'geo-seo', 'local-seo',
-    'gdpr', 'mobile', 'cro', 'site-crawler', 'brand-consistency', 'competitive'
+    'gdpr', 'mobile', 'cro', 'site-crawler', 'brand-consistency', 'competitive', 'hosting'
   ];
   // Normalize legacy 'local-seo' to 'geo-seo'
   const normalizedReportType = reportType === 'local-seo' ? 'geo-seo' : reportType;
@@ -301,6 +302,7 @@ const generatePDF = asyncHandler(async (req, res) => {
     'site-crawler': 'site-crawler',
     'brand-consistency': 'brand-consistency',
     competitive: 'competitive-analysis',
+    hosting: 'hosting-analyzer',
   };
 
   const resolvedReportId = resolveReportId({
@@ -467,6 +469,7 @@ const generatePDF = asyncHandler(async (req, res) => {
     'site-crawler': 'pdf-templates/site-crawler-report.html',
     'brand-consistency': 'pdf-templates/brand-consistency-report.html',
     competitive: 'pdf-templates/competitive-report.html',
+    hosting: 'pdf-templates/hosting-report.html',
   };
 
   const analyzerPageMap = {
@@ -486,6 +489,7 @@ const generatePDF = asyncHandler(async (req, res) => {
     'site-crawler': 'site-crawler.html',
     'brand-consistency': 'brand-consistency.html',
     competitive: 'competitive-analysis.html',
+    hosting: 'hosting-analyzer.html',
   };
 
   const port = process.env.PORT || 3000;

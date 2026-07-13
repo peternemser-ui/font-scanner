@@ -22,6 +22,17 @@ function t(key, fallback, params = {}) {
   return value;
 }
 
+// HTML/attribute escaping for scanned-origin data (matches escapeHtmlA11y / escapeGeoSeoHtml in sibling files)
+function escapeHtmlSec(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Translation helpers for backend data
 function translateRiskLevel(risk) {
   if (!risk) return t('reports.security.low', 'Low');
@@ -780,9 +791,7 @@ async function analyzeSecurity(options = {}) {
       resultsDiv.removeAttribute('hidden');
       window.__REPORT_READY__ = true;
       window.dispatchEvent(new CustomEvent('scan:completed'));
-      window.dispatchEvent(new CustomEvent('report:ready', {
-        detail: { reportId: apiReportId, url: urlInput.value }
-      }));
+      // report:ready is dispatched inside displaySecurityResults (covers all render paths)
     }, 1000);
 
   } catch (error) {
@@ -879,7 +888,7 @@ async function displaySecurityResults(data) {
     : `
       <div class="section" style="margin-bottom: 1.5rem;">
         <h2 style="color: var(--text-primary, #fff); font-size: 1.5rem; margin: 0 0 1rem 0;">${t('reports.security.title', 'Security Analysis Report')}</h2>
-        ${url ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🌐 ${url}</p>` : ''}
+        ${url ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🌐 ${escapeHtmlSec(url)}</p>` : ''}
         <p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🕒 ${timestamp}</p>
       </div>
     `;
@@ -892,7 +901,7 @@ async function displaySecurityResults(data) {
         <div>
           <strong style="color: #ef4444;">${t('reports.security.analysisIncomplete', 'Analysis Incomplete')}</strong>
           <p style="margin: 0.25rem 0 0 0; color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">
-            ${data.errorMessage || t('reports.security.someChecksNotCompleted', 'Some security checks could not be completed. Partial results shown below.')}
+            ${data.errorMessage ? escapeHtmlSec(data.errorMessage) : t('reports.security.someChecksNotCompleted', 'Some security checks could not be completed. Partial results shown below.')}
           </p>
         </div>
       </div>
@@ -901,7 +910,9 @@ async function displaySecurityResults(data) {
 
   // Page Screenshot section - consistent with other analyzers
   const reportId = document.body.getAttribute('data-report-id');
-  const screenshotUrl = data.screenshotUrl || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+  const screenshotUrl = data.screenshotUrl ||
+    document.body.getAttribute('data-sm-screenshot-url') ||
+    (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
 
   // Set screenshot URL body attribute for report-ui.js
   if (screenshotUrl) {
@@ -917,13 +928,13 @@ async function displaySecurityResults(data) {
       </h3>
       <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
         <img
-          src="${screenshotUrl}"
-          alt="${t('reports.common.screenshotAlt', 'Screenshot of')} ${url}"
+          src="${escapeHtmlSec(screenshotUrl)}"
+          alt="${t('reports.common.screenshotAlt', 'Screenshot of')} ${escapeHtmlSec(url)}"
           class="screenshot-item__img"
           style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
           data-action="open-lightbox"
-          data-screenshot-url="${screenshotUrl}"
-          data-screenshot-title="${pageScreenshotLabel}"
+          data-screenshot-url="${escapeHtmlSec(screenshotUrl)}"
+          data-screenshot-title="${escapeHtmlSec(pageScreenshotLabel)}"
         />
       </div>
     </div>
@@ -1087,7 +1098,7 @@ async function displaySecurityResults(data) {
       locked: !isUnlocked,
       context: 'security',
       reportId: secReportId,
-      contentHTML: (() => { try { return renderRecommendationsContent(data.recommendations, data); } catch (e) { console.error('[Security] Recommendations render error:', e); return '<div style="padding:1rem;color:var(--r-text-muted);">Recommendations could not be loaded.</div>'; } })()
+      contentHTML: (() => { try { return renderRecommendationsContent(data.recommendations, data); } catch (e) { console.error('[Security] Recommendations render error:', e); return '<div style="padding:1rem;color:var(--r-text-muted);">' + t('reports.security.recommendationsLoadError', 'Recommendations could not be loaded.') + '</div>'; } })()
     },
     {
       id: 'ai-strategic-analysis',
@@ -1162,7 +1173,7 @@ async function displaySecurityResults(data) {
       reportId: currentReportId
     });
   } else {
-    const opts = { context: 'security', features: ['pdf', 'excel', 'csv', 'share'], title: 'Unlock Report', subtitle: 'PDF export, share link, export data, and fix packs for this scan.' };
+    const opts = { context: 'security', features: ['pdf', 'excel', 'csv', 'share'], title: t('reports.common.unlockReport', 'Unlock Report'), subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.') };
     const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
     actionsFooter.innerHTML = '<div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div>';
   }
@@ -1178,17 +1189,31 @@ async function displaySecurityResults(data) {
     });
   }
 
-  // Add click handler for screenshot lightbox
-  resultsContent.addEventListener('click', (e) => {
-    const openLightbox = e.target.closest('[data-action="open-lightbox"]');
-    if (openLightbox) {
-      const screenshotUrlForLightbox = openLightbox.getAttribute('data-screenshot-url');
-      const screenshotTitle = openLightbox.getAttribute('data-screenshot-title');
-      if (screenshotUrlForLightbox && window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
-        window.ScreenshotLightbox.open(screenshotUrlForLightbox, screenshotTitle || t('reports.common.screenshot', 'Screenshot'));
+  // Add click handler for screenshot lightbox (once — #resultsContent persists across re-renders)
+  if (!resultsContent.dataset.lightboxBound) {
+    resultsContent.dataset.lightboxBound = '1';
+    resultsContent.addEventListener('click', (e) => {
+      const openLightbox = e.target.closest('[data-action="open-lightbox"]');
+      if (openLightbox) {
+        const screenshotUrlForLightbox = openLightbox.getAttribute('data-screenshot-url');
+        const screenshotTitle = openLightbox.getAttribute('data-screenshot-title');
+        if (screenshotUrlForLightbox && window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
+          window.ScreenshotLightbox.open(screenshotUrlForLightbox, screenshotTitle || t('reports.common.screenshot', 'Screenshot'));
+        }
       }
-    }
-  });
+    });
+  }
+
+  // Signal report readiness (scroll trigger) for ALL render paths: fresh scan,
+  // stored-report recall, billing return, and restore. Guarded per report+url so
+  // re-renders (language change, entitlements update) don't re-fire/re-scroll.
+  const readyKey = (document.body.getAttribute('data-report-id') || '') + '|' + url;
+  if (window.__smSecurityReportReadyKey !== readyKey) {
+    window.__smSecurityReportReadyKey = readyKey;
+    window.dispatchEvent(new CustomEvent('report:ready', {
+      detail: { reportId: document.body.getAttribute('data-report-id') || '', url: url }
+    }));
+  }
 }
 
 // Expose display function globally for billing return handler
@@ -1325,8 +1350,8 @@ function createDesktopMobileComparison(container, desktop, mobile) {
       </div>
 
       <div style="margin-top: 1.5rem; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 6px; font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF); line-height: 1.6;">
-        <p style="margin: 0 0 0.5rem 0;"><strong style="color: #a0a0a0;">CSP (Content Security Policy):</strong> ${t('reports.security.cspDescription', 'CSP (Content Security Policy): A security header that helps prevent XSS attacks')}</p>
-        <p style="margin: 0;"><strong style="color: #a0a0a0;">HSTS (HTTP Strict Transport Security):</strong> ${t('reports.security.hstsDescription', 'HSTS (HTTP Strict Transport Security): Forces HTTPS connections')}</p>
+        <p style="margin: 0 0 0.5rem 0;"><strong style="color: #a0a0a0;">${t('reports.security.cspLabel', 'CSP (Content Security Policy)')}:</strong> ${t('reports.security.cspDescription', 'CSP (Content Security Policy): A security header that helps prevent XSS attacks')}</p>
+        <p style="margin: 0;"><strong style="color: #a0a0a0;">${t('reports.security.hstsLabel', 'HSTS (HTTP Strict Transport Security)')}:</strong> ${t('reports.security.hstsDescription', 'HSTS (HTTP Strict Transport Security): Forces HTTPS connections')}</p>
       </div>
 
       ${Math.abs(desktop.securityScore - mobile.securityScore) > 10 ? `
@@ -1341,110 +1366,6 @@ function createDesktopMobileComparison(container, desktop, mobile) {
   container.innerHTML = comparisonHtml;
 }
 
-// Create accordion section matching SEO/Accessibility style with optional Pro gating
-function createAccordionSection(container, id, displayTitle, contentCreator, score, options = {}) {
-  const { isPro = false, previewHtml = '' } = options;
-  ensureProStyles();
-
-  const accordion = document.createElement('div');
-  accordion.className = 'accordion';
-  accordion.setAttribute('data-accordion-id', id);
-  if (isPro) {
-    accordion.classList.add('pro-section');
-    accordion.dataset.pro = 'true';
-  }
-  
-  const header = document.createElement('button');
-  header.className = 'accordion-header';
-  const proBadge = isPro ? '<span class="pro-pill">PRO</span>' : '';
-  header.innerHTML = `
-    <span style="display: inline-flex; align-items: center; gap: 0.5rem;">${displayTitle} ${proBadge}</span>
-    <span style="display: flex; align-items: center; gap: 0.5rem;">
-      ${score !== null ? `<span style="color: ${getScoreColor(score)}; font-size: 0.9rem;">${score}/100</span>` : ''}
-      <span class="accordion-toggle">▼</span>
-    </span>
-  `;
-  
-  const content = document.createElement('div');
-  content.className = 'accordion-content';
-  content.id = `accordion-${id}`;
-  
-  const contentInner = document.createElement('div');
-  contentInner.className = 'accordion-content-inner';
-  content.appendChild(contentInner);
-
-  const renderContent = () => {
-    const hasPro = !isPro || userHasPro();
-    contentInner.innerHTML = ''; // Clear before re-render
-    if (isPro && !hasPro) {
-      contentInner.innerHTML = previewHtml || renderLockedProPreview(displayTitle, [t('reports.security.securityFixesPreview', 'Security fixes preview'), t('reports.security.owaspRecommendations', 'OWASP-aligned recommendations')]);
-      return;
-    }
-    try {
-      const contentHTML = contentCreator();
-      if (typeof contentHTML === 'string') {
-        contentInner.innerHTML = contentHTML;
-      } else if (contentHTML) {
-        contentInner.appendChild(contentHTML);
-      }
-    } catch (err) {
-      console.error('[SecurityReport] Error rendering section ' + id + ':', err);
-      contentInner.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.common.sectionLoadError', 'This section could not be loaded. Please try refreshing the page.') + '</div>';
-    }
-  };
-
-  // Add click handler for accordion
-  header.addEventListener('click', () => {
-    const isExpanded = content.classList.contains('expanded');
-
-    if (isExpanded) {
-      // Collapse
-      content.classList.remove('expanded');
-      header.classList.remove('active');
-      header.querySelector('.accordion-toggle').textContent = '▼';
-      header.querySelector('.accordion-toggle').classList.remove('rotated');
-    } else {
-      // For pro sections, always re-check access (handles billing fetch race condition)
-      if (isPro || !contentInner.hasChildNodes()) {
-        renderContent();
-      }
-
-      content.classList.add('expanded');
-      header.classList.add('active');
-      header.querySelector('.accordion-toggle').textContent = '▲';
-      header.querySelector('.accordion-toggle').classList.add('rotated');
-    }
-  });
-
-  // Listen for pro:unlocked event dispatched by revealProOnlyContent()
-  // This re-renders the section with actual content when access is granted post-payment
-  if (isPro) {
-    contentInner.addEventListener('pro:unlocked', () => {
-      console.log('[Security] pro:unlocked event received for section:', id);
-      renderContent();
-    });
-  }
-
-  // Pro sections: eagerly pre-render and auto-expand if user has Pro access
-  if (isPro) {
-    renderContent();
-    // Auto-expand Pro sections for Pro users (no click needed)
-    if (userHasPro()) {
-      content.classList.add('expanded');
-      header.classList.add('active');
-      const toggle = header.querySelector('.accordion-toggle');
-      if (toggle) {
-        toggle.textContent = '▲';
-        toggle.classList.add('rotated');
-      }
-    }
-  }
-
-  accordion.appendChild(header);
-  accordion.appendChild(content);
-  container.appendChild(accordion);
-}
-
 // Render SSL/TLS Certificate content
 function renderSSLContent(ssl) {
   return `
@@ -1457,23 +1378,23 @@ function renderSSLContent(ssl) {
         </div>
         <div class="info-item">
           <span class="info-label">${t('reports.security.issuer', 'Issuer')}:</span>
-          <span class="info-value">${ssl.issuer || t('common.unknown', 'Unknown')}</span>
+          <span class="info-value">${ssl.issuer ? escapeHtmlSec(ssl.issuer) : t('common.unknown', 'Unknown')}</span>
         </div>
         <div class="info-item">
           <span class="info-label">${t('reports.security.validFrom', 'Valid From')}:</span>
-          <span class="info-value">${ssl.validFrom || t('common.notAvailable', 'N/A')}</span>
+          <span class="info-value">${ssl.validFrom ? escapeHtmlSec(ssl.validFrom) : t('common.notAvailable', 'N/A')}</span>
         </div>
         <div class="info-item">
           <span class="info-label">${t('reports.security.validUntil', 'Valid Until')}:</span>
-          <span class="info-value">${ssl.validUntil || t('common.notAvailable', 'N/A')}</span>
+          <span class="info-value">${ssl.validUntil ? escapeHtmlSec(ssl.validUntil) : t('common.notAvailable', 'N/A')}</span>
         </div>
         <div class="info-item">
           <span class="info-label">${t('reports.security.daysRemaining', 'Days Remaining')}:</span>
-          <span class="info-value ${ssl.daysRemaining > 30 ? 'success' : 'warning'}">${ssl.daysRemaining || t('common.notAvailable', 'N/A')} ${t('common.days', 'days')}</span>
+          <span class="info-value ${ssl.daysRemaining > 30 ? 'success' : 'warning'}">${Number.isFinite(ssl.daysRemaining) ? `${ssl.daysRemaining}` : t('common.notAvailable', 'N/A')} ${t('common.days', 'days')}</span>
         </div>
         <div class="info-item">
           <span class="info-label">${t('reports.security.protocol', 'Protocol')}:</span>
-          <span class="info-value">${ssl.protocol || t('common.unknown', 'Unknown')}</span>
+          <span class="info-value">${ssl.protocol ? escapeHtmlSec(ssl.protocol) : t('common.unknown', 'Unknown')}</span>
         </div>
       </div>
 
@@ -1481,7 +1402,7 @@ function renderSSLContent(ssl) {
         <div class="issues-list" style="margin-top: 1rem;">
           <h5 style="color: #ef4444;">~ ${t('reports.security.certificateIssues', 'Certificate Issues')}:</h5>
           <ul>
-            ${ssl.issues.map(issue => `<li style="color: #ef4444;">${translateSslIssue(issue)}</li>`).join('')}
+            ${ssl.issues.map(issue => `<li style="color: #ef4444;">${escapeHtmlSec(translateSslIssue(issue))}</li>`).join('')}
           </ul>
         </div>
       ` : '<p style="color: var(--accent-primary); margin-top: 1rem;">✓ ' + t('reports.security.noSslIssues', 'No SSL/TLS issues detected') + '</p>'}
@@ -1499,7 +1420,7 @@ function renderHeadersContent(headers) {
       <div style="overflow-x: auto;">
         <table style="width: 100%; border-collapse: collapse; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
           <thead>
-            <tr style="background: rgba(255, 255, 255, 0.05); border-bottom: 2px solid rgba(255, 255, 255, 0.2);">
+            <tr style="background: var(--r-surface-2, #F8FAFC); border-bottom: 2px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--accent-primary); width: 10%;">${t('reports.security.status', 'Status')}</th>
               <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--accent-primary); width: 25%;">${t('reports.security.header', 'Header')}</th>
               <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--accent-primary); width: 30%;">${t('reports.security.value', 'Value')}</th>
@@ -1507,7 +1428,7 @@ function renderHeadersContent(headers) {
             </tr>
           </thead>
           <tbody>
-            ${Object.entries(headers.details).map(([header, info]) => `
+            ${Object.entries(headers.details || {}).map(([header, info]) => `
               <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); ${!info.present ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
                 <td style="padding: 0.75rem; text-align: center;">
                   <span style="color: ${info.present ? 'var(--accent-primary)' : '#ef4444'}; font-size: 1.2rem; font-weight: bold;">
@@ -1515,14 +1436,14 @@ function renderHeadersContent(headers) {
                   </span>
                 </td>
                 <td style="padding: 0.75rem;">
-                  <strong style="color: ${info.present ? '#ffffff' : '#ef4444'};">${header}</strong>
+                  <strong style="color: ${info.present ? 'var(--r-text, #111827)' : '#ef4444'};">${escapeHtmlSec(header)}</strong>
                 </td>
                 <td style="padding: 0.75rem; color: ${info.present ? 'var(--accent-primary)' : '#808080'}; font-family: monospace; font-size: 0.85rem; word-break: break-all;">
-                  ${info.value || '<span style="color: var(--r-text-faint, #9CA3AF); font-style: italic;">' + t('reports.security.notSet', 'Not set') + '</span>'}
+                  ${info.value ? escapeHtmlSec(info.value) : '<span style="color: var(--r-text-faint, #9CA3AF); font-style: italic;">' + t('reports.security.notSet', 'Not set') + '</span>'}
                 </td>
                 <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">
-                  <div>${translateHeaderDescription(header, info.description)}</div>
-                  ${!info.present ? `<div style="color: #ef4444; margin-top: 0.5rem; font-weight: 500;">~ ${t('reports.security.risk', 'Risk')}: ${translateHeaderRisk(header, info.risk)}</div>` : ''}
+                  <div>${escapeHtmlSec(translateHeaderDescription(header, info.description))}</div>
+                  ${!info.present ? `<div style="color: #ef4444; margin-top: 0.5rem; font-weight: 500;">~ ${t('reports.security.risk', 'Risk')}: ${escapeHtmlSec(translateHeaderRisk(header, info.risk))}</div>` : ''}
                 </td>
               </tr>
             `).join('')}
@@ -1541,7 +1462,7 @@ function renderVulnerabilitiesContent(vulnerabilities) {
 
       <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
         <thead>
-          <tr style="background: rgba(255, 255, 255, 0.05); border-bottom: 2px solid rgba(255, 255, 255, 0.1);">
+          <tr style="background: var(--r-surface-2, #F8FAFC); border-bottom: 2px solid var(--r-border, rgba(0, 0, 0, 0.08));">
             <th style="text-align: left; padding: 0.75rem; color: #bb86fc; font-weight: 600;">${t('reports.security.severityLevel', 'Severity Level')}</th>
             <th style="text-align: center; padding: 0.75rem; color: #bb86fc; font-weight: 600;">${t('reports.security.count', 'Count')}</th>
           </tr>
@@ -1585,14 +1506,14 @@ function renderVulnerabilitiesContent(vulnerabilities) {
       ${vulnerabilities.issues && vulnerabilities.issues.length > 0 ? `
         <div class="vulnerabilities-list">
           ${vulnerabilities.issues.map(issue => `
-            <div class="vulnerability-item ${issue.severity}">
+            <div class="vulnerability-item ${escapeHtmlSec(issue.severity)}">
               <div class="vuln-header">
-                <span class="vuln-severity-badge ${issue.severity}">${translateRiskLevel(issue.severity).toUpperCase()}</span>
-                <span class="vuln-title">${translateVulnTitle(issue.title)}</span>
+                <span class="vuln-severity-badge ${escapeHtmlSec(issue.severity)}">${escapeHtmlSec(translateRiskLevel(issue.severity).toUpperCase())}</span>
+                <span class="vuln-title">${escapeHtmlSec(translateVulnTitle(issue.title))}</span>
               </div>
-              <div class="vuln-description">${issue.description}</div>
-              ${issue.cve ? `<div class="vuln-cve">CVE: ${issue.cve}</div>` : ''}
-              ${issue.solution ? `<div class="vuln-solution"><strong>${t('reports.security.solution', 'Solution')}:</strong> ${translateVulnDescription(issue.solution)}</div>` : ''}
+              <div class="vuln-description">${escapeHtmlSec(issue.description)}</div>
+              ${issue.cve ? `<div class="vuln-cve">CVE: ${escapeHtmlSec(issue.cve)}</div>` : ''}
+              ${issue.solution ? `<div class="vuln-solution"><strong>${t('reports.security.solution', 'Solution')}:</strong> ${escapeHtmlSec(translateVulnDescription(issue.solution))}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -1612,7 +1533,7 @@ function renderCookiesContent(cookies) {
   return `
     <div class="security-section">
       <h4>${t('reports.security.cookieSecurityAnalysis', 'Cookie Security Analysis')}</h4>
-      <p style="margin-bottom: 1rem;">${t('reports.security.totalCookies', 'Total cookies: {{total}} | Secure cookies: {{secure}}')}: ${cookies.total} | ${t('reports.security.secureCookies', 'Secure cookies')}: ${cookies.secure}</p>
+      <p style="margin-bottom: 1rem;">${t('reports.security.totalCookies', 'Total cookies: {{total}} | Secure cookies: {{secure}}', { total: cookies.total, secure: cookies.secure })}</p>
 
       ${cookies.list && cookies.list.length > 0 ? `
         <div class="cookies-table">
@@ -1629,7 +1550,7 @@ function renderCookiesContent(cookies) {
             <tbody>
               ${cookies.list.map(cookie => `
                 <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); ${(!cookie.httpOnly || !cookie.secure) ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
-                  <td style="padding: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.9rem; color: #00ccff;">${cookie.name}</td>
+                  <td style="padding: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.9rem; color: #00ccff;">${escapeHtmlSec(cookie.name)}</td>
                   <td style="text-align: center; padding: 0.75rem;">
                     <span style="color: ${cookie.httpOnly ? 'var(--accent-primary)' : '#ef4444'}; font-weight: bold; font-size: 1.1rem;">
                       ${cookie.httpOnly ? '✓' : '✗'}
@@ -1642,11 +1563,11 @@ function renderCookiesContent(cookies) {
                   </td>
                   <td style="text-align: center; padding: 0.75rem;">
                     <span style="color: ${cookie.sameSite && cookie.sameSite !== 'Not set' && cookie.sameSite !== 'None' ? 'var(--accent-primary)' : (cookie.sameSite === 'Lax' ? '#ffa500' : '#ef4444')}; font-weight: bold; font-size: 0.9rem;">
-                      ${cookie.sameSite || t('reports.security.notSet', 'Not set')}
+                      ${cookie.sameSite ? escapeHtmlSec(cookie.sameSite) : t('reports.security.notSet', 'Not set')}
                     </span>
                   </td>
                   <td style="padding: 0.75rem; color: ${cookie.issues && cookie.issues.length > 0 ? '#ef4444' : '#666'}; font-size: 0.85rem;">
-                    ${cookie.issues && cookie.issues.length > 0 ? cookie.issues.map(issue => translateCookieIssue(issue)).join(', ') : t('common.none', 'None')}
+                    ${cookie.issues && cookie.issues.length > 0 ? cookie.issues.map(issue => escapeHtmlSec(translateCookieIssue(issue))).join(', ') : t('common.none', 'None')}
                   </td>
                 </tr>
               `).join('')}
@@ -1659,7 +1580,7 @@ function renderCookiesContent(cookies) {
         <div class="cookie-issues" style="margin-top: 1rem;">
           <h5 style="color: #ef4444;">~ ${t('reports.security.cookieSecurityIssues', 'Cookie Security Issues')}:</h5>
           <ul>
-            ${cookies.issues.map(issue => `<li style="color: #ef4444;">${translateCookieIssue(issue)}</li>`).join('')}
+            ${cookies.issues.map(issue => `<li style="color: #ef4444;">${escapeHtmlSec(translateCookieIssue(issue))}</li>`).join('')}
           </ul>
         </div>
       ` : ''}
@@ -1694,7 +1615,7 @@ function renderThirdPartyContent(thirdParty) {
               ${thirdParty.scripts.map((script) => `
                 <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); ${!script.hasSRI ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
                   <td style="padding: 0.75rem; word-break: break-all; font-family: 'Courier New', monospace; font-size: 0.85rem; color: #00ccff;">
-                    ${script.url}
+                    ${escapeHtmlSec(script.url)}
                   </td>
                   <td style="padding: 0.75rem; text-align: center;">
                     <span style="color: ${script.hasSRI ? 'var(--accent-primary)' : '#ef4444'}; font-weight: bold;">
@@ -1714,9 +1635,9 @@ function renderThirdPartyContent(thirdParty) {
                   <td style="padding: 0.75rem; text-align: center; font-weight: 600; color: ${
                     script.risk === 'high' ? '#ef4444' :
                     script.risk === 'medium' ? '#ffa500' :
-                    script.risk === 'low' ? '#ffff00' : 'var(--accent-primary)'
+                    script.risk === 'low' ? 'var(--r-warn, #B45309)' : 'var(--accent-primary)'
                   };">
-                    ${translateRiskLevel(script.risk)}
+                    ${escapeHtmlSec(translateRiskLevel(script.risk))}
                   </td>
                 </tr>
               `).join('')}
@@ -1783,10 +1704,10 @@ function renderRecommendationsContent(recommendations, results) {
           </thead>
           <tbody>
             ${recommendations.map((rec) => {
-              const priorityColor = 
+              const priorityColor =
                 rec.priority === 'critical' ? '#ef4444' :
                 rec.priority === 'high' ? '#ffa500' :
-                rec.priority === 'medium' ? '#ffff00' : '#00ccff';
+                rec.priority === 'medium' ? 'var(--r-warn, #B45309)' : '#00ccff';
               
               const priorityLabel = 
                 rec.priority === 'critical' ? 'H' :
@@ -1801,22 +1722,22 @@ function renderRecommendationsContent(recommendations, results) {
                     </span>
                   </td>
                   <td style="padding: 0.75rem; font-weight: 600; color: #00ccff; font-size: 0.9rem; line-height: 1.4;">
-                    ${translateRecTitle(rec.title)}
-                    ${rec.owaspRef ? `<br><span style="font-size: 0.75rem; color: #ffa500; font-weight: normal;">OWASP: ${rec.owaspRef}</span>` : ''}
-                    ${rec.location ? `<br><span style="font-size: 0.75rem; color: #818cf8; font-weight: normal;">📍 ${rec.location}</span>` : ''}
+                    ${escapeHtmlSec(translateRecTitle(rec.title))}
+                    ${rec.owaspRef ? `<br><span style="font-size: 0.75rem; color: #ffa500; font-weight: normal;">OWASP: ${escapeHtmlSec(rec.owaspRef)}</span>` : ''}
+                    ${rec.location ? `<br><span style="font-size: 0.75rem; color: #818cf8; font-weight: normal;">📍 ${escapeHtmlSec(rec.location)}</span>` : ''}
                   </td>
                   <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: var(--r-text-muted, #6B7280);">
-                    ${translateRecDescription(rec.description)}
+                    ${escapeHtmlSec(translateRecDescription(rec.description))}
                   </td>
                   <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: #ff6b6b;">
-                    ${translateRecImpact(rec.impact)}
+                    ${escapeHtmlSec(translateRecImpact(rec.impact))}
                   </td>
                   <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: var(--accent-primary);">
-                    ${translateRecSolution(rec.solution)}
+                    ${escapeHtmlSec(translateRecSolution(rec.solution))}
                     ${rec.resources && rec.resources.length > 0 ? `
                       <div style="margin-top: 0.5rem;">
-                        ${rec.resources.map(resource => 
-                          `<a href="${resource.url}" target="_blank" rel="noopener" style="color: #00ccff; text-decoration: none; font-size: 0.75rem; display: block;">→ ${resource.title}</a>`
+                        ${rec.resources.map(resource =>
+                          `<a href="${escapeHtmlSec(resource.url)}" target="_blank" rel="noopener" style="color: #00ccff; text-decoration: none; font-size: 0.75rem; display: block;">→ ${escapeHtmlSec(resource.title)}</a>`
                         ).join('')}
                       </div>
                     ` : ''}
@@ -2007,27 +1928,6 @@ function userHasPro() {
   return false;
 }
 
-function renderLockedProPreview(title = t('reports.common.proContent', 'Pro content'), previewLines = []) {
-  const reportId = document.body?.getAttribute('data-report-id') || '';
-  if (window.ProReportBlock && typeof window.ProReportBlock.renderUnlockPrompt === 'function') {
-    return window.ProReportBlock.renderUnlockPrompt({ context: 'security', reportId });
-  }
-  // Fallback matching ProReportBlock.renderUnlockPrompt() style
-  return `
-    <div class="pro-report-block__unlock-prompt" data-locked-overlay>
-      <div class="pro-report-block__unlock-header">
-        <span class="pro-report-block__unlock-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
-        <span class="pro-report-block__unlock-text">${t('reports.common.unlockThisReport', 'Unlock this report')}</span>
-      </div>
-      <div class="pro-report-block__unlock-buttons">
-        <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="security"${reportId ? ` data-report-id="${reportId}"` : ''}>${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
-        <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="security">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
-      </div>
-      <p class="pro-report-block__unlock-hint">${t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.')}</p>
-    </div>
-  `;
-}
-
 function safeOpenProPaywall(payload = {}) {
   try {
     if (typeof window.openProPaywall === 'function') {
@@ -2047,88 +1947,6 @@ function safeOpenProPaywall(payload = {}) {
   }
 
   return false;
-}
-
-function ensureProStyles() {
-  if (document.getElementById('pro-lock-styles')) return;
-  const style = document.createElement('style');
-  style.id = 'pro-lock-styles';
-  style.textContent = `
-    .pro-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(var(--accent-primary-rgb), 0.4);
-      background: rgba(var(--accent-primary-rgb), 0.1);
-      color: var(--accent-primary);
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-    }
-    .pro-locked {
-      position: relative;
-      border: 1px dashed rgba(var(--accent-primary-rgb), 0.3);
-      border-radius: 12px;
-      padding: 1rem;
-      background: rgba(255, 255, 255, 0.02);
-      overflow: hidden;
-    }
-    .pro-locked__header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-    }
-    .pro-locked__list {
-      margin: 0;
-      padding-left: 1.25rem;
-      color: var(--r-text-muted, #6B7280);
-      font-size: 0.9rem;
-    }
-    .pro-locked__blur {
-      position: absolute;
-      inset: 0;
-      backdrop-filter: blur(3px);
-      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 60%);
-      pointer-events: none;
-    }
-    .pro-locked__buttons {
-      position: relative;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-    }
-    .pro-locked__unlock {
-      position: relative;
-      padding: 0.55rem 1rem;
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .pro-locked__unlock--primary {
-      border: none;
-      background: linear-gradient(135deg, #5bf4e7, #0AFFEF);
-      color: #000;
-    }
-    .pro-locked__unlock--primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(91, 244, 231, 0.4);
-    }
-    .pro-locked__unlock--secondary {
-      border: 1px solid #5bf4e7;
-      background: transparent;
-      color: #5bf4e7;
-    }
-    .pro-locked__unlock--secondary:hover {
-      background: rgba(91, 244, 231, 0.1);
-    }
-  `;
-  document.head.appendChild(style);
 }
 
 // Show error message

@@ -47,6 +47,14 @@ function translateGeoSeoApi(englishText, type = 'title') {
     'Hard': 'reports.common.difficulty.hard'
   };
 
+  const timeMap = {
+    '5 minutes': 'reports.geoSeo.api.time.5min',
+    '10 minutes': 'reports.geoSeo.api.time.10min',
+    '15 minutes': 'reports.geoSeo.api.time.15min',
+    '20 minutes': 'reports.geoSeo.api.time.20min',
+    '30 minutes': 'reports.geoSeo.api.time.30min'
+  };
+
   const stepsMap = {
     'Go to Google Maps and search your business address': 'reports.geoSeo.api.steps.goToGoogleMaps',
     'Click "Share" → "Embed a map"': 'reports.geoSeo.api.steps.clickShareEmbed',
@@ -66,6 +74,7 @@ function translateGeoSeoApi(englishText, type = 'title') {
   switch(type) {
     case 'impact': map = impactMap; break;
     case 'difficulty': map = difficultyMap; break;
+    case 'time': map = timeMap; break;
     case 'step': map = stepsMap; break;
     default: map = titleMap;
   }
@@ -250,6 +259,18 @@ async function displayResults(data) {
   }
 
   if (!data || typeof data !== 'object' || typeof data === 'string') { console.error('[GeoSEO] displayResults received invalid data:', data); return; }
+
+  // Defensive defaults for nested analysis data
+  data.analysis = data.analysis || {};
+  data.analysis.nap = data.analysis.nap || { phoneCount: 0, hasAddress: false };
+  data.analysis.nap.phones = data.analysis.nap.phones || [];
+  data.analysis.nap.emails = data.analysis.nap.emails || [];
+  data.analysis.nap.zipCodes = data.analysis.nap.zipCodes || [];
+  data.analysis.localPresence = data.analysis.localPresence || { socialProfiles: [] };
+  data.analysis.localPresence.socialProfiles = data.analysis.localPresence.socialProfiles || [];
+  data.analysis.schema = data.analysis.schema || {};
+  data.scores = data.scores || {};
+
   const resultsContainer = document.getElementById('results');
   resultsContainer.innerHTML = '';
 
@@ -530,20 +551,21 @@ async function displayResults(data) {
     accordionContainer.innerHTML = accordionHTML;
     resultsContainer.appendChild(accordionContainer);
 
-    // Fetch AI strategic analysis content
-    if (window.AIRecommendations) {
-      const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
-      window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'geo-seo', data, locale, { skipHeader: true });
-    }
-    if (window.SelfImprovement) {
-      window.SelfImprovement.integrate({ data: data, analyzerType: 'geo-seo', donutLabels: {}, resultsContent: resultsContainer, reportId: reportId });
-    }
-
     // Initialize ReportAccordion interactions
     ReportAccordion.initInteractions();
 
     // Note: ReportContainer.create() with proBlock: true already adds Export & Share block
     // Don't manually add ProReportBlock to avoid duplicate
+  }
+
+  // Fetch AI strategic analysis content — called once here (not inside either branch above)
+  // so both the ReportContainer and legacy paths get it; both render #ai-strategic-content.
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'geo-seo', data, locale, { skipHeader: true });
+  }
+  if (window.SelfImprovement) {
+    window.SelfImprovement.integrate({ data: data, analyzerType: 'geo-seo', donutLabels: {}, resultsContent: resultsContainer, reportId: reportId });
   }
 
   if (window.ReportUI && reportId) {
@@ -603,11 +625,10 @@ function createOverviewSection(data) {
               dy="0.35em"
               font-size="3.5rem"
               font-weight="bold"
-              fill="#f9fff2"
               stroke="rgba(0, 0, 0, 0.65)"
               stroke-width="2.5"
               paint-order="stroke fill"
-              style="text-shadow: 0 0 18px ${gradeColor}, 0 0 30px rgba(0,0,0,0.6);"
+              style="fill: var(--r-text, #111827); text-shadow: 0 0 18px ${gradeColor}, 0 0 30px rgba(0,0,0,0.6);"
             >
               ${score}
             </text>
@@ -624,19 +645,19 @@ function createOverviewSection(data) {
         <div>
           <h3 style="color: ${gradeColor}; margin: 0 0 1rem 0; font-size: 1.3rem;">${t('reports.geoSeo.quickStats', 'Quick Stats')}</h3>
           <div style="display: grid; gap: 0.75rem;">
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.geoSeo.overallGrade', 'Overall Grade')}</span>
               <span style="color: ${gradeColor}; font-weight: bold;">${data.grade}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.geoSeo.phoneNumbersFound', 'Phone Numbers Found')}</span>
               <span style="color: ${nap.phoneCount > 0 ? '#22c55e' : '#ef4444'}; font-weight: bold;">${nap.phoneCount}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.geoSeo.businessAddress', 'Business Address')}</span>
               <span style="color: ${nap.hasAddress ? '#22c55e' : '#ff8c00'}; font-weight: bold;">${nap.hasAddress ? t('reports.common.detected', 'Detected') : t('reports.common.notFound', 'Not Found')}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.geoSeo.localBusinessSchema', 'LocalBusiness Schema')}</span>
               <span style="color: ${data.analysis.schema.hasLocalBusinessSchema ? '#22c55e' : '#ef4444'}; font-weight: bold;">${data.analysis.schema.hasLocalBusinessSchema ? t('reports.common.present', 'Present') : t('reports.common.missing', 'Missing')}</span>
             </div>
@@ -658,7 +679,10 @@ function createQuickWinsSection(quickWins) {
     title: translateGeoSeoApi(win.title, 'title'),
     impact: translateGeoSeoApi(win.impact, 'impact'),
     difficulty: translateGeoSeoApi(win.difficulty, 'difficulty'),
-    steps: win.steps.map(step => translateGeoSeoApi(step, 'step'))
+    // Compare the raw API value BEFORE translation (translated strings never equal 'Easy')
+    isEasyDifficulty: win.difficulty === 'Easy',
+    timeEstimate: translateGeoSeoApi(win.timeEstimate, 'time'),
+    steps: (win.steps || []).map(step => translateGeoSeoApi(step, 'step'))
   }));
 
   return `
@@ -728,8 +752,8 @@ function createQuickWinsSection(quickWins) {
                   <span>📈</span> ${win.impact}
                 </span>
                 <span style="
-                  background: ${win.difficulty === 'Easy' ? 'rgba(0, 255, 65, 0.15)' : 'rgba(255, 140, 0, 0.15)'};
-                  color: ${win.difficulty === 'Easy' ? '#22c55e' : '#ff8c00'};
+                  background: ${win.isEasyDifficulty ? 'rgba(0, 255, 65, 0.15)' : 'rgba(255, 140, 0, 0.15)'};
+                  color: ${win.isEasyDifficulty ? '#22c55e' : '#ff8c00'};
                   padding: 0.15rem 0.5rem;
                   border-radius: 4px;
                   font-size: 0.75rem;
@@ -744,7 +768,7 @@ function createQuickWinsSection(quickWins) {
                 padding: 0.75rem 1rem;
               ">
                 <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">${t('reports.common.howToFix', 'How to fix:')}</div>
-                <ol style="margin: 0; padding-left: 1.25rem; color: #b0b0b0; font-size: 0.85rem; line-height: 1.6;">
+                <ol style="margin: 0; padding-left: 1.25rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; line-height: 1.6;">
                   ${win.steps.map(step => `<li>${step}</li>`).join('')}
                 </ol>
               </div>
@@ -816,11 +840,10 @@ function createScoreBreakdownCards(scores) {
                 dy="0.35em"
                 font-size="2.5rem"
                 font-weight="bold"
-                fill="#f9fff2"
                 stroke="rgba(0, 0, 0, 0.65)"
                 stroke-width="2"
                 paint-order="stroke fill"
-                style="text-shadow: 0 0 12px ${color};"
+                style="fill: var(--r-text, #111827); text-shadow: 0 0 12px ${color};"
               >
                 ${score}
               </text>
@@ -868,7 +891,7 @@ function renderNAPContent(analysis) {
                   border-radius: 4px;
                   font-size: 0.85rem;
                   font-family: monospace;
-                ">${phone}</span>
+                ">${escapeGeoSeoHtml(String(phone))}</span>
               `).join('')}
             </div>
           ` : ''}
@@ -890,7 +913,7 @@ function renderNAPContent(analysis) {
           </div>
           ${nap.zipCodes.length > 0 ? `
             <div style="margin-top: 0.5rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">
-              ${t('reports.geoSeo.zipCodes', 'ZIP Codes')}: ${nap.zipCodes.join(', ')}
+              ${t('reports.geoSeo.zipCodes', 'ZIP Codes')}: ${escapeGeoSeoHtml(nap.zipCodes.join(', '))}
             </div>
           ` : ''}
         </div>
@@ -915,7 +938,7 @@ function renderNAPContent(analysis) {
                 padding: 0.35rem 0.75rem;
                 border-radius: 4px;
                 font-size: 0.85rem;
-              ">${email}</span>
+              ">${escapeGeoSeoHtml(String(email))}</span>
             `).join('')}
           </div>
         ` : `
@@ -951,7 +974,7 @@ function renderSchemaContent(schema) {
           margin-bottom: 1rem;
         ">
           <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.geoSeo.businessNameInSchema', 'Business Name in Schema')}:</span>
-          <div style="color: #22c55e; font-size: 1.1rem; font-weight: bold; margin-top: 0.25rem;">${schema.businessName}</div>
+          <div style="color: #22c55e; font-size: 1.1rem; font-weight: bold; margin-top: 0.25rem;">${escapeGeoSeoHtml(String(schema.businessName))}</div>
         </div>
       ` : ''}
 
@@ -1074,7 +1097,7 @@ function renderLocalPresenceContent(presence) {
                 border-radius: 6px;
                 font-size: 0.9rem;
                 text-transform: capitalize;
-              ">${getSocialIcon(profile)} ${profile}</span>
+              ">${getSocialIcon(profile)} ${escapeGeoSeoHtml(String(profile))}</span>
             `).join('')}
           </div>
         ` : `
@@ -1461,7 +1484,11 @@ function renderReviewsContent(reviews) {
         ${reviewPlatformLinks.length > 0 ? `
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
             ${reviewPlatformLinks.map(link => {
-              const domain = link.domain || (link.url ? new URL(link.url).hostname : '') || link;
+              let hostname = '';
+              if (link.url) {
+                try { hostname = new URL(link.url).hostname; } catch (e) { hostname = link.url; }
+              }
+              const domain = link.domain || hostname || link;
               return `
                 <span style="
                   background: rgba(0, 217, 255, 0.1);
@@ -1559,8 +1586,8 @@ function ensureGeoSeoFixFunctions() {
 
       tabs.forEach(tab => {
         tab.style.background = 'transparent';
-        tab.style.color = '#aaa';
-        tab.style.borderColor = 'rgba(255,255,255,0.1)';
+        tab.style.color = 'var(--r-text-faint, #9CA3AF)';
+        tab.style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
         tab.classList.remove('active');
       });
       contents.forEach(content => {
@@ -1572,9 +1599,9 @@ function ensureGeoSeoFixFunctions() {
       const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
       if (activeTab) {
-        activeTab.style.background = 'rgba(255,255,255,0.1)';
-        activeTab.style.color = '#fff';
-        activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+        activeTab.style.background = 'var(--r-surface-2, #F8FAFC)';
+        activeTab.style.color = 'var(--r-text, #111827)';
+        activeTab.style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
         activeTab.classList.add('active');
       }
       if (activeContent) {
@@ -1760,9 +1787,9 @@ function renderGeoSeoFixTabs(accordionId, rec, codeSnippet, steps) {
     <div class="geo-seo-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="geo-seo-fix-tab active" data-action="switch-geo-seo-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
-        background: rgba(255,255,255,0.1);
+        background: var(--r-surface-2, #F8FAFC);
         color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;

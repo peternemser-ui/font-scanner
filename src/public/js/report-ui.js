@@ -20,6 +20,21 @@
     return fallback;
   }
 
+  // HTML/attribute-escape helper for values interpolated into innerHTML
+  function escAttr(input) {
+    return String(input == null ? '' : input)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Allowlist validation for report IDs interpolated into markup
+  function safeReportIdForMarkup(reportId) {
+    return (typeof reportId === 'string' && /^[\w-]+$/.test(reportId)) ? reportId : '';
+  }
+
   // Feature flag for gradual rollout
   const FEATURE_FLAG_KEY = 'use_new_report_ui';
 
@@ -451,7 +466,12 @@
       document.body.getAttribute('data-sm-screenshot-url') ||
       `/reports/${encodedId}/screenshot.jpg`
     );
-    
+
+    // SECURITY: only allow report-relative or http(s) URLs (blocks javascript: etc.)
+    if (!/^(\/reports\/|https?:\/\/)/.test(screenshotUrl)) {
+      screenshotUrl = `/reports/${encodedId}/screenshot.jpg`;
+    }
+
     // Add cache-busting parameter to ensure fresh screenshots
     const cacheBuster = `?t=${Date.now()}`;
     if (!screenshotUrl.includes('?')) {
@@ -486,11 +506,11 @@
     shell.innerHTML = `
       <div class="report-shell__header">
         <div class="report-shell__title">${t('reports.common.pageScreenshot', 'Page Screenshot')}</div>
-        <a class="report-shell__badge" href="${screenshotUrl}" target="_blank" rel="noopener">${t('reports.common.openFullSize', 'Open full size')}</a>
+        <a class="report-shell__badge" href="${escAttr(screenshotUrl)}" target="_blank" rel="noopener">${t('reports.common.openFullSize', 'Open full size')}</a>
       </div>
       <div class="report-shell__card" data-screenshot-gallery>
-        <a class="report-shell__screenshot-link" href="${screenshotUrl}" target="_blank" rel="noopener">
-          <img class="report-shell__screenshot" src="${screenshotUrl}" alt="${t('reports.common.pageScreenshot', 'Page Screenshot')}" data-screenshot="0" loading="lazy" />
+        <a class="report-shell__screenshot-link" href="${escAttr(screenshotUrl)}" target="_blank" rel="noopener">
+          <img class="report-shell__screenshot" src="${escAttr(screenshotUrl)}" alt="${t('reports.common.pageScreenshot', 'Page Screenshot')}" data-screenshot="0" loading="lazy" />
         </a>
       </div>
     `;
@@ -519,7 +539,7 @@
             link.innerHTML = `
               <div style="padding: 3rem; text-align: center; color: var(--color-text-muted, #6b7280);">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">📷</div>
-                <div>This site blocks automated screenshots</div>
+                <div>${t('reports.common.screenshotUnavailable', 'This site blocks automated screenshots')}</div>
               </div>
             `;
           }
@@ -631,7 +651,7 @@
       const isPaymentError = msg.includes('stripe') || msg.includes('api key') || msg.includes('payment service');
 
       if (isPaymentError) {
-        showToast('Payment service error. Please try again later.');
+        showToast(t('reports.common.paymentServiceError', 'Payment service error. Please try again later.'));
         return;
       }
 
@@ -656,7 +676,7 @@
       return;
     }
 
-    showToast('Checkout is unavailable right now.');
+    showToast(t('reports.common.checkoutUnavailable', 'Checkout is unavailable right now.'));
   }
 
   /**
@@ -872,14 +892,14 @@
       // Verify purchase and show appropriate message
       if (billingStatus) {
         if (billingStatus.plan === 'pro') {
-          showToast('Pro subscription activated! Unlocking premium content...');
+          showToast(t('reports.common.proActivatedUnlocking', 'Pro subscription activated! Unlocking premium content...'));
         } else if (reportId && billingStatus.purchasedReports?.includes(reportId)) {
-          showToast('Report unlocked!');
+          showToast(t('reports.common.reportUnlocked', 'Report unlocked!'));
         } else if (reportId) {
           // Purchase may have been recorded but not yet in billing status
           // Still proceed with reveal since verifyAndRecordPurchase succeeded
           console.log('[BillingReturn] Report not in purchasedReports yet, but continuing with unlock');
-          showToast('Report unlocked!');
+          showToast(t('reports.common.reportUnlocked', 'Report unlocked!'));
         }
       }
 
@@ -1270,7 +1290,7 @@
 
       // Handle subscription purchase
       if (verification.purchaseType === 'subscription') {
-        showToast('Pro subscription activated!');
+        showToast(t('reports.common.proActivated', 'Pro subscription activated!'));
         if (window.ProReportBlock?.clearBillingCache) {
           window.ProReportBlock.clearBillingCache();
         }
@@ -1282,7 +1302,7 @@
         const rid = verification.reportId || getCurrentReportId();
         if (rid) {
           revealProOnlyContent();
-          showToast('Report unlocked!');
+          showToast(t('reports.common.reportUnlocked', 'Report unlocked!'));
         }
       }
 
@@ -1422,7 +1442,7 @@
         }
 
         if (!reportId) {
-          showToast('Run a scan first to buy this report.');
+          showToast(t('reports.common.runScanFirstToBuy', 'Run a scan first to buy this report.'));
           return;
         }
 
@@ -1445,7 +1465,7 @@
           const computed = computeReportId(getReportUrl(), getScanStartedAt(), getAnalyzerKey());
           if (computed) { reportId = computed; setCurrentReportId(reportId); }
         }
-        if (!reportId) { showToast('Run a scan first.'); return; }
+        if (!reportId) { showToast(t('reports.common.runScanFirst', 'Run a scan first.')); return; }
 
         redeemToken.disabled = true;
         redeemToken.textContent = '...';
@@ -1495,7 +1515,7 @@
         } else if (typeof window.ProGate !== 'undefined' && window.ProGate.showUpgradePrompt) {
           window.ProGate.showUpgradePrompt({ context });
         } else {
-          alert('Unlock Report ($5 USD)');
+          alert(t('reports.common.unlockReport5Usd', 'Unlock Report ($5 USD)'));
         }
       }
 
@@ -1534,25 +1554,13 @@
     });
 
     // Keyboard shortcuts
+    // NOTE: ScreenshotLightbox owns its own keyboard handling (Escape/ArrowLeft/ArrowRight)
+    // via its internal keydown handler — do not duplicate it here.
     document.addEventListener('keydown', (e) => {
       // ESC closes modals
       if (e.key === 'Escape') {
         if (window.Modal && window.Modal.closeTopmost) {
           window.Modal.closeTopmost();
-        }
-        if (window.ScreenshotLightbox && window.ScreenshotLightbox.isOpen()) {
-          window.ScreenshotLightbox.close();
-        }
-      }
-
-      // Arrow keys for screenshot navigation
-      if (window.ScreenshotLightbox && window.ScreenshotLightbox.isOpen()) {
-        if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          window.ScreenshotLightbox.navigate('prev');
-        } else if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          window.ScreenshotLightbox.navigate('next');
         }
       }
     });
@@ -1869,7 +1877,8 @@
       isPro: () => window.ProReportBlock?.isProSubscriber?.() || window.ProGate?.isPro() || false,
       hasAccess: (reportId) => window.ProReportBlock?.hasAccess?.(reportId) || false,
       lockContent: (contentHTML, context) => {
-        const reportId = getCurrentReportId();
+        // SECURITY: allowlist-validate reportId before interpolating into markup
+        const reportId = safeReportIdForMarkup(getCurrentReportId());
         const unlockPrompt = window.ProReportBlock?.renderUnlockPrompt
           ? window.ProReportBlock.renderUnlockPrompt({ context: context || 'feature', reportId })
           : `

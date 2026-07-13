@@ -18,6 +18,16 @@
     return fallback;
   }
 
+  // HTML-escape helper for values interpolated into innerHTML
+  function esc(input) {
+    return String(input == null ? '' : input)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   /**
    * Mode display labels - now uses translation function for i18n support
    */
@@ -120,13 +130,13 @@
 
     return `
       <div class="print-header">
-        <span class="print-header__left">Site Mechanic Report</span>
-        <span class="print-header__right">${displayUrl || ''} | ${formattedTimestamp || ''}</span>
+        <span class="print-header__left">${esc(t('reports.print.header', 'Site Mechanic Report'))}</span>
+        <span class="print-header__right">${esc(displayUrl || '')} | ${esc(formattedTimestamp || '')}</span>
       </div>
       <div class="report-header">
-        <h2 class="report-header__title" data-results-heading>${displayTitle}</h2>
-        ${effectiveShowModeBadge && modeLabel ? `<div class="report-header__badge">${modeLabel}</div>` : ''}
-        ${effectiveSubtitle ? `<p class="report-header__subtitle">${effectiveSubtitle}</p>` : ''}
+        <h2 class="report-header__title" data-results-heading>${esc(displayTitle)}</h2>
+        ${effectiveShowModeBadge && modeLabel ? `<div class="report-header__badge">${esc(modeLabel)}</div>` : ''}
+        ${effectiveSubtitle ? `<p class="report-header__subtitle">${esc(effectiveSubtitle)}</p>` : ''}
         <div class="report-header__meta">
           ${displayUrl ? `
             <span class="meta-item">
@@ -134,7 +144,7 @@
                 <circle cx="12" cy="12" r="10"/>
                 <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
               </svg>
-              <span class="meta-item__text">${displayUrl}</span>
+              <span class="meta-item__text">${esc(displayUrl)}</span>
             </span>
           ` : ''}
           ${timestamp ? `
@@ -143,7 +153,7 @@
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12 6 12 12 16 14"/>
               </svg>
-              <span class="meta-item__text">${formattedTimestamp}</span>
+              <span class="meta-item__text">${esc(formattedTimestamp)}</span>
             </span>
           ` : ''}
           ${effectiveShowModeMeta && mode ? `
@@ -152,7 +162,7 @@
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
                 <polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
-              <span class="meta-item__text">${modeLabel}</span>
+              <span class="meta-item__text">${esc(modeLabel)}</span>
             </span>
           ` : ''}
         </div>
@@ -217,13 +227,13 @@
 
     return `
       <div class="screenshot-section">
-        <h3 class="screenshot-section__title">${title}</h3>
+        <h3 class="screenshot-section__title">${esc(title)}</h3>
         <div class="screenshot-grid" data-screenshot-gallery>
           ${screenshots.map((screenshot, index) => `
-            <div class="screenshot-item" data-screenshot="${index}" ${screenshot.device ? `data-device="${screenshot.device}"` : ''}>
-              <img src="${screenshot.src || screenshot}" alt="${screenshot.alt || `Screenshot ${index + 1}`}" class="screenshot-item__img">
+            <div class="screenshot-item" data-screenshot="${index}" ${screenshot.device ? `data-device="${esc(screenshot.device)}"` : ''}>
+              <img src="${esc(screenshot.src || screenshot)}" alt="${esc(screenshot.alt || `Screenshot ${index + 1}`)}" class="screenshot-item__img">
               ${showDeviceLabels && screenshot.device ? `
-                <div class="screenshot-item__label">${screenshot.device}</div>
+                <div class="screenshot-item__label">${esc(screenshot.device)}</div>
               ` : ''}
             </div>
           `).join('')}
@@ -300,7 +310,7 @@
       <div class="print-footer">
         <span class="print-footer__left">© ${currentYear} Site Mechanic</span>
         <span class="print-footer__center">sitemechanic.io</span>
-        <span class="print-footer__right">Confidential</span>
+        <span class="print-footer__right">${esc(t('reports.print.confidential', 'Confidential'))}</span>
       </div>
     `;
   }

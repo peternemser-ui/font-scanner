@@ -55,6 +55,36 @@ function translatePriority(priority) {
   return t('reports.performance.priorityLabels.' + p, p.toUpperCase());
 }
 
+// HTML-escape helper for interpolating untrusted values (URLs, server strings) into innerHTML
+function esc(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Unit-aware parser for display values like "2.5 s", "3,240 ms", "180ms" — returns milliseconds
+function parseMetricMs(val) {
+  if (val === null || val === undefined) return null;
+  if (typeof val === 'number' && !Number.isNaN(val)) return val;
+  if (typeof val === 'string') {
+    const v = val.trim().toLowerCase().replace(/,/g, '');
+    if (v.endsWith('ms')) {
+      const n = parseFloat(v);
+      return Number.isNaN(n) ? null : n;
+    }
+    if (v.endsWith('s')) {
+      const n = parseFloat(v);
+      return Number.isNaN(n) ? null : n * 1000;
+    }
+    const n = parseFloat(v);
+    return Number.isNaN(n) ? null : n;
+  }
+  return null;
+}
+
 // Function to get analysis steps with current translations
 // Called at runtime to ensure i18n is loaded
 function getAnalysisSteps() {
@@ -340,12 +370,12 @@ function displayPerformanceResults(results) {
       </h3>
       <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
         <img
-          src="${screenshotUrl}"
-          alt="Screenshot of ${results.url || ''}"
+          src="${esc(screenshotUrl)}"
+          alt="Screenshot of ${esc(results.url || '')}"
           class="screenshot-item__img"
           style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
           data-action="open-lightbox"
-          data-screenshot-url="${screenshotUrl}"
+          data-screenshot-url="${esc(screenshotUrl)}"
           data-screenshot-title="${t('reports.performance.pageScreenshot', 'Page Screenshot')}"
         />
       </div>
@@ -394,7 +424,7 @@ function displayPerformanceResults(results) {
   summarySection.className = 'section';
   summarySection.innerHTML = `
     <h2>${t('reports.performance.title', 'Performance Report')}</h2>
-    <p>>> ${t('reports.performance.url', 'URL')}: ${results.url}</p>
+    <p>>> ${t('reports.performance.url', 'URL')}: ${esc(results.url)}</p>
     <p>>> ${t('reports.performance.timestamp', 'timestamp')}: ${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date(results.timestamp)) : new Date(results.timestamp).toLocaleString()}</p>
     <p>>> ${t('reports.performance.analysisDuration', 'analysis_duration')}: ${results.analysisDuration || t('reports.performance.notAvailable', 'N/A')}</p>
     ${isCrossBrowser ? '<p>>> ' + t('reports.performance.devicesTested', 'devices_tested') + ': 2</p>' : ''}
@@ -417,7 +447,7 @@ function displayPerformanceResults(results) {
               width: 160px;
               height: 160px;
               border-radius: 50%;
-              background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
+              background: var(--r-surface-2, #F8FAFC);
               border: 5px solid ${getPerformanceColor(avgScore)};
               display: flex;
               flex-direction: column;
@@ -434,7 +464,7 @@ function displayPerformanceResults(results) {
               ">${avgScore}</div>
               <div style="
                 font-size: 0.85rem;
-                color: #b0b0b0;
+                color: var(--r-text-muted, #6B7280);
                 margin-top: 0.5rem;
                 text-transform: uppercase;
                 letter-spacing: 2px;
@@ -458,7 +488,7 @@ function displayPerformanceResults(results) {
                 width: 160px;
                 height: 160px;
                 border-radius: 50%;
-                background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
+                background: var(--r-surface-2, #F8FAFC);
                 border: 4px solid ${getPerformanceColor(results.siteHealthScore)};
                 display: flex;
                 flex-direction: column;
@@ -475,7 +505,7 @@ function displayPerformanceResults(results) {
                 ">${results.siteHealthScore}</div>
                 <div style="
                   font-size: 0.8rem;
-                  color: #b0b0b0;
+                  color: var(--r-text-muted, #6B7280);
                   margin-top: 0.4rem;
                   text-transform: uppercase;
                   letter-spacing: 1.5px;
@@ -564,26 +594,26 @@ function displayPerformanceResults(results) {
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
               ${results.coreWebVitals ? `
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
-                  <span style="color: #a0a0a0;">LCP:</span>
-                  <span style="color: ${results.coreWebVitals.lcp && parseInt(results.coreWebVitals.lcp) < 2500 ? '#22c55e' : '#ff8c00'}; font-weight: 600;">
+                  <span style="color: var(--r-text-faint, #9CA3AF);">LCP:</span>
+                  <span style="color: ${(parseMetricMs(results.coreWebVitals.lcp) ?? Infinity) < 2500 ? '#22c55e' : '#ff8c00'}; font-weight: 600;">
                     ${results.coreWebVitals.lcp || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
-                  <span style="color: #a0a0a0;">FID:</span>
-                  <span style="color: ${results.coreWebVitals.fid && parseInt(results.coreWebVitals.fid) < 100 ? '#22c55e' : '#ff8c00'}; font-weight: 600;">
+                  <span style="color: var(--r-text-faint, #9CA3AF);">FID:</span>
+                  <span style="color: ${(parseMetricMs(results.coreWebVitals.fid) ?? Infinity) < 100 ? '#22c55e' : '#ff8c00'}; font-weight: 600;">
                     ${results.coreWebVitals.fid || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
-                  <span style="color: #a0a0a0;">CLS:</span>
+                  <span style="color: var(--r-text-faint, #9CA3AF);">CLS:</span>
                   <span style="color: ${results.coreWebVitals.cls && parseFloat(results.coreWebVitals.cls) < 0.1 ? '#22c55e' : '#ff8c00'}; font-weight: 600;">
                     ${results.coreWebVitals.cls || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
-                  <span style="color: #a0a0a0;">TTI:</span>
-                  <span style="color: ${results.coreWebVitals.tti && parseInt(results.coreWebVitals.tti) < 3800 ? '#22c55e' : '#ff8c00'}; font-weight: 600;">
+                  <span style="color: var(--r-text-faint, #9CA3AF);">TTI:</span>
+                  <span style="color: ${(parseMetricMs(results.coreWebVitals.tti) ?? Infinity) < 3800 ? '#22c55e' : '#ff8c00'}; font-weight: 600;">
                     ${results.coreWebVitals.tti || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
@@ -599,7 +629,7 @@ function displayPerformanceResults(results) {
             border-radius: 4px;
           ">
             <strong style="color: #ff9800; font-size: 0.85rem;">ⓘ ${t('reports.performance.note', 'Note')}:</strong>
-            <span style="color: #d0d0d0; font-size: 0.8rem;">
+            <span style="color: var(--r-text-muted, #6B7280); font-size: 0.8rem;">
               ${t('reports.performance.scoreNote', '100/100 performance ≠ perfect website. Check Site Health Score for overall quality.')}
             </span>
           </div>
@@ -648,7 +678,7 @@ function displayPerformanceResults(results) {
                     text-shadow: 0 0 10px ${gradeColor}60;
                     margin-bottom: 0.25rem;
                   ">${grade}</div>
-                  <div style="font-size: 0.75rem; color: #a0a0a0; text-transform: uppercase; letter-spacing: 1px;">
+                  <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); text-transform: uppercase; letter-spacing: 1px;">
                     ${labels[dimension]}
                   </div>
                 </div>
@@ -688,7 +718,7 @@ function displayPerformanceResults(results) {
                 height: 120px;
                 margin: 0 auto;
                 border-radius: 50%;
-                background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
+                background: var(--r-surface-2, #F8FAFC);
                 border: 4px solid ${getPerformanceColor(results.browsers.desktop.performanceScore)};
                 display: flex;
                 flex-direction: column;
@@ -703,7 +733,7 @@ function displayPerformanceResults(results) {
                   line-height: 1;
                   text-shadow: 0 0 10px ${getPerformanceColor(results.browsers.desktop.performanceScore)};
                 ">${results.browsers.desktop.performanceScore}</div>
-                <div style="color: #b0b0b0; font-size: 0.75rem; margin-top: 0.25rem; font-weight: 600;">/ 100</div>
+                <div style="color: var(--r-text-muted, #6B7280); font-size: 0.75rem; margin-top: 0.25rem; font-weight: 600;">/ 100</div>
               </div>
               <div style="
                 margin-top: 0.75rem;
@@ -773,7 +803,7 @@ function displayPerformanceResults(results) {
                 height: 120px;
                 margin: 0 auto;
                 border-radius: 50%;
-                background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
+                background: var(--r-surface-2, #F8FAFC);
                 border: 4px solid ${getPerformanceColor(results.browsers.mobile.performanceScore)};
                 display: flex;
                 flex-direction: column;
@@ -788,7 +818,7 @@ function displayPerformanceResults(results) {
                   line-height: 1;
                   text-shadow: 0 0 10px ${getPerformanceColor(results.browsers.mobile.performanceScore)};
                 ">${results.browsers.mobile.performanceScore}</div>
-                <div style="color: #b0b0b0; font-size: 0.75rem; margin-top: 0.25rem; font-weight: 600;">/ 100</div>
+                <div style="color: var(--r-text-muted, #6B7280); font-size: 0.75rem; margin-top: 0.25rem; font-weight: 600;">/ 100</div>
               </div>
               <div style="
                 margin-top: 0.75rem;
@@ -886,13 +916,17 @@ function displayPerformanceResults(results) {
   }
   
   // Create accordion sections
-  // Pass both desktop and mobile vitals for comparison
-  const avgVitalsScore = results.desktop?.coreWebVitals?.score && results.mobile?.coreWebVitals?.score 
-    ? Math.round((results.desktop.coreWebVitals.score + results.mobile.coreWebVitals.score) / 2)
-    : (results.desktop?.coreWebVitals?.score || results.mobile?.coreWebVitals?.score || results.coreWebVitals?.score || 0);
-  
-  // Debug logging
-  createAccordionSection(container, 'core-web-vitals', t('reports.performance.coreWebVitals', 'Core Web Vitals'), () => renderCoreWebVitalsContent(results.desktop?.coreWebVitals, results.mobile?.coreWebVitals), avgVitalsScore);
+  // Pass both desktop and mobile vitals for comparison.
+  // Cross-browser results live under results.browsers.* (same source used by the comparison
+  // section above) — fall back to legacy top-level shapes for single-device results.
+  const desktopVitals = results.browsers?.desktop?.metrics?.coreWebVitals || results.browsers?.desktop?.coreWebVitals || results.desktop?.coreWebVitals || results.coreWebVitals;
+  const mobileVitals = results.browsers?.mobile?.metrics?.coreWebVitals || results.browsers?.mobile?.coreWebVitals || results.mobile?.coreWebVitals;
+  const vitalsScores = [desktopVitals?.score, mobileVitals?.score].filter(s => typeof s === 'number');
+  const avgVitalsScore = vitalsScores.length
+    ? Math.round(vitalsScores.reduce((a, b) => a + b, 0) / vitalsScores.length)
+    : (results.coreWebVitals?.score || 0);
+
+  createAccordionSection(container, 'core-web-vitals', t('reports.performance.coreWebVitals', 'Core Web Vitals'), () => renderCoreWebVitalsContent(desktopVitals, mobileVitals), avgVitalsScore);
   createAccordionSection(container, 'resource-analysis', t('reports.performance.resourceAnalysis', 'Resource Analysis'), () => renderResourceAnalysisContent(results.resources), results.resources?.score || 0);
   createAccordionSection(container, 'network-performance', t('reports.performance.networkPerformance', 'Network Performance'), () => renderNetworkPerformanceContent(results.network), results.network?.score || 0);
   createAccordionSection(container, 'caching-optimization', t('reports.performance.cachingOptimization', 'Caching & Optimization'), () => renderCachingOptimizationContent(results.caching), results.caching?.score || 0);
@@ -934,15 +968,17 @@ function displayPerformanceResults(results) {
 /**
  * Create an accordion section
  */
-function createAccordionSection(container, id, displayTitle, contentCreator, score) {
+function createAccordionSection(container, id, displayTitle, contentCreator, score, options = {}) {
   const accordion = document.createElement('div');
   accordion.className = 'accordion';
   accordion.setAttribute('data-accordion-id', id);
-  
+
+  const isPro = !!options.isPro;
+
   const header = document.createElement('button');
   header.className = 'accordion-header';
   header.innerHTML = `
-    <span>${displayTitle}</span>
+    <span>${displayTitle}${isPro ? ` <span style="font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; padding: 0.15rem 0.45rem; border-radius: 4px; background: rgba(187,134,252,0.15); color: #bb86fc; vertical-align: middle;">${t('reports.common.proBadge', 'PRO')}</span>` : ''}</span>
     <span style="display: flex; align-items: center; gap: 0.5rem;">
       ${score !== null ? `<span style="color: ${getPerformanceColor(score)}; font-size: 0.9rem;">${score}/100</span>` : ''}
       <span class="accordion-toggle">▼</span>
@@ -970,6 +1006,18 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
     } else {
       // Expand and create content if not already created
       if (!contentInner.hasChildNodes()) {
+        // Pro-gated sections: only render the full content when the report is unlocked.
+        // Uses the same ProReportBlock access signal as the rest of the app — no new client gating.
+        const reportId = document.body.getAttribute('data-report-id') || '';
+        const isLocked = isPro && !(window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function' && window.ProReportBlock.hasAccess(reportId));
+        if (isLocked) {
+          contentInner.innerHTML = '<div class="pro-locked-note" style="padding: 1.5rem; text-align: center; color: var(--r-text-muted, #6B7280);">🔒 ' + t('reports.common.proSectionLocked', 'This section is included in the Pro report. Use the Unlock Report options below to view it.') + '</div>';
+          content.classList.add('expanded');
+          header.classList.add('active');
+          header.querySelector('.accordion-toggle').textContent = '▲';
+          header.querySelector('.accordion-toggle').classList.add('rotated');
+          return;
+        }
         try {
           const contentHTML = contentCreator();
           contentInner.innerHTML = contentHTML;
@@ -1005,7 +1053,8 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
 
     let numValue;
     if (type === 'LCP' || type === 'FID' || type === 'TTFB' || type === 'FCP') {
-      numValue = parseFloat(value.replace(/[ms]/g, '')) || 0;
+      // Unit-aware parse: "2.5 s" → 2500, "3,240 ms" → 3240
+      numValue = parseMetricMs(value) ?? 0;
     } else {
       numValue = parseFloat(value) || 0;
     }
@@ -1076,7 +1125,7 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
     <div style="padding-left: 1rem;">
       <h3 style="color: #22c55e; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.whatAreCoreWebVitals', 'What are Core Web Vitals?')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1.5rem;">
-        ${t('reports.performance.coreWebVitalsDescription', 'Core Web Vitals are Google\\')}
+        ${t('reports.performance.coreWebVitalsDescription', 'Core Web Vitals are Google’s metrics for measuring real-world user experience: loading performance, interactivity, and visual stability. They directly influence your search rankings.')}
       </p>
 
       <table class="seo-table" style="width: 100%; margin-bottom: 1.5rem;">
@@ -1151,7 +1200,7 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
       <div style="margin-top: 1rem; padding: 1rem; background: rgba(0,255,65,0.05); border-radius: 4px;">
         <h4 style="color: #22c55e; margin: 0 0 0.5rem 0; font-size: 1rem;">📚 ${t('reports.performance.learnMore', 'Learn More')}</h4>
         <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; margin: 0;">
-          ${t('reports.performance.learnMoreDescription', 'Core Web Vitals are part of Google\\')}
+          ${t('reports.performance.learnMoreDescription', 'Core Web Vitals are part of Google’s page experience ranking signals. Improving these metrics can boost your search rankings and keep visitors on your site longer.')}
         </p>
       </div>
     </div>
@@ -1583,7 +1632,7 @@ function renderCachingOptimizationContent(caching) {
               width: 140px;
               height: 140px;
               border-radius: 50%;
-              background: #1a1a1a;
+              background: var(--r-surface-1, #FFFFFF);
               display: flex;
               flex-direction: column;
               align-items: center;
@@ -1940,8 +1989,8 @@ function switchPerfFixTab(accordionId, tabName) {
 
   tabs.forEach(tab => {
     tab.style.background = 'transparent';
-    tab.style.color = '#aaa';
-    tab.style.borderColor = 'rgba(255,255,255,0.1)';
+    tab.style.color = 'var(--r-text-muted, #6B7280)';
+    tab.style.borderColor = 'var(--r-border, rgba(0,0,0,0.10))';
     tab.classList.remove('active');
   });
   contents.forEach(content => {
@@ -1953,9 +2002,9 @@ function switchPerfFixTab(accordionId, tabName) {
   const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
   if (activeTab) {
-    activeTab.style.background = 'rgba(255,255,255,0.1)';
-    activeTab.style.color = '#fff';
-    activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+    activeTab.style.background = 'var(--r-surface-2, #F8FAFC)';
+    activeTab.style.color = 'var(--r-text, #111827)';
+    activeTab.style.borderColor = 'var(--r-border, rgba(0,0,0,0.20))';
     activeTab.classList.add('active');
   }
   if (activeContent) {
@@ -1977,6 +2026,11 @@ window.switchPerfFixTab = switchPerfFixTab;
 
 // Add click event delegation for performance fix accordions and tabs
 document.addEventListener('click', function(e) {
+  // Handle error-state retry button (data-action="reload-page")
+  if (e.target.closest('[data-action="reload-page"]')) {
+    location.reload();
+    return;
+  }
   // Handle tab clicks first
   const tab = e.target.closest('.perf-fix-tab');
   if (tab) {
@@ -2270,75 +2324,6 @@ function getCrossBrowserLoadingHTML() {
 }
 
 /**
- * Display Cross-Browser Comparison Results
- */
-function displayCrossBrowserResults(results) {
-  const container = document.getElementById('perfResults');
-  
-  // Clear container
-  container.innerHTML = '';
-  container.style.display = 'block';
-  
-  // Executive Summary
-  const summarySection = document.createElement('div');
-  summarySection.className = 'section';
-  summarySection.innerHTML = `
-    <h2>${t('reports.performance.crossBrowserComparisonResults', 'Cross-Browser Comparison Results')}</h2>
-    <p>>> ${t('reports.performance.url', 'URL')}: ${results.url}</p>
-    <p>>> ${t('reports.performance.timestamp', 'timestamp')}: ${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date(results.timestamp)) : new Date(results.timestamp).toLocaleString()}</p>
-    <p>>> ${t('reports.performance.analysisDuration', 'analysis_duration')}: ${results.duration ? `${(results.duration / 1000).toFixed(1)}s` : t('reports.performance.notAvailable', 'N/A')}</p>
-    <p>>> ${t('reports.performance.devicesTested', 'devices_tested')}: ${Object.keys(results.browsers).length}</p>
-
-    <!-- Overall Comparison Score -->
-    <div style="
-      background: linear-gradient(135deg, rgba(187,134,252,0.05) 0%, rgba(187,134,252,0.02) 100%);
-      border: 2px solid ${getPerformanceColor(results.overallScore)};
-      border-radius: 12px;
-      padding: 2rem;
-      margin: 2rem 0;
-      box-shadow: 0 4px 20px rgba(187,134,252,0.15);
-    ">
-      <h3 style="margin: 0 0 1.5rem 0; color: #bb86fc;">${t('reports.performance.overallPerformanceComparison', 'Overall Performance Comparison')}</h3>
-
-      <!-- Circular Dials for Each Browser -->
-      <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; margin: 2rem 0;">
-        ${renderBrowserDials(results.browsers)}
-      </div>
-
-      <!-- Performance Gap Warning -->
-      ${results.comparison.performanceGap > 20 ? `
-        <div style="background: rgba(255, 102, 0, 0.1); border-left: 4px solid #ff6600; padding: 1rem; margin-top: 1.5rem; border-radius: 4px;">
-          <p style="margin: 0; color: #ff6600; font-weight: bold;">~ ${t('reports.performance.significantPerformanceGap', 'Significant Performance Gap Detected')}</p>
-          <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">
-            ${t('reports.performance.performanceGapPoints', '{{gap}} point difference between desktop and mobile performance', { gap: results.comparison.performanceGap })}
-          </p>
-        </div>
-      ` : ''}
-
-      <!-- Overall Score -->
-      <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(187,134,252,0.3);">
-        <div style="font-size: 2.5rem; font-weight: bold; color: ${getPerformanceColor(results.overallScore)}; margin-bottom: 0.5rem;">
-          ${results.overallScore}
-        </div>
-        <div style="font-size: 1rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.averagePerformanceScore', 'Average Performance Score')}</div>
-      </div>
-    </div>
-  `;
-  
-  container.appendChild(summarySection);
-  
-  // Accordion Sections
-  createAccordionSection(container, 'browser-comparison', t('reports.performance.deviceByDeviceAnalysis', 'Device-by-Device Analysis'),
-    () => renderDeviceComparisonContent(results.browsers), null);
-
-  createAccordionSection(container, 'cwv-comparison', t('reports.performance.coreWebVitalsComparison', 'Core Web Vitals Comparison'),
-    () => renderCWVComparisonContent(results.browsers), null);
-
-  createAccordionSection(container, 'cross-browser-recommendations', t('reports.performance.crossDeviceRecommendations', 'Cross-Device Recommendations & Fixes'),
-    () => renderCrossBrowserRecommendationsContent(results.recommendations, results.comparison), null);
-}
-
-/**
  * Render browser circular dials
  */
 function renderBrowserDials(browsers) {
@@ -2434,17 +2419,17 @@ function renderDeviceComparisonContent(browsers) {
           <!-- Core Web Vitals -->
           <h4 style="margin: 1rem 0 0.5rem 0; color: #22c55e;">${t('reports.performance.coreWebVitals', 'Core Web Vitals')}</h4>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-            ${renderMetricBox('LCP', data.metrics.metrics.coreWebVitals.lcp, 'ms', 'lcp')}
-            ${renderMetricBox('FID', data.metrics.metrics.coreWebVitals.fid, 'ms', 'fid')}
-            ${renderMetricBox('CLS', data.metrics.metrics.coreWebVitals.cls, '', 'cls')}
+            ${renderMetricBox('LCP', data.metrics?.metrics?.coreWebVitals?.lcp, 'ms', 'lcp')}
+            ${renderMetricBox('FID', data.metrics?.metrics?.coreWebVitals?.fid, 'ms', 'fid')}
+            ${renderMetricBox('CLS', data.metrics?.metrics?.coreWebVitals?.cls, '', 'cls')}
           </div>
 
           <!-- Additional Metrics -->
           <h4 style="margin: 1rem 0 0.5rem 0; color: #22c55e;">${t('reports.performance.additionalMetrics', 'Additional Metrics')}</h4>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-            ${renderMetricBox('FCP', data.metrics.firstContentfulPaint, 'ms', 'fcp')}
-            ${renderMetricBox('TBT', data.metrics.totalBlockingTime, 'ms', 'tbt')}
-            ${renderMetricBox(t('reports.performance.speedIndex', 'Speed Index (SI)'), data.metrics.speedIndex, 'ms', 'si')}
+            ${renderMetricBox('FCP', data.metrics?.firstContentfulPaint, 'ms', 'fcp')}
+            ${renderMetricBox('TBT', data.metrics?.totalBlockingTime, 'ms', 'tbt')}
+            ${renderMetricBox(t('reports.performance.speedIndex', 'Speed Index (SI)'), data.metrics?.speedIndex, 'ms', 'si')}
           </div>
         `}
       </div>
@@ -2480,12 +2465,12 @@ function renderCWVComparisonContent(browsers) {
           </tr>
         </thead>
         <tbody>
-          ${renderComparisonRow('LCP', desktopData.metrics.metrics.coreWebVitals.lcp, mobileData.metrics.metrics.coreWebVitals.lcp, 'ms', 2500, 4000)}
-          ${renderComparisonRow('FID', desktopData.metrics.metrics.coreWebVitals.fid, mobileData.metrics.metrics.coreWebVitals.fid, 'ms', 100, 300)}
-          ${renderComparisonRow('CLS', desktopData.metrics.metrics.coreWebVitals.cls, mobileData.metrics.metrics.coreWebVitals.cls, '', 0.1, 0.25)}
-          ${renderComparisonRow('FCP', desktopData.metrics.firstContentfulPaint, mobileData.metrics.firstContentfulPaint, 'ms', 1800, 3000)}
-          ${renderComparisonRow('TBT', desktopData.metrics.totalBlockingTime, mobileData.metrics.totalBlockingTime, 'ms', 200, 600)}
-          ${renderComparisonRow(t('reports.performance.speedIndex', 'Speed Index (SI)'), desktopData.metrics.speedIndex, mobileData.metrics.speedIndex, 'ms', 3400, 5800)}
+          ${renderComparisonRow('LCP', desktopData.metrics?.metrics?.coreWebVitals?.lcp, mobileData.metrics?.metrics?.coreWebVitals?.lcp, 'ms', 2500, 4000)}
+          ${renderComparisonRow('FID', desktopData.metrics?.metrics?.coreWebVitals?.fid, mobileData.metrics?.metrics?.coreWebVitals?.fid, 'ms', 100, 300)}
+          ${renderComparisonRow('CLS', desktopData.metrics?.metrics?.coreWebVitals?.cls, mobileData.metrics?.metrics?.coreWebVitals?.cls, '', 0.1, 0.25)}
+          ${renderComparisonRow('FCP', desktopData.metrics?.firstContentfulPaint, mobileData.metrics?.firstContentfulPaint, 'ms', 1800, 3000)}
+          ${renderComparisonRow('TBT', desktopData.metrics?.totalBlockingTime, mobileData.metrics?.totalBlockingTime, 'ms', 200, 600)}
+          ${renderComparisonRow(t('reports.performance.speedIndex', 'Speed Index (SI)'), desktopData.metrics?.speedIndex, mobileData.metrics?.speedIndex, 'ms', 3400, 5800)}
         </tbody>
       </table>
     </div>
@@ -2651,19 +2636,19 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
       <div style="margin-bottom: 1.5rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border-left: 4px solid ${priorityColor}; border-radius: 4px;">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
           <span style="font-size: 1.2rem;">${priorityIcon}</span>
-          <h4 style="margin: 0; color: ${priorityColor};">${translateRecTitle(rec.title)}</h4>
+          <h4 style="margin: 0; color: ${priorityColor};">${esc(translateRecTitle(rec.title))}</h4>
           <span style="margin-left: auto; padding: 0.25rem 0.75rem; background: ${priorityColor}33; color: ${priorityColor}; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">
             ${translatePriority(rec.priority)}
           </span>
         </div>
 
-        <p style="margin: 0.5rem 0; color: var(--r-text-muted, #6B7280);">${translateRecDescription(rec.title, rec.description)}</p>
+        <p style="margin: 0.5rem 0; color: var(--r-text-muted, #6B7280);">${esc(translateRecDescription(rec.title, rec.description))}</p>
 
         ${rec.actions && rec.actions.length > 0 ? `
           <div style="margin-top: 1rem;">
             <strong style="color: #bb86fc;">${t('reports.performance.recommendedActions', 'Recommended Actions')}:</strong>
             <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
-              ${rec.actions.map(action => `<li style="margin: 0.25rem 0; color: var(--r-text-muted, #6B7280);">${action}</li>`).join('')}
+              ${rec.actions.map(action => `<li style="margin: 0.25rem 0; color: var(--r-text-muted, #6B7280);">${esc(action)}</li>`).join('')}
             </ul>
           </div>
         ` : ''}
@@ -2679,14 +2664,14 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
         ${comparison.metricsDifferences.map(diff => `
           <div style="padding: 0.75rem; margin: 0.5rem 0; background: var(--r-surface-2, #F8FAFC); border-radius: 4px;">
             <div style="font-weight: bold; color: ${diff.severity === 'high' ? '#ef4444' : '#ffa500'};">
-              ${diff.metric}
+              ${esc(diff.metric)}
             </div>
             <div style="font-size: 0.9rem; color: var(--r-text-muted, #6B7280); margin-top: 0.25rem;">
-              ${diff.message}
+              ${esc(diff.message)}
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem; font-size: 0.85rem;">
-              <div>D ${t('reports.performance.desktop', 'Desktop')}: <span style="color: #22c55e;">${typeof diff.desktop === 'number' ? diff.desktop.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.desktop}</span></div>
-              <div>M ${t('reports.performance.mobile', 'Mobile')}: <span style="color: #ffa500;">${typeof diff.mobile === 'number' ? diff.mobile.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.mobile}</span></div>
+              <div>D ${t('reports.performance.desktop', 'Desktop')}: <span style="color: #22c55e;">${typeof diff.desktop === 'number' ? diff.desktop.toFixed(diff.metric.includes('CLS') ? 3 : 0) : esc(diff.desktop)}</span></div>
+              <div>M ${t('reports.performance.mobile', 'Mobile')}: <span style="color: #ffa500;">${typeof diff.mobile === 'number' ? diff.mobile.toFixed(diff.metric.includes('CLS') ? 3 : 0) : esc(diff.mobile)}</span></div>
             </div>
           </div>
         `).join('')}

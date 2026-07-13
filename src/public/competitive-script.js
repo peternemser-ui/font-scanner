@@ -540,7 +540,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
   
   const modalTimer = setInterval(() => {
     elapsedSeconds++;
-    const remaining = totalSeconds - elapsedSeconds;
+    const remaining = Math.max(0, totalSeconds - elapsedSeconds);
     const minutes = Math.floor(remaining / 60);
     const seconds = remaining % 60;
     
@@ -1177,10 +1177,10 @@ function initializeCharts(data) {
   chartData = data;
   
   const sites = [
-    { name: getDomainName(data.yourSite.url), scores: data.yourSite.scores, isYourSite: true },
+    { name: getDomainName(data.yourSite.url), scores: data.yourSite.scores || {}, isYourSite: true },
     ...data.competitors.map(comp => ({
       name: getDomainName(comp.url),
-      scores: comp.scores,
+      scores: comp.scores || {},
       isYourSite: false
     }))
   ];
@@ -1227,7 +1227,7 @@ function createRadarChart(sites) {
   
   const datasets = sites.map((site, idx) => {
     const color = getChartColor(idx, site.isYourSite);
-    const scores = metrics.map(metric => site.scores[metric] || 0);
+    const scores = metrics.map(metric => (site.scores || {})[metric] || 0);
     
     return {
       label: site.name,
@@ -1340,7 +1340,7 @@ function createBarChart(sites) {
   
   const datasets = sites.map((site, idx) => {
     const color = getChartColor(idx, site.isYourSite);
-    const scores = metrics.map(metric => site.scores[metric] || 0);
+    const scores = metrics.map(metric => (site.scores || {})[metric] || 0);
     
     return {
       label: site.name,
@@ -1795,7 +1795,7 @@ function renderExecutiveSummary(data) {
     ${data.warning ? `
       <div style="background: rgba(255, 140, 0, 0.15); border-left: 4px solid #ff8c00; padding: 1rem; margin-bottom: 2rem; border-radius: 4px;">
         <p style="margin: 0; color: #ff8c00;">
-          <strong>ⓘ ${t('reports.common.note', 'Note')}:</strong> ${data.warning}
+          <strong>ⓘ ${t('reports.common.note', 'Note')}:</strong> ${escapeCompetitiveHtml(data.warning)}
         </p>
       </div>
     ` : ''}
@@ -1955,8 +1955,8 @@ function translateInsightMessage(insight) {
   if (cat === 'security') {
     return t('reports.competitive.insights.securityGap', 'Security gap detected');
   }
-  // Fallback to server message if no matching key
-  return insight.message || '';
+  // Fallback to server message if no matching key (escaped - stored/scanned data)
+  return escapeCompetitiveHtml(insight.message || '');
 }
 
 // Translate insight detail from server
@@ -1984,7 +1984,7 @@ function translateInsightDetail(insight) {
   if (cat === 'security') {
     return t('reports.competitive.insights.securityGapDetail', 'Competitors have stronger security measures. This affects user trust.');
   }
-  return insight.detail || '';
+  return escapeCompetitiveHtml(insight.detail || '');
 }
 
 // Render insights content (for accordion)
@@ -2054,20 +2054,20 @@ function renderVisualComparisonContent(data) {
       const metricStatus = getMetricStatus(data, metric);
       
       const allScores = [
-        { name: 'You', score: data.yourSite.scores[metric], url: data.yourSite.url, isYou: true },
-        ...data.competitors.map(c => ({ 
-          name: getDomainName(c.url), 
-          score: c.scores[metric], 
-          url: c.url, 
-          isYou: false 
+        { name: 'You', score: (data.yourSite.scores || {})[metric] || 0, url: data.yourSite.url, isYou: true },
+        ...data.competitors.map(c => ({
+          name: getDomainName(c.url),
+          score: (c.scores || {})[metric] || 0,
+          url: c.url,
+          isYou: false
         }))
       ].sort((a, b) => b.score - a.score);
-      
+
       const maxScore = Math.max(...allScores.map(s => s.score));
-      const yourScore = data.yourSite.scores[metric];
-      const bestCompetitor = data.competitors.reduce((best, c) => 
-        c.scores[metric] > (best?.scores[metric] || 0) ? c : best, null);
-      const gap = bestCompetitor ? bestCompetitor.scores[metric] - yourScore : 0;
+      const yourScore = (data.yourSite.scores || {})[metric] || 0;
+      const bestCompetitor = data.competitors.reduce((best, c) =>
+        ((c.scores || {})[metric] || 0) > ((best?.scores || {})[metric] || 0) ? c : best, null);
+      const gap = bestCompetitor ? ((bestCompetitor.scores || {})[metric] || 0) - yourScore : 0;
       
       return `
         <div style="margin-bottom: 2.5rem; padding: 1.5rem; background: var(--r-surface-2, #f3f4f6); border-radius: 8px; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
@@ -2182,8 +2182,8 @@ function renderHeadToHeadContent(data) {
 
   // Build metric analysis for sub-accordions
   const metricAnalysis = metrics.map(metric => {
-    const yourScore = data.yourSite.scores[metric];
-    const competitorScores = data.competitors.map(c => ({ name: getDomainName(c.url), score: c.scores[metric], url: c.url }));
+    const yourScore = (data.yourSite.scores || {})[metric] || 0;
+    const competitorScores = data.competitors.map(c => ({ name: getDomainName(c.url), score: (c.scores || {})[metric] || 0, url: c.url }));
     const maxScore = Math.max(yourScore, ...competitorScores.map(c => c.score));
     const avgCompetitor = competitorScores.reduce((a, c) => a + c.score, 0) / competitorScores.length;
     const leader = yourScore >= maxScore ? 'You' : competitorScores.find(c => c.score === maxScore)?.name || 'Competitor';
@@ -2212,7 +2212,7 @@ function renderHeadToHeadContent(data) {
       <table class="comparison-table">
         <thead>
           <tr>
-            <th style="position: sticky; left: 0; background: rgba(20, 20, 20, 0.95); z-index: 10;">${t('reports.competitive.website', 'Website')}</th>
+            <th style="position: sticky; left: 0; background: var(--r-surface-2, #F8FAFC); z-index: 10;">${t('reports.competitive.website', 'Website')}</th>
             ${metrics.map(m => `<th>${formatMetricName(m)}</th>`).join('')}
             <th>${t('reports.metrics.overall', 'Overall')}</th>
             <th>${t('reports.competitive.grade', 'Grade')}</th>
@@ -2223,13 +2223,13 @@ function renderHeadToHeadContent(data) {
             const isYou = site.isYou;
             return `
               <tr class="${isYou ? 'your-site' : ''}" style="${isYou ? 'background: rgba(var(--accent-primary-rgb), 0.1);' : ''}">
-                <td style="position: sticky; left: 0; background: ${isYou ? 'rgba(var(--accent-primary-rgb), 0.15)' : 'rgba(20, 20, 20, 0.95)'}; z-index: 9;">
+                <td style="position: sticky; left: 0; background: ${isYou ? 'rgba(var(--accent-primary-rgb), 0.15)' : 'var(--r-surface-2, #F8FAFC)'}; z-index: 9;">
                   <strong>${isYou ? '👤 ' + t('reports.competitive.you', 'YOU') : site.name}</strong>
-                  <br><small style="font-size: 0.75rem; opacity: 0.7;">${site.url}</small>
+                  <br><small style="font-size: 0.75rem; opacity: 0.7;">${escapeCompetitiveHtml(site.url)}</small>
                 </td>
                 ${metrics.map(m => {
-                  const score = site.scores[m];
-                  const maxScore = Math.max(...allSites.map(s => s.scores[m]));
+                  const score = (site.scores || {})[m] || 0;
+                  const maxScore = Math.max(...allSites.map(s => (s.scores || {})[m] || 0));
                   const isMax = score === maxScore && score > 0;
                   return `
                     <td style="text-align: center;">
@@ -2244,7 +2244,7 @@ function renderHeadToHeadContent(data) {
                   `;
                 }).join('')}
                 <td style="text-align: center;">
-                  <strong style="font-size: 1.1rem;">${site.scores.overall}</strong>
+                  <strong style="font-size: 1.1rem;">${(site.scores || {}).overall || 0}</strong>
                 </td>
                 <td style="text-align: center;">
                   <strong style="color: ${getGradeColor(site.grade)}; font-size: 1.2rem;">
@@ -2536,15 +2536,15 @@ function renderHeadToHead(data, metrics) {
 function renderStrengthsWeaknessesContent(data) {
   ensureCompetitiveFixStyles();
   const metrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
-  const yourScores = data.yourSite.scores;
+  const yourScores = data.yourSite.scores || {};
 
   // Calculate what you're winning and losing at
   const strengths = [];
   const weaknesses = [];
 
   metrics.forEach(metric => {
-    const yourScore = yourScores[metric];
-    const competitorScores = data.competitors.map(c => ({ name: getDomainName(c.url), score: c.scores[metric], url: c.url }));
+    const yourScore = yourScores[metric] || 0;
+    const competitorScores = data.competitors.map(c => ({ name: getDomainName(c.url), score: (c.scores || {})[metric] || 0, url: c.url }));
     const maxCompetitor = Math.max(...competitorScores.map(c => c.score));
     const avgCompetitor = competitorScores.reduce((a, c) => a + c.score, 0) / competitorScores.length;
 
@@ -3100,14 +3100,14 @@ window.switchCompetitiveFixTab = function(accordionId, tabName) {
   accordion.querySelectorAll('.competitive-fix-tab').forEach(tab => {
     tab.classList.remove('active');
     tab.style.background = 'transparent';
-    tab.style.color = '#aaa';
+    tab.style.color = 'var(--r-text-muted, #6B7280)';
   });
-  
-  const activeTab = accordion.querySelector(`[onclick*="'${tabName}'"]`);
+
+  const activeTab = accordion.querySelector(`.competitive-fix-tab[data-tab="${tabName}"]`);
   if (activeTab) {
     activeTab.classList.add('active');
-    activeTab.style.background = 'rgba(255,255,255,0.1)';
-    activeTab.style.color = '#fff';
+    activeTab.style.background = 'var(--r-surface-2, #F8FAFC)';
+    activeTab.style.color = 'var(--r-text, #111827)';
   }
   
   // Update content panels
@@ -3137,7 +3137,7 @@ window.copyCompetitiveCode = function(elementId) {
   if (!el) return;
   
   navigator.clipboard.writeText(el.textContent).then(() => {
-    const btn = document.querySelector(`[onclick*="${elementId}"]`);
+    const btn = document.querySelector(`[data-copy-target="${elementId}"]`);
     if (btn) {
       const original = btn.textContent;
       btn.textContent = '✓ ' + t('common.copied', 'Copied!');
@@ -3589,7 +3589,7 @@ function renderSiteScreenshotsContent(data) {
       <div class="site-screenshots-grid__item">
         <div class="site-screenshots-grid__label">${site.label}${youBadge}</div>
         <div class="site-screenshots-grid__image-wrap">
-          <img class="site-screenshots-grid__img" src="${site.screenshotUrl}" alt="${altText}" data-screenshot="${idx}" loading="lazy" />
+          <img class="site-screenshots-grid__img" src="${escapeCompetitiveHtml(site.screenshotUrl)}" alt="${escapeCompetitiveHtml(altText)}" data-screenshot="${idx}" loading="lazy" />
         </div>
       </div>`;
   }).join('');
@@ -3599,6 +3599,17 @@ function renderSiteScreenshotsContent(data) {
     <div class="site-screenshots-grid" data-screenshot-gallery>
       ${cards}
     </div>`;
+}
+
+// HTML escaper for scanned/user-controlled values (URLs, warnings, insights)
+function escapeCompetitiveHtml(str) {
+  if (str === null || str === undefined || str === '') return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // Utility functions
@@ -3619,7 +3630,8 @@ function getDomainName(url) {
     const urlObj = new URL(url);
     return urlObj.hostname.replace('www.', '');
   } catch (e) {
-    return url;
+    // Never return raw input on parse failure - sanitize it for safe HTML use
+    return escapeCompetitiveHtml(url);
   }
 }
 

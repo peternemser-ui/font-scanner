@@ -247,9 +247,9 @@
     const defaultPrefix = pageId ? pageId.replace(/-/g, '') : '';
 
     return {
-      urlInput: legacyIds?.urlInput || `${defaultPrefix}UrlInput` || 'urlInput',
-      scanButton: legacyIds?.scanButton || `${defaultPrefix}AnalyzeButton` || 'analyzeButton',
-      results: legacyIds?.results || `${defaultPrefix}Results` || 'results'
+      urlInput: legacyIds?.urlInput || (defaultPrefix ? `${defaultPrefix}UrlInput` : 'urlInput'),
+      scanButton: legacyIds?.scanButton || (defaultPrefix ? `${defaultPrefix}AnalyzeButton` : 'analyzeButton'),
+      results: legacyIds?.results || (defaultPrefix ? `${defaultPrefix}Results` : 'results')
     };
   }
 
@@ -415,13 +415,13 @@
       if (loader) {
         loader.showError(message, options);
       } else {
-        // Fallback error display
+        // Fallback error display (message set via textContent to avoid HTML injection)
         if (elements.loadingContainer) {
           elements.loadingContainer.innerHTML = `
-            <div class="error-message" style="padding: 1rem; color: var(--error-color, #ef4444);">
-              ${message}
-            </div>
+            <div class="error-message" style="padding: 1rem; color: var(--error-color, #ef4444);"></div>
           `;
+          const errorEl = elements.loadingContainer.querySelector('.error-message');
+          if (errorEl) errorEl.textContent = message;
         }
       }
     }
@@ -449,18 +449,24 @@
       document.body.removeAttribute('data-sm-screenshot-url');
       document.body.removeAttribute('data-sm-scan-started-at');
 
+      // Destroy Chart.js instances whose canvas lives inside this page's results container
+      // (scoped so charts elsewhere on the page are left alone; must run before the
+      // container is emptied, or the canvases are no longer inside it)
+      if (window.Chart && window.Chart.instances && elements.results) {
+        Object.values(window.Chart.instances).forEach(chart => {
+          try {
+            if (chart.canvas && elements.results.contains(chart.canvas)) {
+              chart.destroy();
+            }
+          } catch (e) { /* ignore */ }
+        });
+      }
+
       if (elements.results) {
         elements.results.innerHTML = '';
       }
       if (elements.loadingContainer) {
         elements.loadingContainer.innerHTML = '';
-      }
-
-      // Destroy Chart.js instances if any
-      if (window.Chart && window.Chart.instances) {
-        Object.values(window.Chart.instances).forEach(chart => {
-          try { chart.destroy(); } catch (e) { /* ignore */ }
-        });
       }
     }
 

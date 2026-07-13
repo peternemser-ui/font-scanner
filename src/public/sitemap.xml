@@ -189,22 +189,7 @@
     <priority>0.7</priority>
   </url>
 
-  <!-- Core Web Vitals -->
-  <url>
-    <loc>https://sitemechanic.io/core-web-vitals.html</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/core-web-vitals.html"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/core-web-vitals.html"/>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/core-web-vitals.html"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/core-web-vitals.html"/>
-    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/core-web-vitals.html"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/core-web-vitals.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/core-web-vitals.html"/>
-    <xhtml:link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/core-web-vitals.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/core-web-vitals.html"/>
-    <lastmod>2026-02-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
+  <!-- Core Web Vitals — consolidated into performance-hub.html; page now redirects (noindex), so it is intentionally omitted from the sitemap. -->
 
   <!-- Competitive Analysis -->
   <url>

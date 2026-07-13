@@ -292,7 +292,12 @@ document.addEventListener('DOMContentLoaded', () => {
     results.classList.remove('hidden');
 
     const pages = data.results?.pages || [];
-    const hostname = new URL(data.url || 'https://example.com').hostname;
+    let hostname = '';
+    try {
+      hostname = new URL(data.url || 'https://example.com').hostname;
+    } catch (e) {
+      hostname = String(data.url || '').replace(/^https?:\/\//i, '').split('/')[0] || 'unknown';
+    }
     
     // Build site structure from URLs
     const siteStructure = buildSiteStructure(pages);
@@ -471,6 +476,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     resultsContent.innerHTML = `<div class="report-scope">${reportHTML}</div>`;
 
+    // Attach retry/fallback handling to the report screenshot (screenshots can lag the scan)
+    if (screenshotUrlResolved) {
+      const ssImg = resultsContent.querySelector('.screenshot-item__img, .screenshot-item img');
+      if (ssImg) {
+        attachCrawlerScreenshotRetry(ssImg, screenshotUrlResolved);
+      }
+    }
+
     // Fetch AI strategic analysis content
     if (window.AIRecommendations) {
       const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
@@ -527,7 +540,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const crawlPages = crawlData.results?.pages || [];
         const crawlStructure = buildSiteStructure(crawlPages);
-        const crawlHostname = new URL(crawlData.url).hostname;
+        let crawlHostname = '';
+        try {
+          crawlHostname = new URL(crawlData.url).hostname;
+        } catch (e) {
+          crawlHostname = String(crawlData.url || '').replace(/^https?:\/\//i, '').split('/')[0] || 'unknown';
+        }
 
         // Replace Visual Sitemap section body with full content
         const sitemapBody = document.querySelector('[data-accordion-body="visual-sitemap"]');
@@ -708,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
           class="input input-sm" style="min-width: 200px;">
         <select id="sectionFilter" data-action="filter-by-section" class="input input-sm">
           <option value="">${t('reports.crawler.allSections', 'All Sections')}</option>
-          ${Object.keys(siteStructure.children).map(section => `<option value="${section}">/${section}/</option>`).join('')}
+          ${Object.keys(siteStructure.children).map(section => `<option value="${escapeCrawlerHtml(section)}">/${escapeCrawlerHtml(section)}/</option>`).join('')}
         </select>
         <button data-action="toggle-view-mode" id="viewModeBtn" class="btn btn-secondary btn-sm">
           ${t('reports.crawler.groupView', 'Group View')}
@@ -723,14 +741,14 @@ document.addEventListener('DOMContentLoaded', () => {
         ${pages.map((page, index) => {
           const pageType = getPageType(page);
           return `
-          <div class="page-item" data-url="${page.toLowerCase()}" data-section="${getPageSection(page)}">
+          <div class="page-item" data-url="${escapeCrawlerHtml(page.toLowerCase())}" data-section="${escapeCrawlerHtml(getPageSection(page))}">
             <span style="color: var(--text-tertiary); font-size: 0.8rem; min-width: 30px;">${index + 1}.</span>
             <span style="font-size: 1.1rem; margin-right: 0.3rem;">${pageType.icon}</span>
-            <a href="${page}" target="_blank" rel="noopener" style="flex: 1; word-break: break-all;">${formatPageUrl(page)}</a>
+            <a href="${safeCrawlerHref(page)}" target="_blank" rel="noopener" style="flex: 1; word-break: break-all;">${escapeCrawlerHtml(formatPageUrl(page))}</a>
             <span style="background: ${pageType.color}; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; margin-right: 0.5rem; white-space: nowrap;">${pageType.label}</span>
             <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="tag-intelligence" data-url="${page}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.tags', 'Tags')}</button>
-              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="enhanced-fonts" data-url="${page}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.fonts', 'Fonts')}</button>
+              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="tag-intelligence" data-url="${escapeCrawlerHtml(page)}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.tags', 'Tags')}</button>
+              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="enhanced-fonts" data-url="${escapeCrawlerHtml(page)}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.fonts', 'Fonts')}</button>
             </div>
           </div>
         `}).join('')}
@@ -784,7 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
           class="input input-sm" style="min-width: 200px;">
         <select id="sectionFilter" data-action="filter-by-section" class="input input-sm">
           <option value="">${t('reports.crawler.allSections', 'All Sections')}</option>
-          ${Object.keys(siteStructure.children).map(section => `<option value="${section}">/${section}/</option>`).join('')}
+          ${Object.keys(siteStructure.children).map(section => `<option value="${escapeCrawlerHtml(section)}">/${escapeCrawlerHtml(section)}/</option>`).join('')}
         </select>
         <button data-action="toggle-view-mode" id="viewModeBtn" class="btn btn-secondary btn-sm">
           ${t('reports.crawler.groupView', 'Group View')}
@@ -799,14 +817,14 @@ document.addEventListener('DOMContentLoaded', () => {
         ${pages.map((page, index) => {
           const pageType = getPageType(page);
           return `
-          <div class="page-item" data-url="${page.toLowerCase()}" data-section="${getPageSection(page)}">
+          <div class="page-item" data-url="${escapeCrawlerHtml(page.toLowerCase())}" data-section="${escapeCrawlerHtml(getPageSection(page))}">
             <span style="color: var(--text-tertiary); font-size: 0.8rem; min-width: 30px;">${index + 1}.</span>
             <span style="font-size: 1.1rem; margin-right: 0.3rem;">${pageType.icon}</span>
-            <a href="${page}" target="_blank" rel="noopener" style="flex: 1; word-break: break-all;">${formatPageUrl(page)}</a>
+            <a href="${safeCrawlerHref(page)}" target="_blank" rel="noopener" style="flex: 1; word-break: break-all;">${escapeCrawlerHtml(formatPageUrl(page))}</a>
             <span style="background: ${pageType.color}; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; margin-right: 0.5rem; white-space: nowrap;">${pageType.label}</span>
             <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="tag-intelligence" data-url="${page}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.tags', 'Tags')}</button>
-              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="enhanced-fonts" data-url="${page}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.fonts', 'Fonts')}</button>
+              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="tag-intelligence" data-url="${escapeCrawlerHtml(page)}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.tags', 'Tags')}</button>
+              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="enhanced-fonts" data-url="${escapeCrawlerHtml(page)}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.fonts', 'Fonts')}</button>
             </div>
           </div>
         `}).join('')}
@@ -1291,8 +1309,8 @@ Sitemap: https://example.com/sitemap.xml`,
 
     tabs.forEach(tab => {
       tab.style.background = 'transparent';
-      tab.style.color = '#aaa';
-      tab.style.borderColor = 'rgba(255,255,255,0.1)';
+      tab.style.color = 'var(--r-text-faint, #64748B)';
+      tab.style.borderColor = 'var(--r-border, rgba(0,0,0,0.10))';
       tab.classList.remove('active');
     });
     contents.forEach(content => {
@@ -1304,9 +1322,9 @@ Sitemap: https://example.com/sitemap.xml`,
     const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
     if (activeTab) {
-      activeTab.style.background = 'rgba(255,255,255,0.1)';
-      activeTab.style.color = '#fff';
-      activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+      activeTab.style.background = 'var(--r-surface-2, #F8FAFC)';
+      activeTab.style.color = 'var(--r-text, #111827)';
+      activeTab.style.borderColor = 'var(--r-border, rgba(0,0,0,0.10))';
       activeTab.classList.add('active');
     }
     if (activeContent) {
@@ -1325,6 +1343,41 @@ Sitemap: https://example.com/sitemap.xml`,
 
   // Add click event delegation for crawler fix accordions and tabs
   document.addEventListener('click', function(e) {
+    // Handle export/page-action buttons (CSP-compliant, no inline onclick)
+    const actionEl = e.target.closest('[data-action]');
+    if (actionEl) {
+      switch (actionEl.getAttribute('data-action')) {
+        case 'download-json':
+          if (typeof window.downloadJSON === 'function') window.downloadJSON();
+          return;
+        case 'download-csv':
+          if (typeof window.downloadCSV === 'function') window.downloadCSV();
+          return;
+        case 'download-sitemap':
+          if (typeof window.downloadSitemap === 'function') window.downloadSitemap();
+          return;
+        case 'download-sitemap-image':
+          if (typeof window.downloadSitemapImage === 'function') window.downloadSitemapImage();
+          return;
+        case 'toggle-view-mode':
+          if (typeof window.toggleViewMode === 'function') window.toggleViewMode();
+          return;
+        case 'copy-code': {
+          const copyTarget = actionEl.getAttribute('data-copy-target');
+          if (copyTarget && typeof window.copyCrawlerCode === 'function') window.copyCrawlerCode(copyTarget);
+          return;
+        }
+        case 'open-analyzer': {
+          const analyzer = actionEl.getAttribute('data-analyzer');
+          const pageUrl = actionEl.getAttribute('data-url') || '';
+          if (analyzer === 'tag-intelligence' && typeof window.analyzeAllTags === 'function') window.analyzeAllTags(pageUrl);
+          else if (analyzer === 'enhanced-fonts' && typeof window.analyzeAllFonts === 'function') window.analyzeAllFonts(pageUrl);
+          return;
+        }
+        // Other data-action values fall through to the handlers below
+      }
+    }
+
     // Handle tab clicks first
     const tab = e.target.closest('.crawler-fix-tab');
     if (tab) {
@@ -1388,6 +1441,14 @@ Sitemap: https://example.com/sitemap.xml`,
   function escapeCrawlerHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Only allow http(s) URLs inside href attributes (rejects javascript: etc.)
+  function safeCrawlerHref(url) {
+    if (typeof url !== 'string') return '#';
+    const trimmed = url.trim();
+    if (!/^https?:\/\//i.test(trimmed)) return '#';
+    return escapeCrawlerHtml(trimmed);
   }
 
   // Reveal PRO content when unlocked
@@ -1572,37 +1633,49 @@ Sitemap: https://example.com/sitemap.xml`,
     
     const host = hostname.toLowerCase();
     
-    // Hosting providers
+    // Hosting providers (types localized via t(); provider names are brands)
+    const hostingTypes = {
+      managedWordPress: t('reports.crawler.hostingTypes.managedWordPress', 'Managed WordPress'),
+      webOpsPlatform: t('reports.crawler.hostingTypes.webOpsPlatform', 'WebOps Platform'),
+      jamstack: t('reports.crawler.hostingTypes.jamstack', 'JAMstack'),
+      edgePlatform: t('reports.crawler.hostingTypes.edgePlatform', 'Edge Platform'),
+      paas: t('reports.crawler.hostingTypes.paas', 'PaaS'),
+      cloudInfrastructure: t('reports.crawler.hostingTypes.cloudInfrastructure', 'Cloud Infrastructure'),
+      edgeCdn: t('reports.crawler.hostingTypes.edgeCdn', 'Edge/CDN'),
+      ecommerce: t('reports.crawler.hostingTypes.ecommerce', 'E-commerce'),
+      websiteBuilder: t('reports.crawler.hostingTypes.websiteBuilder', 'Website Builder'),
+      sharedHosting: t('reports.crawler.hostingTypes.sharedHosting', 'Shared Hosting')
+    };
     if (host.includes('wpengine') || host.includes('wpenginepowered')) {
-      info.provider = { name: 'WP Engine', icon: '🚀', type: 'Managed WordPress' };
+      info.provider = { name: 'WP Engine', icon: '🚀', type: hostingTypes.managedWordPress };
     } else if (host.includes('kinsta')) {
-      info.provider = { name: 'Kinsta', icon: '⚡', type: 'Managed WordPress' };
+      info.provider = { name: 'Kinsta', icon: '⚡', type: hostingTypes.managedWordPress };
     } else if (host.includes('pantheon')) {
-      info.provider = { name: 'Pantheon', icon: '🏛️', type: 'WebOps Platform' };
+      info.provider = { name: 'Pantheon', icon: '🏛️', type: hostingTypes.webOpsPlatform };
     } else if (host.includes('netlify')) {
-      info.provider = { name: 'Netlify', icon: '🔷', type: 'JAMstack' };
+      info.provider = { name: 'Netlify', icon: '🔷', type: hostingTypes.jamstack };
     } else if (host.includes('vercel')) {
-      info.provider = { name: 'Vercel', icon: '▲', type: 'Edge Platform' };
+      info.provider = { name: 'Vercel', icon: '▲', type: hostingTypes.edgePlatform };
     } else if (host.includes('heroku')) {
-      info.provider = { name: 'Heroku', icon: '💜', type: 'PaaS' };
+      info.provider = { name: 'Heroku', icon: '💜', type: hostingTypes.paas };
     } else if (host.includes('amazonaws') || host.includes('aws')) {
-      info.provider = { name: 'AWS', icon: '🟧', type: 'Cloud Infrastructure' };
+      info.provider = { name: 'AWS', icon: '🟧', type: hostingTypes.cloudInfrastructure };
     } else if (host.includes('azure')) {
-      info.provider = { name: 'Azure', icon: '🔵', type: 'Cloud Infrastructure' };
+      info.provider = { name: 'Azure', icon: '🔵', type: hostingTypes.cloudInfrastructure };
     } else if (host.includes('cloudflare')) {
-      info.provider = { name: 'Cloudflare', icon: '☁️', type: 'Edge/CDN' };
+      info.provider = { name: 'Cloudflare', icon: '☁️', type: hostingTypes.edgeCdn };
     } else if (host.includes('shopify')) {
-      info.provider = { name: 'Shopify', icon: '🛒', type: 'E-commerce' };
+      info.provider = { name: 'Shopify', icon: '🛒', type: hostingTypes.ecommerce };
     } else if (host.includes('squarespace')) {
-      info.provider = { name: 'Squarespace', icon: '⬛', type: 'Website Builder' };
+      info.provider = { name: 'Squarespace', icon: '⬛', type: hostingTypes.websiteBuilder };
     } else if (host.includes('wix')) {
-      info.provider = { name: 'Wix', icon: '🎨', type: 'Website Builder' };
+      info.provider = { name: 'Wix', icon: '🎨', type: hostingTypes.websiteBuilder };
     } else if (host.includes('godaddy')) {
-      info.provider = { name: 'GoDaddy', icon: '🌐', type: 'Shared Hosting' };
+      info.provider = { name: 'GoDaddy', icon: '🌐', type: hostingTypes.sharedHosting };
     } else if (host.includes('bluehost')) {
-      info.provider = { name: 'Bluehost', icon: '🔵', type: 'Shared Hosting' };
+      info.provider = { name: 'Bluehost', icon: '🔵', type: hostingTypes.sharedHosting };
     } else if (host.includes('siteground')) {
-      info.provider = { name: 'SiteGround', icon: '🟠', type: 'Shared Hosting' };
+      info.provider = { name: 'SiteGround', icon: '🟠', type: hostingTypes.sharedHosting };
     }
     
     return info;
@@ -2105,7 +2178,7 @@ Sitemap: https://example.com/sitemap.xml`,
         ${insights.map(insight => `
           <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 6px; border-left: 3px solid ${typeColors[insight.type]};">
             <span style="font-size: 1.1rem;">${insight.icon}</span>
-            <span style="color: #ddd; font-size: 0.9rem;">${insight.text}</span>
+            <span style="color: var(--r-text, #111827); font-size: 0.9rem;">${insight.text}</span>
           </div>
         `).join('')}
       </div>
@@ -2138,10 +2211,10 @@ Sitemap: https://example.com/sitemap.xml`,
             return `
               <div class="page-item" style="padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
                 <span style="font-size: 1rem; margin-right: 0.3rem;">${pageType.icon}</span>
-                <a href="${page}" target="_blank" rel="noopener" style="flex: 1; font-size: 0.9rem;">${formatPageUrl(page)}</a>
+                <a href="${safeCrawlerHref(page)}" target="_blank" rel="noopener" style="flex: 1; font-size: 0.9rem;">${escapeCrawlerHtml(formatPageUrl(page))}</a>
                 <div style="display: flex; gap: 0.5rem;">
-                  <button class="action-btn analyze" data-action="open-analyzer" data-analyzer="tag-intelligence" data-url="${page}">${t('reports.crawler.tags', 'Tags')}</button>
-                  <button class="action-btn analyze" data-action="open-analyzer" data-analyzer="enhanced-fonts" data-url="${page}">${t('reports.crawler.fonts', 'Fonts')}</button>
+                  <button class="action-btn analyze" data-action="open-analyzer" data-analyzer="tag-intelligence" data-url="${escapeCrawlerHtml(page)}">${t('reports.crawler.tags', 'Tags')}</button>
+                  <button class="action-btn analyze" data-action="open-analyzer" data-analyzer="enhanced-fonts" data-url="${escapeCrawlerHtml(page)}">${t('reports.crawler.fonts', 'Fonts')}</button>
                 </div>
               </div>
             `;
@@ -2206,12 +2279,12 @@ Sitemap: https://example.com/sitemap.xml`,
   // Global functions for button handlers
   window.analyzeAllFonts = function(url) {
     const maxPages = window.crawlData?.results?.pagesDiscovered || 5;
-    window.location.href = `/enhanced-fonts.html?url=${url}&maxPages=${Math.min(maxPages, 10)}`;
+    window.location.href = `/enhanced-fonts.html?url=${encodeURIComponent(url)}&maxPages=${Math.min(maxPages, 10)}`;
   };
 
   window.analyzeAllTags = function(url) {
     const maxPages = window.crawlData?.results?.pagesDiscovered || 5;
-    window.location.href = `/tag-intelligence.html?url=${url}&maxPages=${Math.min(maxPages, 10)}`;
+    window.location.href = `/tag-intelligence.html?url=${encodeURIComponent(url)}&maxPages=${Math.min(maxPages, 10)}`;
   };
 
   window.analyzePerformance = function(url) {
@@ -2326,17 +2399,21 @@ Sitemap: https://example.com/sitemap.xml`,
             </thead>
             <tbody>
               ${pages.map((url, index) => {
-                const urlObj = new URL(url);
-                const pathname = urlObj.pathname;
-                const segments = pathname.split('/').filter(s => s);
-                const pageName = segments.length > 0 
-                  ? segments[segments.length - 1].replace(/-/g, ' ').replace(/\.(html|htm|php)$/i, '')
-                  : t('reports.crawler.home', 'Home');
+                let pageName = t('reports.crawler.home', 'Home');
+                try {
+                  const urlObj = new URL(url);
+                  const segments = urlObj.pathname.split('/').filter(s => s);
+                  pageName = segments.length > 0
+                    ? segments[segments.length - 1].replace(/-/g, ' ').replace(/\.(html|htm|php)$/i, '')
+                    : t('reports.crawler.home', 'Home');
+                } catch (e) {
+                  pageName = String(url);
+                }
                 return `
                   <tr>
                     <td style="text-align: center; color: #666;">${index + 1}</td>
-                    <td style="text-transform: capitalize;">${pageName || t('reports.crawler.home', 'Home')}</td>
-                    <td style="font-family: monospace; font-size: 11px; color: #333;">${url}</td>
+                    <td style="text-transform: capitalize;">${escapeCrawlerHtml(pageName) || t('reports.crawler.home', 'Home')}</td>
+                    <td style="font-family: monospace; font-size: 11px; color: #333;">${escapeCrawlerHtml(url)}</td>
                   </tr>
                 `;
               }).join('')}
@@ -2356,7 +2433,7 @@ Sitemap: https://example.com/sitemap.xml`,
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${t('reports.crawler.visualSitemapTitle', 'Visual Sitemap')} - ${hostname}</title>
+        <title>${t('reports.crawler.visualSitemapTitle', 'Visual Sitemap')} - ${escapeCrawlerHtml(hostname)}</title>
         <style>
           @page { 
             size: landscape;
@@ -2485,7 +2562,7 @@ Sitemap: https://example.com/sitemap.xml`,
             </div>
             <div class="header-info">
               <div class="meta">
-                <strong>${hostname}</strong><br>
+                <strong>${escapeCrawlerHtml(hostname)}</strong><br>
                 ${t('reports.crawler.pagesDiscoveredCount', '{{count}} pages discovered', { count: pageCount })}<br>
                 ${t('reports.crawler.generated', 'Generated')} ${new Date().toLocaleDateString()}
               </div>

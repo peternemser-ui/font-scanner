@@ -201,7 +201,7 @@ async function analyzeLinks() {
     if (loader && typeof loader.showError === 'function') {
       loader.showError(error.message || t('reports.brokenLinks.scanFailed', 'Failed to analyze links. Please try again.'));
     }
-    loader.complete();
+    return;
   } finally {
     btn.disabled = false;
   }
@@ -232,6 +232,9 @@ async function displayResults(data) {
   data.summary.working = data.summary.working ?? 0;
   data.summary.external = data.summary.external ?? 0;
   data.totalLinks = data.totalLinks ?? 0;
+  data.score = Number.isFinite(Number(data.score)) ? Number(data.score) : 0;
+  data.pagesScanned = data.pagesScanned ?? 0;
+  data.analysisTime = data.analysisTime ?? 0;
 
   // Store results globally
   window.currentBrokenLinksResults = data;
@@ -274,6 +277,8 @@ async function displayResults(data) {
       window.ProReportBlock.hasAccess(reportId))
   );
   console.log('[BrokenLinks] isUnlocked:', isUnlocked, 'reportId:', reportId);
+  // Persist for re-renders (pagination) — ProAccess is not loaded on this page
+  window.currentBrokenLinksUnlocked = isUnlocked;
 
   // Wrap in report-scope for proper CSS styling of accordions
   const reportScope = document.createElement('div');
@@ -291,10 +296,10 @@ async function displayResults(data) {
     const screenshotSection = document.createElement('div');
     screenshotSection.className = 'section screenshot-section';
     screenshotSection.innerHTML = `
-      <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
+      <h3 style="color: var(--r-text, #111827); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
         ${t('reports.common.pageScreenshot', 'Page Screenshot')}
       </h3>
-      <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
+      <div class="screenshot-item" style="background: var(--r-surface-2, #F8FAFC); border: 1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius: 8px; overflow: hidden;">
         <img
           src="${screenshotUrl}"
           alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url: reportUrl })}"
@@ -379,7 +384,7 @@ async function displayResults(data) {
     id: 'broken-links',
     title: t('reports.brokenLinks.brokenLinksCount', 'Broken Links ({{count}})', { count: brokenCount }),
     contentHTML: brokenCount > 0
-      ? renderBrokenLinksContent(data.links.broken)
+      ? renderBrokenLinksContent(data.links.broken, isUnlocked)
       : `<p style="color: var(--r-text-muted, #6B7280); padding: 1rem 0;">${t('reports.brokenLinks.noBrokenLinks', 'No broken links found. All links are healthy.')}</p>`
   });
 
@@ -388,7 +393,7 @@ async function displayResults(data) {
     id: 'redirects',
     title: t('reports.brokenLinks.redirectsCount', 'Redirects ({{count}})', { count: redirectCount }),
     contentHTML: redirectCount > 0
-      ? renderRedirectsContent(data.links.redirects, data.redirectAnalysis)
+      ? renderRedirectsContent(data.links.redirects, data.redirectAnalysis, isUnlocked)
       : `<p style="color: var(--r-text-muted, #6B7280); padding: 1rem 0;">${t('reports.brokenLinks.noRedirects', 'No redirects detected.')}</p>`
   });
 
@@ -397,7 +402,7 @@ async function displayResults(data) {
     id: 'working-links',
     title: t('reports.brokenLinks.workingLinksTotal', 'Working Links ({{count}} total)', { count: workingCount }),
     contentHTML: (data.links.working && data.links.working.length > 0)
-      ? renderWorkingLinksContent(data.links.working, workingCount)
+      ? renderWorkingLinksContent(data.links.working, workingCount, isUnlocked)
       : `<p style="color: var(--r-text-muted, #6B7280); padding: 1rem 0;">${t('reports.brokenLinks.noWorkingLinks', 'No working links found.')}</p>`
   });
 
@@ -406,7 +411,7 @@ async function displayResults(data) {
     id: 'external-links',
     title: t('reports.brokenLinks.externalLinksTotal', 'External Links ({{count}} total)', { count: externalCount }),
     contentHTML: (data.links.external && data.links.external.length > 0)
-      ? renderExternalLinksContent(data.links.external, externalCount)
+      ? renderExternalLinksContent(data.links.external, externalCount, isUnlocked)
       : `<p style="color: var(--r-text-muted, #6B7280); padding: 1rem 0;">${t('reports.brokenLinks.noExternalLinks', 'No external links found.')}</p>`
   });
 
@@ -424,7 +429,7 @@ async function displayResults(data) {
     accordionHTML += ReportAccordion.createSection({
       id: 'attribute-analysis',
       title: t('reports.brokenLinks.linkAttributesAudit', 'Link Attributes Audit'),
-      contentHTML: renderAttributeAnalysisContent(data.attributeAnalysis)
+      contentHTML: renderAttributeAnalysisContent(data.attributeAnalysis, isUnlocked)
     });
   }
 
@@ -580,19 +585,19 @@ function createOverviewSection(data) {
         <div>
           <h3 style="color: ${gradeColor}; margin: 0 0 1rem 0; font-size: 1.3rem;">>> ${t('reports.brokenLinks.linkHealthSummary', 'Link Health Summary')}</h3>
           <div style="display: grid; gap: 0.75rem;">
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0,0,0,0.10));">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.brokenLinks.pagesScanned', 'Pages Scanned')}</span>
               <span style="color: #06b6d4; font-weight: bold;">${data.pagesScanned}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0,0,0,0.10));">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.brokenLinks.totalLinksFound', 'Total Links Found')}</span>
               <span style="color: #06b6d4; font-weight: bold;">${data.totalLinks}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0,0,0,0.10));">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.brokenLinks.brokenLinks', 'Broken Links')}</span>
               <span style="color: ${s.broken > 0 ? '#ef4444' : getAccentPrimaryHex()}; font-weight: bold;">${s.broken}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0,0,0,0.10));">
               <span style="color: var(--r-text-muted, #6B7280);">${t('reports.brokenLinks.redirects', 'Redirects')}</span>
               <span style="color: ${s.redirects > 5 ? '#ff8c00' : '#eab308'}; font-weight: bold;">${s.redirects}</span>
             </div>
@@ -711,7 +716,7 @@ function hexToRgb(hex) {
   return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '128, 128, 128';
 }
 
-function renderBrokenLinksContent(broken) {
+function renderBrokenLinksContent(broken, isUnlocked = window.currentBrokenLinksUnlocked === true) {
   const headers = [
     { label: t('reports.brokenLinks.headers.brokenUrl', 'Broken URL'), align: 'left' },
     { label: t('reports.brokenLinks.headers.status', 'Status'), align: 'center' },
@@ -720,23 +725,21 @@ function renderBrokenLinksContent(broken) {
   ];
 
   const renderRow = (link) => `
-    <tr style="border-bottom: 1px solid #222;">
+    <tr style="border-bottom: 1px solid var(--r-border, rgba(0,0,0,0.10));">
       <td style="padding: 0.75rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-        <a href="${link.url}" target="_blank" rel="noopener" style="color: #ff6b6b;">${truncateUrl(link.url)}</a>
+        <a href="${safeBrokenLinksHref(link.url)}" target="_blank" rel="noopener" style="color: #ff6b6b;">${escapeBrokenLinksHtml(truncateUrl(link.url))}</a>
       </td>
       <td style="padding: 0.75rem; text-align: center;">
         <span style="background: rgba(255,68,68,0.2); color: #ff6b6b; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600;">
           ${link.statusCode || t('reports.common.err', 'ERR')}
         </span>
       </td>
-      <td style="padding: 0.75rem; text-align: center; color: var(--r-text-faint, #9CA3AF);">${link.foundOn.length} ${link.foundOn.length !== 1 ? t('reports.brokenLinks.pages', 'pages') : t('reports.brokenLinks.page', 'page')}</td>
+      <td style="padding: 0.75rem; text-align: center; color: var(--r-text-faint, #9CA3AF);">${link.foundOn ? link.foundOn.length : 1} ${(link.foundOn ? link.foundOn.length : 1) !== 1 ? t('reports.brokenLinks.pages', 'pages') : t('reports.brokenLinks.page', 'page')}</td>
       <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--r-text-muted, #6B7280);">
-        ${link.text || '—'}
+        ${link.text ? escapeBrokenLinksHtml(link.text) : '—'}
       </td>
     </tr>
   `;
-
-  const isUnlocked = window.ProAccess?.hasProAccess?.() || false;
 
   return `
     <div>
@@ -752,7 +755,7 @@ function renderBrokenLinksContent(broken) {
   `;
 }
 
-function renderRedirectsContent(redirects, redirectAnalysis) {
+function renderRedirectsContent(redirects, redirectAnalysis, isUnlocked = window.currentBrokenLinksUnlocked === true) {
   const headers = [
     { label: t('reports.brokenLinks.headers.originalUrl', 'Original URL'), align: 'left' },
     { label: t('reports.brokenLinks.headers.type', 'Type'), align: 'center' },
@@ -768,9 +771,9 @@ function renderRedirectsContent(redirects, redirectAnalysis) {
                      link.redirectType === 'temporary-307' ? '307' :
                      link.redirectType === 'permanent-308' ? '308' : link.statusCode;
     return `
-      <tr style="border-bottom: 1px solid #222;">
+      <tr style="border-bottom: 1px solid var(--r-border, rgba(0,0,0,0.10));">
         <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-          <a href="${link.url}" target="_blank" rel="noopener" style="color: #F5B041;">${truncateUrl(link.url)}</a>
+          <a href="${safeBrokenLinksHref(link.url)}" target="_blank" rel="noopener" style="color: #F5B041;">${escapeBrokenLinksHtml(truncateUrl(link.url))}</a>
         </td>
         <td style="padding: 0.75rem; text-align: center;">
           <span style="background: ${typeColor}20; color: ${typeColor}; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">
@@ -784,14 +787,12 @@ function renderRedirectsContent(redirects, redirectAnalysis) {
           ${link.redirectLoop ? '<span style="color: #E74C3C; margin-left: 0.5rem;">⚠️ ' + t('reports.brokenLinks.loop', 'LOOP') + '</span>' : ''}
         </td>
         <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: ${link.redirectEndsInError ? '#E74C3C' : '#58D68D'};">
-            link.redirectEndsInError ? '❌ ' + t('reports.common.error', 'Error: {{message}}') :
-            link.redirectChain && link.redirectChain.length > 0 ? truncateUrl(link.redirectChain[link.redirectChain.length - 1]?.url || link.redirectChain[0]) : '—'}
+          ${link.redirectEndsInError ? '❌ ' + escapeBrokenLinksHtml(t('reports.common.error', 'Error: {{message}}', { message: link.redirectError || link.finalStatusCode || '' })) :
+            link.redirectChain && link.redirectChain.length > 0 ? escapeBrokenLinksHtml(truncateUrl(link.redirectChain[link.redirectChain.length - 1]?.url || link.redirectChain[0])) : '—'}
         </td>
       </tr>
     `;
   };
-
-  const isUnlocked = window.ProAccess?.hasProAccess?.() || false;
 
   return `
     <div>
@@ -807,7 +808,7 @@ function renderRedirectsContent(redirects, redirectAnalysis) {
   `;
 }
 
-function renderWorkingLinksContent(working, total) {
+function renderWorkingLinksContent(working, total, isUnlocked = window.currentBrokenLinksUnlocked === true) {
   const headers = [
     { label: t('reports.brokenLinks.headers.url', 'URL'), align: 'left' },
     { label: t('reports.brokenLinks.headers.linkText', 'Link Text'), align: 'left' },
@@ -815,18 +816,16 @@ function renderWorkingLinksContent(working, total) {
   ];
 
   const renderRow = (link) => `
-    <tr style="border-bottom: 1px solid #222;">
+    <tr style="border-bottom: 1px solid var(--r-border, rgba(0,0,0,0.10));">
       <td style="padding: 0.75rem; max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-        <a href="${link.url}" target="_blank" rel="noopener" style="color: #5DADE2;">${truncateUrl(link.url)}</a>
+        <a href="${safeBrokenLinksHref(link.url)}" target="_blank" rel="noopener" style="color: #5DADE2;">${escapeBrokenLinksHtml(truncateUrl(link.url))}</a>
       </td>
       <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--r-text-muted, #6B7280);">
-        ${link.text || '—'}
+        ${link.text ? escapeBrokenLinksHtml(link.text) : '—'}
       </td>
       <td style="padding: 0.75rem; text-align: center; color: var(--r-text-faint, #9CA3AF);">${link.foundOn ? link.foundOn.length : 1}</td>
     </tr>
   `;
-
-  const isUnlocked = window.ProAccess?.hasProAccess?.() || false;
 
   return `
     <div>
@@ -842,7 +841,7 @@ function renderWorkingLinksContent(working, total) {
   `;
 }
 
-function renderExternalLinksContent(external, total) {
+function renderExternalLinksContent(external, total, isUnlocked = window.currentBrokenLinksUnlocked === true) {
   const headers = [
     { label: t('reports.brokenLinks.headers.externalUrl', 'External URL'), align: 'left' },
     { label: t('reports.brokenLinks.headers.linkText', 'Link Text'), align: 'left' },
@@ -851,12 +850,12 @@ function renderExternalLinksContent(external, total) {
   ];
 
   const renderRow = (link) => `
-    <tr style="border-bottom: 1px solid #222;">
+    <tr style="border-bottom: 1px solid var(--r-border, rgba(0,0,0,0.10));">
       <td style="padding: 0.75rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-        <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="color: #7FB3D5;">${truncateUrl(link.url)}</a>
+        <a href="${safeBrokenLinksHref(link.url)}" target="_blank" rel="noopener noreferrer" style="color: #7FB3D5;">${escapeBrokenLinksHtml(truncateUrl(link.url))}</a>
       </td>
       <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--r-text-muted, #6B7280);">
-        ${link.text || '—'}
+        ${link.text ? escapeBrokenLinksHtml(link.text) : '—'}
       </td>
       <td style="padding: 0.75rem; text-align: center;">
         <span style="background: rgba(93,173,226,0.2); color: #5DADE2; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">
@@ -866,8 +865,6 @@ function renderExternalLinksContent(external, total) {
       <td style="padding: 0.75rem; text-align: center; color: var(--r-text-faint, #9CA3AF);">${link.foundOn ? link.foundOn.length : 1}</td>
     </tr>
   `;
-
-  const isUnlocked = window.ProAccess?.hasProAccess?.() || false;
 
   return `
     <div>
@@ -1202,6 +1199,20 @@ function escapeBrokenLinksHtml(text) {
   return div.innerHTML;
 }
 
+// Only allow http(s) URLs inside href attributes (rejects javascript: etc.)
+// and escape for the attribute context.
+function safeBrokenLinksHref(url) {
+  if (typeof url !== 'string') return '#';
+  const trimmed = url.trim();
+  if (!/^https?:\/\//i.test(trimmed)) return '#';
+  return trimmed
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function getBrokenLinksCodeSnippet(fix, type) {
   const category = fix.category || '';
   const data = window.currentBrokenLinksResults || {};
@@ -1511,7 +1522,7 @@ function renderRecommendationsAndExportContent(data) {
       <div style="
         margin-top: 2rem;
         padding-top: 1.5rem;
-        border-top: 1px solid #333;
+        border-top: 1px solid var(--r-border, rgba(0,0,0,0.10));
       ">
         <h3 style="color: #06b6d4; margin: 0 0 0.75rem 0; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
           ${t('reports.common.exportReportData', 'Export Report Data')}
@@ -1652,7 +1663,7 @@ function renderAnchorAnalysisContent(analysis) {
                 padding: 0.35rem 0.75rem;
                 border-radius: 4px;
                 font-size: 0.85rem;
-              ">"${a.text}" <span style="opacity: 0.7;">(${a.count}×)</span></span>
+              ">"${escapeBrokenLinksHtml(a.text)}" <span style="opacity: 0.7;">(${a.count}×)</span></span>
             `).join('')}
           </div>
         </div>
@@ -1664,7 +1675,7 @@ function renderAnchorAnalysisContent(analysis) {
         <div style="overflow-x: auto;">
           <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
             <thead>
-              <tr style="border-bottom: 2px solid #333;">
+              <tr style="border-bottom: 2px solid var(--r-border, rgba(0,0,0,0.10));">
                 <th style="text-align: left; padding: 0.5rem; color: var(--r-text-muted, #6B7280);">${t('reports.brokenLinks.headers.anchorText', 'Anchor Text')}</th>
                 <th style="text-align: left; padding: 0.5rem; color: var(--r-text-muted, #6B7280);">${t('reports.brokenLinks.headers.issue', 'Issue')}</th>
                 <th style="text-align: left; padding: 0.5rem; color: var(--r-text-muted, #6B7280);">${t('reports.brokenLinks.headers.linkUrl', 'Link URL')}</th>
@@ -1672,13 +1683,13 @@ function renderAnchorAnalysisContent(analysis) {
             </thead>
             <tbody>
               ${analysis.issues.slice(0, 20).map(issue => `
-                <tr style="border-bottom: 1px solid #222;">
+                <tr style="border-bottom: 1px solid var(--r-border, rgba(0,0,0,0.10));">
                   <td style="padding: 0.5rem; color: ${issue.category === 'empty' ? '#ef4444' : '#ff8c00'};">
-                    ${issue.text || `<em style="opacity: 0.5;">${t('reports.brokenLinks.emptyPlaceholder', '[empty]')}</em>`}
+                    ${issue.text ? escapeBrokenLinksHtml(issue.text) : `<em style="opacity: 0.5;">${t('reports.brokenLinks.emptyPlaceholder', '[empty]')}</em>`}
                   </td>
                   <td style="padding: 0.5rem; color: var(--r-text-muted, #6B7280); font-size: 0.8rem;">${translateIssueDescription(issue.issue)}</td>
                   <td style="padding: 0.5rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    <a href="${issue.url}" target="_blank" rel="noopener" style="color: #06b6d4;">${truncateUrl(issue.url)}</a>
+                    <a href="${safeBrokenLinksHref(issue.url)}" target="_blank" rel="noopener" style="color: #06b6d4;">${escapeBrokenLinksHtml(truncateUrl(issue.url))}</a>
                   </td>
                 </tr>
               `).join('')}
@@ -1694,11 +1705,10 @@ function renderAnchorAnalysisContent(analysis) {
 // ============================================
 // NEW: Link Attributes Audit
 // ============================================
-function renderAttributeAnalysisContent(analysis) {
+function renderAttributeAnalysisContent(analysis, isUnlocked = window.currentBrokenLinksUnlocked === true) {
   const securityScore = analysis.insecureExternalLinks === 0 ? 100 :
     Math.round((analysis.secureExternalLinks / (analysis.secureExternalLinks + analysis.insecureExternalLinks)) * 100);
   const securityColor = securityScore === 100 ? '#22c55e' : securityScore >= 80 ? '#eab308' : '#ef4444';
-  const isUnlocked = window.ProAccess?.hasProAccess?.() || false;
   
   return `
     <div>
@@ -1760,7 +1770,7 @@ function renderAttributeAnalysisContent(analysis) {
       <!-- Internal Link Flow -->
       <div style="
         padding: 1rem;
-        background: rgba(255,255,255,0.03);
+        background: var(--r-surface-2, #F8FAFC);
         border-radius: 8px;
         margin-bottom: 1.5rem;
       ">
@@ -1787,7 +1797,7 @@ function renderAttributeAnalysisContent(analysis) {
         <div style="overflow-x: auto;">
           <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
             <thead>
-              <tr style="border-bottom: 2px solid #333;">
+              <tr style="border-bottom: 2px solid var(--r-border, rgba(0,0,0,0.10));">
                 <th style="text-align: left; padding: 0.5rem; color: var(--r-text-muted, #6B7280);">${t('reports.brokenLinks.headers.url', 'URL')}</th>
                 <th style="text-align: left; padding: 0.5rem; color: var(--r-text-muted, #6B7280);">${t('reports.brokenLinks.headers.issue', 'Issue')}</th>
                 <th style="text-align: left; padding: 0.5rem; color: var(--r-text-muted, #6B7280);">${t('reports.brokenLinks.headers.fix', 'Fix')}</th>
@@ -1795,9 +1805,9 @@ function renderAttributeAnalysisContent(analysis) {
             </thead>
             <tbody>
               ${analysis.securityIssues.slice(0, 15).map(issue => `
-                <tr style="border-bottom: 1px solid #222;">
+                <tr style="border-bottom: 1px solid var(--r-border, rgba(0,0,0,0.10));">
                   <td style="padding: 0.5rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    <a href="${issue.url}" target="_blank" rel="noopener noreferrer" style="color: #ff6b6b;">${truncateUrl(issue.url)}</a>
+                    <a href="${safeBrokenLinksHref(issue.url)}" target="_blank" rel="noopener noreferrer" style="color: #ff6b6b;">${escapeBrokenLinksHtml(truncateUrl(issue.url))}</a>
                   </td>
                   <td style="padding: 0.5rem; color: var(--r-text-muted, #6B7280); font-size: 0.8rem;">${issue.risk}</td>
                   <td style="padding: 0.5rem; color: #22c55e; font-size: 0.8rem; font-family: monospace;">${issue.fix}</td>
@@ -1853,7 +1863,7 @@ function renderRedirectAnalysisContent(analysis) {
       ${Object.keys(analysis.chainLengths).length > 0 ? `
         <div style="
           padding: 1rem;
-          background: rgba(255,255,255,0.03);
+          background: var(--r-surface-2, #F8FAFC);
           border-radius: 8px;
           margin-bottom: 1.5rem;
         ">
@@ -1931,7 +1941,7 @@ function renderRedirectAnalysisContent(analysis) {
             margin-bottom: 0.5rem;
           ">
             <div style="color: #ff0000; font-weight: 600; margin-bottom: 0.25rem;">${t('reports.brokenLinks.loopStartingFrom', 'Loop starting from:')}</div>
-            <a href="${loop.url}" target="_blank" rel="noopener" style="color: #ff6b6b; font-family: monospace; font-size: 0.85rem;">${loop.url}</a>
+            <a href="${safeBrokenLinksHref(loop.url)}" target="_blank" rel="noopener" style="color: #ff6b6b; font-family: monospace; font-size: 0.85rem;">${escapeBrokenLinksHtml(loop.url)}</a>
           </div>
         `).join('')}
       ` : ''}
@@ -1952,7 +1962,7 @@ function renderRedirectAnalysisContent(analysis) {
             justify-content: space-between;
             align-items: center;
           ">
-            <a href="${err.url}" target="_blank" rel="noopener" style="color: #ff6b6b; font-size: 0.85rem;">${truncateUrl(err.url)}</a>
+            <a href="${safeBrokenLinksHref(err.url)}" target="_blank" rel="noopener" style="color: #ff6b6b; font-size: 0.85rem;">${escapeBrokenLinksHtml(truncateUrl(err.url))}</a>
             <span style="background: #ef444420; color: #ef4444; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
               ${err.finalStatusCode || t('reports.common.err', 'ERR')}
             </span>
@@ -2647,7 +2657,7 @@ function renderPaginatedTable(items, tableId, renderRow, headers) {
     <div style="overflow-x: auto;">
       <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
         <thead>
-          <tr style="border-bottom: 2px solid #333;">
+          <tr style="border-bottom: 2px solid var(--r-border, rgba(0,0,0,0.10));">
             ${headers.map(h => `<th style="text-align: ${h.align || 'left'}; padding: 0.75rem; color: var(--r-text-muted, #6B7280);">${h.label}</th>`).join('')}
           </tr>
         </thead>
@@ -2671,7 +2681,7 @@ function renderPaginationControls(tableId, currentPage, totalPages, totalItems) 
       align-items: center;
       margin-top: 1rem;
       padding: 0.75rem;
-      background: rgba(255,255,255,0.03);
+      background: var(--r-surface-2, #F8FAFC);
       border-radius: 8px;
     ">
       <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">

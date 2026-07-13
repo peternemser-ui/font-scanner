@@ -9,6 +9,16 @@
  */
 
 (function(window) {
+  // Debug logging: verbose access/billing logs only when window.SM_DEBUG is truthy
+  function dlog() {
+    if (window.SM_DEBUG) console.log.apply(console, arguments);
+  }
+
+  // Allowlist validation for report IDs interpolated into markup
+  function safeReportId(reportId) {
+    return (typeof reportId === 'string' && /^[\w-]+$/.test(reportId)) ? reportId : '';
+  }
+
   // i18n helper: falls back to provided fallback when translation key is missing
   function _t(key, fallback) {
     if (window.i18n && typeof window.i18n.t === 'function') {
@@ -38,7 +48,7 @@
    */
   async function fetchBillingStatus(forceRefresh = false) {
     if (forceRefresh) {
-      console.log('[ProReportBlock] Force refreshing billing status');
+      dlog('[ProReportBlock] Force refreshing billing status');
       // IMPORTANT: Do NOT null out cachedBillingStatus here.
       // Keep stale data available for synchronous hasAccess() calls
       // that may run before the new fetch resolves. This prevents
@@ -53,11 +63,11 @@
 
     const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
     if (!token) {
-      console.log('[ProReportBlock] No auth token, skipping billing status fetch');
+      dlog('[ProReportBlock] No auth token, skipping billing status fetch');
       return null;
     }
 
-    console.log('[ProReportBlock] Fetching billing status from API...');
+    dlog('[ProReportBlock] Fetching billing status from API...');
     const thisGeneration = ++fetchGeneration;
     billingStatusPromise = fetch('/api/billing/status', {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -70,7 +80,7 @@
           // user out. Token clearing should only happen on explicit user actions
           // (e.g. checkout attempt) that fail with 401, not background fetches.
           if (r.status === 401) {
-            console.log('[ProReportBlock] Billing status returned 401 — tokens preserved, user may need to re-login if checkout also fails');
+            dlog('[ProReportBlock] Billing status returned 401 — tokens preserved, user may need to re-login if checkout also fails');
           }
           return null;
         }
@@ -80,7 +90,7 @@
         // Only update cache if this is still the latest fetch (prevents stale
         // fetches from overwriting newer results in race conditions)
         if (thisGeneration < fetchGeneration) {
-          console.log('[ProReportBlock] Stale fetch result ignored (gen', thisGeneration, 'vs current', fetchGeneration, ')');
+          dlog('[ProReportBlock] Stale fetch result ignored (gen', thisGeneration, 'vs current', fetchGeneration, ')');
           return data;
         }
 
@@ -92,7 +102,7 @@
         // an error and overwrites valid data that a later force-refresh already set.
         if (data) {
           cachedBillingStatus = data;
-          console.log('[ProReportBlock] Billing status fetched:', {
+          dlog('[ProReportBlock] Billing status fetched:', {
             plan: data?.plan,
             isPro: data?.plan === 'pro' || data?.plan === 'day_pass',
             purchasedReportsCount: data?.purchasedReports?.length || 0,
@@ -147,7 +157,7 @@
    */
   async function verifyAccessViaServer(reportId, forceRefresh = false) {
     if (!reportId) {
-      console.log('[ProReportBlock] verifyAccessViaServer: No reportId provided');
+      dlog('[ProReportBlock] verifyAccessViaServer: No reportId provided');
       return { canViewPro: false, canExport: false, reason: 'no_report_id' };
     }
 
@@ -156,7 +166,7 @@
     if (!forceRefresh && accessCheckCache.has(cacheKey)) {
       const cached = accessCheckCache.get(cacheKey);
       if (Date.now() - cached.timestamp < ACCESS_CACHE_TTL) {
-        console.log('[ProReportBlock] verifyAccessViaServer: Using cached result', cached.result);
+        dlog('[ProReportBlock] verifyAccessViaServer: Using cached result', cached.result);
         return cached.result;
       }
       accessCheckCache.delete(cacheKey);
@@ -169,7 +179,7 @@
     }
 
     try {
-      console.log('[ProReportBlock] verifyAccessViaServer: Checking with server', { reportId });
+      dlog('[ProReportBlock] verifyAccessViaServer: Checking with server', { reportId });
       const response = await fetch(`/api/auth/check-access?reportId=${encodeURIComponent(reportId)}`, {
         headers
       });
@@ -180,7 +190,7 @@
       }
 
       const result = await response.json();
-      console.log('[ProReportBlock] verifyAccessViaServer: Server result', result);
+      dlog('[ProReportBlock] verifyAccessViaServer: Server result', result);
 
       // Cache the result
       accessCheckCache.set(cacheKey, {
@@ -208,15 +218,15 @@
     if (!token) {
       // No token = user is not logged in, clear any stale cache
       if (cachedBillingStatus) {
-        console.log('[ProReportBlock] isProSubscriber: Clearing stale cache (no auth token)');
+        dlog('[ProReportBlock] isProSubscriber: Clearing stale cache (no auth token)');
         cachedBillingStatus = null;
         billingStatusPromise = null;
       }
-      console.log('[ProReportBlock] isProSubscriber: FALSE (no auth token)');
+      dlog('[ProReportBlock] isProSubscriber: FALSE (no auth token)');
       return false;
     }
 
-    console.log('[ProReportBlock] isProSubscriber checking cachedBillingStatus:', {
+    dlog('[ProReportBlock] isProSubscriber checking cachedBillingStatus:', {
       exists: !!cachedBillingStatus,
       permissions: cachedBillingStatus?.permissions,
       plan: cachedBillingStatus?.plan
@@ -224,7 +234,7 @@
 
     // Use server-derived permissions if available (new format)
     if (cachedBillingStatus?.permissions?.accessProTools) {
-      console.log('[ProReportBlock] isProSubscriber: TRUE (permissions.accessProTools)');
+      dlog('[ProReportBlock] isProSubscriber: TRUE (permissions.accessProTools)');
       return true;
     }
 
@@ -235,11 +245,11 @@
       if (plan === 'day_pass' && cachedBillingStatus?.dayPassExpiresAt) {
         const expiresAt = new Date(cachedBillingStatus.dayPassExpiresAt);
         if (expiresAt < new Date()) {
-          console.log('[ProReportBlock] isProSubscriber: FALSE (day pass expired)');
+          dlog('[ProReportBlock] isProSubscriber: FALSE (day pass expired)');
           return false;
         }
       }
-      console.log('[ProReportBlock] isProSubscriber: TRUE (plan=' + plan + ')');
+      dlog('[ProReportBlock] isProSubscriber: TRUE (plan=' + plan + ')');
       return true;
     }
 
@@ -250,7 +260,7 @@
     // Note: Removed legacy localStorage checks (proManager, ProGate) for security
     // Subscription status must come from server via fetchBillingStatus()
 
-    console.log('[ProReportBlock] isProSubscriber: FALSE', {
+    dlog('[ProReportBlock] isProSubscriber: FALSE', {
       cachedBillingStatus: cachedBillingStatus ? 'exists' : 'null',
       plan: cachedBillingStatus?.plan || 'none'
     });
@@ -262,12 +272,12 @@
    */
   function isReportPurchased(reportId) {
     if (!reportId || !cachedBillingStatus) {
-      console.log('[ProReportBlock] isReportPurchased:', { reportId, hasCachedStatus: !!cachedBillingStatus });
+      dlog('[ProReportBlock] isReportPurchased:', { reportId, hasCachedStatus: !!cachedBillingStatus });
       return false;
     }
     const purchased = cachedBillingStatus.purchasedReports || [];
     const isPurchased = purchased.includes(reportId);
-    console.log('[ProReportBlock] isReportPurchased:', { reportId, purchasedReports: purchased, isPurchased });
+    dlog('[ProReportBlock] isReportPurchased:', { reportId, purchasedReports: purchased, isPurchased });
     return isPurchased;
   }
 
@@ -291,14 +301,14 @@
     }
 
     if (!currentReportId) {
-      console.log('[ProReportBlock] isReportTypePurchasedLocally: FALSE (no current reportId)');
+      dlog('[ProReportBlock] isReportTypePurchasedLocally: FALSE (no current reportId)');
       return false;
     }
 
     // Check for session-verified purchase marker
     const sessionPaymentMarker = sessionStorage.getItem('sm_payment_completed_session');
     if (!sessionPaymentMarker) {
-      console.log('[ProReportBlock] isReportTypePurchasedLocally: FALSE (no session marker)');
+      dlog('[ProReportBlock] isReportTypePurchasedLocally: FALSE (no session marker)');
       return false;
     }
 
@@ -307,7 +317,7 @@
     const markerTimestamp = parseInt(sessionPaymentMarker, 10);
     const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
     if (isNaN(markerTimestamp) || markerTimestamp < tenMinutesAgo) {
-      console.log('[ProReportBlock] isReportTypePurchasedLocally: FALSE (session marker expired)', {
+      dlog('[ProReportBlock] isReportTypePurchasedLocally: FALSE (session marker expired)', {
         markerTimestamp,
         ageMinutes: isNaN(markerTimestamp) ? 'invalid' : Math.round((Date.now() - markerTimestamp) / 60000)
       });
@@ -320,19 +330,19 @@
     // CRITICAL: Check if the purchased reportId matches the current reportId
     const purchasedReportId = sessionStorage.getItem('sm_purchased_report_id');
     if (!purchasedReportId) {
-      console.log('[ProReportBlock] isReportTypePurchasedLocally: FALSE (no purchased reportId in session)');
+      dlog('[ProReportBlock] isReportTypePurchasedLocally: FALSE (no purchased reportId in session)');
       return false;
     }
 
     if (purchasedReportId !== currentReportId) {
-      console.log('[ProReportBlock] isReportTypePurchasedLocally: FALSE (reportId mismatch)', {
+      dlog('[ProReportBlock] isReportTypePurchasedLocally: FALSE (reportId mismatch)', {
         purchasedReportId,
         currentReportId
       });
       return false;
     }
 
-    console.log('[ProReportBlock] isReportTypePurchasedLocally: TRUE (session-verified purchase for this reportId)', {
+    dlog('[ProReportBlock] isReportTypePurchasedLocally: TRUE (session-verified purchase for this reportId)', {
       reportId: currentReportId,
       markerAgeMinutes: Math.round((Date.now() - markerTimestamp) / 60000)
     });
@@ -349,7 +359,7 @@
   function hasAccess(reportId) {
     // Version marker for debugging cache issues - UPDATE THIS WHEN CHANGING CODE
     const VERSION = '20260212-remove-auto-preserve';
-    console.log('[ProReportBlock] hasAccess v' + VERSION + ' called with reportId:', reportId);
+    dlog('[ProReportBlock] hasAccess v' + VERSION + ' called with reportId:', reportId);
 
     // Determine the effective reportId once (used by multiple checks)
     const effectiveId = reportId || document.body?.getAttribute('data-report-id') || '';
@@ -364,7 +374,7 @@
           const proof = JSON.parse(purchaseProof);
           const age = Date.now() - (proof.ts || 0);
           if (age < 24 * 60 * 60 * 1000) { // 24 hour TTL
-            console.log('[ProReportBlock] hasAccess: TRUE via localStorage purchase proof', {
+            dlog('[ProReportBlock] hasAccess: TRUE via localStorage purchase proof', {
               reportId: effectiveId,
               ageMinutes: Math.round(age / 60000)
             });
@@ -384,7 +394,7 @@
     // SECURITY: Require matching reportId — empty effectiveId must NOT grant access
     if (window.__smVerifiedPurchaseReportId && effectiveId) {
       if (effectiveId === window.__smVerifiedPurchaseReportId) {
-        console.log('[ProReportBlock] hasAccess: TRUE via verified purchase flag', {
+        dlog('[ProReportBlock] hasAccess: TRUE via verified purchase flag', {
           verifiedReportId: window.__smVerifiedPurchaseReportId,
           requestedReportId: effectiveId
         });
@@ -394,9 +404,9 @@
 
     // Check 1: Is user a Pro subscriber? (server-verified, requires auth token)
     const isProSub = isProSubscriber();
-    console.log('[ProReportBlock] isProSubscriber check:', isProSub, '(type: ' + typeof isProSub + ')');
+    dlog('[ProReportBlock] isProSubscriber check:', isProSub, '(type: ' + typeof isProSub + ')');
     if (isProSub === true) {
-      console.log('[ProReportBlock] hasAccess: TRUE via isProSubscriber');
+      dlog('[ProReportBlock] hasAccess: TRUE via isProSubscriber');
       return true;
     }
 
@@ -404,9 +414,9 @@
     // This handles the case where user just paid and returned from Stripe
     // The session marker proves they went through payment flow in this browser session
     const localPurchase = isReportTypePurchasedLocally();
-    console.log('[ProReportBlock] isReportTypePurchasedLocally check:', localPurchase, '(type: ' + typeof localPurchase + ')');
+    dlog('[ProReportBlock] isReportTypePurchasedLocally check:', localPurchase, '(type: ' + typeof localPurchase + ')');
     if (localPurchase === true) {
-      console.log('[ProReportBlock] hasAccess: TRUE via session-verified purchase');
+      dlog('[ProReportBlock] hasAccess: TRUE via session-verified purchase');
       return true;
     }
 
@@ -427,14 +437,14 @@
 
     // Check 4: Server-verified report purchase
     const isPurchased = effectiveReportId ? isReportPurchased(effectiveReportId) : false;
-    console.log('[ProReportBlock] isReportPurchased check:', isPurchased, '(reportId:', effectiveReportId, ')');
+    dlog('[ProReportBlock] isReportPurchased check:', isPurchased, '(reportId:', effectiveReportId, ')');
     if (isPurchased === true) {
-      console.log('[ProReportBlock] hasAccess: TRUE via purchased report');
+      dlog('[ProReportBlock] hasAccess: TRUE via purchased report');
       return true;
     }
 
     // SECURITY: Default to FALSE - no access unless explicitly granted above
-    console.log('[ProReportBlock] hasAccess: FALSE (no valid access proof)', {
+    dlog('[ProReportBlock] hasAccess: FALSE (no valid access proof)', {
       reportId: effectiveReportId,
       hasCachedStatus: !!cachedBillingStatus
     });
@@ -453,11 +463,11 @@
   async function hasAccessAsync(reportId, preferServer = true) {
     // Quick local check first - this includes session-verified purchases
     const localAccess = hasAccess(reportId);
-    console.log('[ProReportBlock] hasAccessAsync: Local check result', { reportId, localAccess });
+    dlog('[ProReportBlock] hasAccessAsync: Local check result', { reportId, localAccess });
 
     // If local check passes, user has access (trust session markers after payment)
     if (localAccess) {
-      console.log('[ProReportBlock] hasAccessAsync: Access granted via local check');
+      dlog('[ProReportBlock] hasAccessAsync: Access granted via local check');
       return true;
     }
 
@@ -466,7 +476,7 @@
       try {
         // Force refresh to bypass cache and get latest server state
         const serverResult = await verifyAccessViaServer(reportId, true);
-        console.log('[ProReportBlock] hasAccessAsync: Server verification result', {
+        dlog('[ProReportBlock] hasAccessAsync: Server verification result', {
           reportId,
           localAccess,
           serverAccess: serverResult.canViewPro
@@ -484,7 +494,9 @@
    * Render the unlock prompt for locked reports
    */
   function renderUnlockPrompt(options = {}) {
-    const { context = 'report', reportId = null } = options;
+    const { context = 'report' } = options;
+    // SECURITY: allowlist-validate reportId before interpolating into markup
+    const reportId = safeReportId(options.reportId);
 
     return `
       <div class="pro-report-block__unlock-prompt" data-locked-overlay>
@@ -557,12 +569,14 @@
   /**
    * Render individual action button
    */
-  function renderActionButton(feature, context, reportId) {
+  function renderActionButton(feature, context, rawReportId) {
     const featureLabels = getFeatureLabels();
     const featureData = featureLabels[feature];
     if (!featureData) return '';
 
-    const userHasAccess = hasAccess(reportId);
+    // SECURITY: allowlist-validate reportId before interpolating into markup
+    const reportId = safeReportId(rawReportId);
+    const userHasAccess = hasAccess(rawReportId);
     const handler = feature === 'pdf' ? 'exportPDF' :
                     feature === 'excel' ? 'exportExcel' :
                     feature === 'csv' ? 'exportCSV' :
@@ -632,8 +646,9 @@
     const exportIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
     const lockIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
 
+    const attrReportId = safeReportId(reportId);
     return `
-      <div class="pro-report-block${!userHasAccess ? ' pro-report-block--locked' : ''}" data-pro-report-block ${!userHasAccess ? 'data-locked' : ''} ${reportId ? `data-report-id="${reportId}"` : ''}>
+      <div class="pro-report-block${!userHasAccess ? ' pro-report-block--locked' : ''}" data-pro-report-block ${!userHasAccess ? 'data-locked' : ''} ${attrReportId ? `data-report-id="${attrReportId}"` : ''}>
         <div class="pro-report-block__header">
           <div class="pro-report-block__icon">${userHasAccess ? exportIcon : lockIcon}</div>
           <div class="pro-report-block__text">
@@ -666,9 +681,10 @@
         </div>
       `;
     } else {
+      const attrReportId = safeReportId(reportId);
       return `
         <div class="pro-report-block pro-report-block--compact pro-report-block--locked">
-          <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--compact" data-open-pricing-modal data-context="${context}" ${reportId ? `data-report-id="${reportId}"` : ''}>
+          <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--compact" data-open-pricing-modal data-context="${context}" ${attrReportId ? `data-report-id="${attrReportId}"` : ''}>
             <span>🔒</span>
             <span>${_t('reports.common.unlockReport', 'Unlock Report')}</span>
           </button>
@@ -692,9 +708,10 @@
         </div>
       `;
     } else {
+      const attrReportId = safeReportId(reportId);
       return `
         <div class="pro-report-block pro-report-block--minimal">
-          <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--minimal" data-open-pricing-modal data-context="${context}" ${reportId ? `data-report-id="${reportId}"` : ''}>
+          <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--minimal" data-open-pricing-modal data-context="${context}" ${attrReportId ? `data-report-id="${attrReportId}"` : ''}>
             ${text}
           </button>
         </div>
@@ -742,7 +759,7 @@
       }
     }
     if (keysToRemove.length > 0) {
-      console.log('[ProReportBlock] Cleaning up stale URL-based purchase keys:', keysToRemove);
+      dlog('[ProReportBlock] Cleaning up stale URL-based purchase keys:', keysToRemove);
       keysToRemove.forEach(key => localStorage.removeItem(key));
     }
   }
@@ -777,13 +794,13 @@
         const isRecentPurchase = !isNaN(markerAge) && markerAge < 10 * 60 * 1000; // 10 min TTL
 
         if (urlReportId && urlReportId === purchasedReportId && isRecentPurchase) {
-          console.log('[ProReportBlock] Keeping session markers (post-billing reload, report_id matches)', {
+          dlog('[ProReportBlock] Keeping session markers (post-billing reload, report_id matches)', {
             urlReportId,
             purchasedReportId,
             markerAgeSeconds: Math.round(markerAge / 1000)
           });
         } else {
-          console.log('[ProReportBlock] SECURITY: Clearing stale session markers (not returning from billing)');
+          dlog('[ProReportBlock] SECURITY: Clearing stale session markers (not returning from billing)');
           sessionStorage.removeItem('sm_payment_completed_session');
           sessionStorage.removeItem('sm_purchased_report_id');
         }

@@ -25,6 +25,18 @@ function t(key, fallback, params = {}) {
   return value;
 }
 
+// HTML escaper for scanned/user-controlled values (mirrors escapeFontsHtml)
+// Safe for both element text and double/single-quoted attribute contexts
+function escapeTagHtml(str) {
+  if (str === null || str === undefined || str === '') return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // Function to get analysis steps with current translations
 // Called at runtime to ensure i18n is loaded
 function getAnalysisSteps() {
@@ -59,13 +71,88 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') analyzeUrl();
   });
 
-  // Check for URL in query params
-  const params = new URLSearchParams(window.location.search);
-  const urlParam = params.get('url');
-  if (urlParam) {
-    urlInput.value = urlParam;
-    analyzeUrl();
-  }
+  // Handle URL parameters for report loading and billing return
+  (async function initFromUrlParams() {
+    // Ensure i18n translations are loaded before rendering any report content
+    if (window.i18n && typeof window.i18n.init === 'function' && !window.i18n.initialized) {
+      try { await window.i18n.init(); } catch (e) { /* i18n will use fallback */ }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const reportIdParam = params.get('report_id') || '';
+    const autoUrl = params.get('url') || '';
+    const autoScan = params.get('auto_scan') === 'true';
+    const billingSuccess = params.get('billing_success') === 'true';
+
+    // If we have a report_id, set it immediately so hasAccess checks work
+    if (reportIdParam) {
+      document.body.setAttribute('data-report-id', reportIdParam);
+      console.log('[Tag Intelligence] Set report ID from URL:', reportIdParam);
+    }
+
+    // If returning from billing, wait for billing return processing to complete
+    if (billingSuccess && !window.__smBillingReturnComplete) {
+      console.log('[Tag Intelligence] Waiting for billing return processing...');
+      await new Promise((resolve) => {
+        if (window.__smBillingReturnComplete) {
+          resolve();
+          return;
+        }
+        const handler = () => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        };
+        window.addEventListener('sm:billingReturnComplete', handler);
+        setTimeout(() => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        }, 5000);
+      });
+      console.log('[Tag Intelligence] Billing return processing complete');
+      return;
+    }
+
+    // If we have a report_id, try to load the stored report first
+    if (reportIdParam && window.ReportStorage) {
+      console.log('[Tag Intelligence] Checking for stored report:', reportIdParam);
+
+      // Fetch billing status BEFORE displaying the report so hasAccess is accurate
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        console.log('[Tag Intelligence] Fetching billing status (force refresh for report recall)...');
+        await window.ProReportBlock.fetchBillingStatus(true);
+        console.log('[Tag Intelligence] Billing status fetched, hasAccess:', window.ProReportBlock.hasAccess(reportIdParam));
+      }
+
+      const loaded = await window.ReportStorage.tryLoadAndDisplay(reportIdParam, displayResults);
+      if (loaded) {
+        // Stored report was loaded - fill URL input for context
+        if (autoUrl && urlInput) urlInput.value = autoUrl;
+        return; // Don't auto-scan
+      }
+    }
+
+    // No stored report found - pre-fill URL but only auto-scan if explicitly requested
+    if (autoUrl && urlInput) {
+      urlInput.value = autoUrl;
+    }
+    if (autoScan) {
+      setTimeout(() => {
+        analyzeUrl();
+      }, 500);
+    }
+  })();
+
+  // Listen for restore scan results event (after payment return)
+  window.addEventListener('sm:restoreScanResults', (e) => {
+    const { results: restoredResults, url: restoredUrl, analyzer } = e.detail || {};
+    if (restoredResults && analyzer?.includes('tag')) {
+      console.log('[Tag Intelligence] Restoring scan results after payment');
+      if (restoredUrl && urlInput) {
+        urlInput.value = restoredUrl;
+      }
+      displayResults(restoredResults);
+    }
+  });
 
   async function analyzeUrl() {
     const url = urlInput.value.trim();
@@ -358,7 +445,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (screenshotUrl) {
       document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
     }
-    const screenshots = screenshotUrl ? [{ src: screenshotUrl, alt: `Screenshot of ${url}`, device: '' }] : [];
+    const screenshots = screenshotUrl ? [{ src: screenshotUrl, alt: t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url }), device: '' }] : [];
+
+    // Check if report is unlocked (Pro subscription or purchased single report)
+    // Default to LOCKED (false) - user must prove they have access
+    let isUnlocked = false;
+    if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+      isUnlocked = window.ProReportBlock.hasAccess(reportId);
+    }
+    console.log('[Tag Intelligence] Access check:', { reportId, hasProReportBlock: !!window.ProReportBlock, isUnlocked });
 
     // Build summary array for ReportContainer (score donuts)
     const summary = [
@@ -414,8 +509,8 @@ document.addEventListener('DOMContentLoaded', () => {
       title: `⚠️ ${t('reports.tagIntelligence.issuesDetected', 'Issues Detected')} (${issueCount})`,
       contentHTML: issueCount > 0
         ? `<ul style="margin: 0; padding-left: 1.5rem;">
-            ${data.duplicates.map(d => `<li class="severity-warning">${d.messageKey ? t('reports.' + d.messageKey, d.message) : d.message}</li>`).join('')}
-            ${data.issues.map(i => `<li class="severity-${i.severity}">${i.messageKey ? t('reports.' + i.messageKey, i.message, i.messageParams) : i.message}</li>`).join('')}
+            ${data.duplicates.map(d => `<li class="severity-warning">${d.messageKey ? t('reports.' + d.messageKey, escapeTagHtml(d.message)) : escapeTagHtml(d.message)}</li>`).join('')}
+            ${data.issues.map(i => `<li class="severity-${i.severity}">${i.messageKey ? t('reports.' + i.messageKey, escapeTagHtml(i.message), i.messageParams) : escapeTagHtml(i.message)}</li>`).join('')}
           </ul>`
         : `<p style="color: var(--r-text-muted, #6B7280); padding: 1rem 0;">${t('reports.tagIntelligence.noIssuesFound', 'No issues found. Your tag implementation looks clean.')}</p>`
     });
@@ -431,8 +526,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="tag-card" style="margin-bottom: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
               <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
                 <div>
-                  <span class="tag-badge tag-${tag.category}">${formatCategory(tag.category)}</span>
-                  <strong>${tag.name}</strong>
+                  <span class="tag-badge tag-${escapeTagHtml(tag.category)}">${escapeTagHtml(formatCategory(tag.category))}</span>
+                  <strong>${escapeTagHtml(tag.name)}</strong>
                 </div>
                 <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">
                   ${tag.instances} ${t('reports.tagIntelligence.instances', 'instance(s)')} • ${tag.pagesFound ? tag.pagesFound.length : 1} ${t('reports.tagIntelligence.pages', 'page(s)')}
@@ -440,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
               ${tag.ids && tag.ids.length > 0 ? `
                 <div style="margin-top: 0.5rem; font-family: monospace; font-size: 0.85rem; color: #a78bfa;">
-                  ${t('reports.tagIntelligence.ids', 'ID(s):')}: ${tag.ids.join(', ')}
+                  ${t('reports.tagIntelligence.ids', 'ID(s):')}: ${escapeTagHtml(tag.ids.join(', '))}
                 </div>
               ` : ''}
               <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #666;">
@@ -468,8 +563,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <div style="display: grid; gap: 0.5rem;">
                 ${tags.map(tagItem => `
                   <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 4px;">
-                    <span>${tagItem.name}</span>
-                    <span style="color: #666;">${tagItem.ids?.join(', ') || t('reports.common.notAvailable', 'N/A')}</span>
+                    <span>${escapeTagHtml(tagItem.name)}</span>
+                    <span style="color: #666;">${escapeTagHtml(tagItem.ids?.join(', ')) || t('reports.common.notAvailable', 'N/A')}</span>
                   </div>
                 `).join('')}
               </div>
@@ -517,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <div style="margin-top: 1rem;">
                 ${data.pageResults[0].performanceImpact.issues.map(issue => `
                   <div style="background: rgba(${issue.severity === 'warning' ? '239, 68, 68' : '59, 130, 246'}, 0.1); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; font-size: 0.85rem;">
-                    ${issue.severity === 'warning' ? '⚠️' : 'ℹ️'} ${issue.message}
+                    ${issue.severity === 'warning' ? '⚠️' : 'ℹ️'} ${escapeTagHtml(issue.message)}
                   </div>
                 `).join('')}
               </div>
@@ -549,11 +644,11 @@ document.addEventListener('DOMContentLoaded', () => {
               `).join('')}
             </div>
             <div style="display: grid; gap: 0.5rem;">
-              ${data.pageResults[0].thirdPartyScripts.scripts.slice(0, 10).map(script => `
+              ${(data.pageResults[0].thirdPartyScripts.scripts || []).slice(0, 10).map(script => `
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 4px; font-size: 0.85rem;">
                   <div>
-                    <span style="color: var(--r-text, #111827);">${script.name}</span>
-                    <span style="color: #666; margin-left: 0.5rem;">${script.host}</span>
+                    <span style="color: var(--r-text, #111827);">${escapeTagHtml(script.name)}</span>
+                    <span style="color: #666; margin-left: 0.5rem;">${escapeTagHtml(script.host)}</span>
                   </div>
                   <div style="display: flex; gap: 0.5rem;">
                     ${script.async ? '<span style="background: #10b981; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem;">async</span>' : ''}
@@ -595,14 +690,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.5rem;">${t('reports.tagIntelligence.eventsFound', 'Events Found')}:</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                   ${data.pageResults[0].dataLayer.events.map(event => `
-                    <code style="background: rgba(167, 139, 250, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">${event}</code>
+                    <code style="background: rgba(167, 139, 250, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">${escapeTagHtml(event)}</code>
                   `).join('')}
                 </div>
               </div>
             ` : ''}
             ${data.pageResults[0].dataLayer.ecommerce ? `
               <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 4px; font-size: 0.85rem;">
-                🛒 <strong>${data.pageResults[0].dataLayer.ecommerce.type}</strong> ${t('reports.tagIntelligence.detected', 'detected')}
+                🛒 <strong>${escapeTagHtml(data.pageResults[0].dataLayer.ecommerce.type)}</strong> ${t('reports.tagIntelligence.detected', 'detected')}
               </div>
             ` : ''}
           </div>
@@ -665,8 +760,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <div style="margin-bottom: 1rem;">
                 ${data.pageResults[0].cookies.issues.map(issue => `
                   <div style="background: rgba(${issue.severity === 'high' ? '239, 68, 68' : '245, 158, 11'}, 0.1); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; font-size: 0.85rem; border-left: 3px solid ${issue.severity === 'high' ? '#ef4444' : '#f59e0b'};">
-                    <strong>${issue.severity === 'high' ? '⚠️' : '⚡'} ${issue.message}</strong>
-                    <p style="margin: 0.25rem 0 0 0; color: var(--r-text-faint, #9CA3AF);">${issue.recommendation}</p>
+                    <strong>${issue.severity === 'high' ? '⚠️' : '⚡'} ${escapeTagHtml(issue.message)}</strong>
+                    <p style="margin: 0.25rem 0 0 0; color: var(--r-text-faint, #9CA3AF);">${escapeTagHtml(issue.recommendation)}</p>
                   </div>
                 `).join('')}
               </div>
@@ -675,7 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <!-- Cookie List -->
             <div style="max-height: 400px; overflow-y: auto;">
               <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
-                <thead style="position: sticky; top: 0; background: #1a1a1a;">
+                <thead style="position: sticky; top: 0; background: var(--r-surface-2, #F8FAFC);">
                   <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
                     <th style="text-align: left; padding: 0.5rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.cookieName', 'Name')}</th>
                     <th style="text-align: left; padding: 0.5rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.cookieType', 'Type')}</th>
@@ -685,18 +780,18 @@ document.addEventListener('DOMContentLoaded', () => {
                   </tr>
                 </thead>
                 <tbody>
-                  ${data.pageResults[0].cookies.cookies.slice(0, 30).map(cookie => `
+                  ${(data.pageResults[0].cookies.cookies || []).slice(0, 30).map(cookie => `
                     <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
-                      <td style="padding: 0.5rem; font-family: monospace; color: #a78bfa;">${cookie.name.substring(0, 25)}${cookie.name.length > 25 ? '...' : ''}</td>
-                      <td style="padding: 0.5rem;"><span style="background: ${getCookieTypeColor(cookie.type)}; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.7rem;">${cookie.type}</span></td>
-                      <td style="padding: 0.5rem; color: var(--r-text-muted, #6B7280);">${cookie.vendor || t('reports.tagIntelligence.unknown', 'Unknown')}</td>
-                      <td style="padding: 0.5rem; color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${cookie.purpose || '-'}</td>
+                      <td style="padding: 0.5rem; font-family: monospace; color: #a78bfa;">${escapeTagHtml((cookie.name || '').substring(0, 25))}${(cookie.name || '').length > 25 ? '...' : ''}</td>
+                      <td style="padding: 0.5rem;"><span style="background: ${getCookieTypeColor(cookie.type)}; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.7rem;">${escapeTagHtml(cookie.type)}</span></td>
+                      <td style="padding: 0.5rem; color: var(--r-text-muted, #6B7280);">${escapeTagHtml(cookie.vendor) || t('reports.tagIntelligence.unknown', 'Unknown')}</td>
+                      <td style="padding: 0.5rem; color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${escapeTagHtml(cookie.purpose) || '-'}</td>
                       <td style="padding: 0.5rem; text-align: center;">${cookie.hasSecure ? '✓' : '✗'}</td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
-              ${data.pageResults[0].cookies.cookies.length > 30 ? `<p style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-top: 0.5rem;">... ${t('reports.common.andMore', 'and')} ${data.pageResults[0].cookies.cookies.length - 30} ${t('reports.tagIntelligence.moreCookies', 'more cookies')}</p>` : ''}
+              ${(data.pageResults[0].cookies.cookies || []).length > 30 ? `<p style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-top: 0.5rem;">... ${t('reports.common.andMore', 'and')} ${(data.pageResults[0].cookies.cookies || []).length - 30} ${t('reports.tagIntelligence.moreCookies', 'more cookies')}</p>` : ''}
             </div>
           </div>
         `
@@ -731,8 +826,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <div style="margin-bottom: 1.5rem;">
                 ${data.pageResults[0].tagLoadWaterfall.insights.map(insight => `
                   <div style="background: rgba(${insight.type === 'warning' ? '245, 158, 11' : insight.type === 'good' ? '16, 185, 129' : '59, 130, 246'}, 0.1); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; font-size: 0.85rem;">
-                    ${insight.type === 'warning' ? '⚠️' : insight.type === 'good' ? '✅' : 'ℹ️'} ${insight.message}
-                    ${insight.recommendation ? `<span style="color: var(--r-text-faint, #9CA3AF);"> - ${insight.recommendation}</span>` : ''}
+                    ${insight.type === 'warning' ? '⚠️' : insight.type === 'good' ? '✅' : 'ℹ️'} ${escapeTagHtml(insight.message)}
+                    ${insight.recommendation ? `<span style="color: var(--r-text-faint, #9CA3AF);"> - ${escapeTagHtml(insight.recommendation)}</span>` : ''}
                   </div>
                 `).join('')}
               </div>
@@ -743,7 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <div style="min-width: 600px;">
                 ${data.pageResults[0].tagLoadWaterfall.scripts.slice(0, 20).map(script => `
                   <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.75rem;">
-                    <div style="width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--r-text-muted, #6B7280);" title="${script.vendor}">${script.vendor}</div>
+                    <div style="width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--r-text-muted, #6B7280);" title="${escapeTagHtml(script.vendor)}">${escapeTagHtml(script.vendor)}</div>
                     <div style="flex: 1; height: 20px; background: rgba(255,255,255,0.05); border-radius: 3px; position: relative; overflow: hidden;">
                       <div style="
                         position: absolute;
@@ -752,7 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         height: 100%;
                         background: ${getWaterfallColor(script.category)};
                         border-radius: 3px;
-                      " title="${script.vendor}: ${script.duration}ms"></div>
+                      " title="${escapeTagHtml(script.vendor)}: ${script.duration}ms"></div>
                     </div>
                     <div style="width: 60px; text-align: right; color: var(--r-text-faint, #9CA3AF);">${script.duration}ms</div>
                     <div style="width: 50px; text-align: right; color: #666;">${script.sizeFormatted}</div>
@@ -789,7 +884,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sections.push({
       id: 'ai-strategic-analysis',
       title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
-      isPro: true, locked: true, context: 'tag-intelligence', reportId: reportId,
+      isPro: true, locked: !isUnlocked, context: 'tag-intelligence', reportId: reportId,
       scoreTextRight: null,
       contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
     });
@@ -883,7 +978,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tags by Category Doughnut Chart
     const categoryCanvas = document.getElementById('tagsCategoryChart');
-    if (categoryCanvas && data.summary?.byCategory) {
+    if (categoryCanvas && data.summary?.byCategory && typeof Chart !== 'undefined') {
       const categories = Object.keys(data.summary.byCategory);
       const counts = Object.values(data.summary.byCategory);
       
@@ -918,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Script Loading Strategy Pie Chart
     const scriptCanvas = document.getElementById('scriptLoadingChart');
-    if (scriptCanvas && data.pageResults?.[0]?.performanceImpact?.stats) {
+    if (scriptCanvas && data.pageResults?.[0]?.performanceImpact?.stats && typeof Chart !== 'undefined') {
       const stats = data.pageResults[0].performanceImpact.stats;
       
       new Chart(scriptCanvas, {
@@ -950,7 +1045,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Third-Party Scripts Bar Chart
     const thirdPartyCanvas = document.getElementById('thirdPartyChart');
-    if (thirdPartyCanvas && data.pageResults?.[0]?.thirdPartyScripts?.byCategory) {
+    if (thirdPartyCanvas && data.pageResults?.[0]?.thirdPartyScripts?.byCategory && typeof Chart !== 'undefined') {
       const byCategory = data.pageResults[0].thirdPartyScripts.byCategory;
       const categories = Object.keys(byCategory);
       const counts = Object.values(byCategory);
@@ -1214,8 +1309,8 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <span style="font-size: 1.25rem;">${details.icon}</span>
-                      <strong style="color: var(--r-text, #111827);">${tag.name}</strong>
-                      ${tag.ids?.length ? `<code style="background: rgba(139, 92, 246, 0.3); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem; color: #a78bfa;">${tag.ids[0]}</code>` : ''}
+                      <strong style="color: var(--r-text, #111827);">${escapeTagHtml(tag.name)}</strong>
+                      ${tag.ids?.length ? `<code style="background: rgba(139, 92, 246, 0.3); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem; color: #a78bfa;">${escapeTagHtml(tag.ids[0])}</code>` : ''}
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                       <span style="background: #10b981; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.active', 'ACTIVE')}</span>
@@ -1227,7 +1322,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       ${details.features.map(f => `<span style="background: rgba(139, 92, 246, 0.15); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; color: #c4b5fd;">${f}</span>`).join('')}
                     </div>
                   ` : ''}
-                  ${tag.foundIn ? `<div style="margin-top: 0.5rem; font-size: 0.75rem; color: #666;">${t('reports.tagIntelligence.found', 'Found')}: ${tag.foundIn.join(', ')}</div>` : ''}
+                  ${tag.foundIn ? `<div style="margin-top: 0.5rem; font-size: 0.75rem; color: #666;">${t('reports.tagIntelligence.found', 'Found')}: ${escapeTagHtml(tag.foundIn.join(', '))}</div>` : ''}
                 </div>
               `}).join('')}
             </div>
@@ -1249,7 +1344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <span style="font-size: 1.25rem;">${details.icon}</span>
-                      <strong style="color: var(--r-text, #111827);">${tag.name}</strong>
+                      <strong style="color: var(--r-text, #111827);">${escapeTagHtml(tag.name)}</strong>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                       <span style="background: #10b981; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.recording', 'RECORDING')}</span>
@@ -1282,7 +1377,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <span style="font-size: 1.25rem;">${details.icon}</span>
-                      <strong style="color: var(--r-text, #111827);">${tag.name}</strong>
+                      <strong style="color: var(--r-text, #111827);">${escapeTagHtml(tag.name)}</strong>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                       <span style="background: #3b82f6; color: var(--r-text, #111827); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.monitoring', 'MONITORING')}</span>
@@ -1315,7 +1410,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <span style="font-size: 1.25rem;">${details.icon}</span>
-                      <strong style="color: var(--r-text, #111827);">${tag.name}</strong>
+                      <strong style="color: var(--r-text, #111827);">${escapeTagHtml(tag.name)}</strong>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                       <span style="background: #14b8a6; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.collecting', 'COLLECTING')}</span>

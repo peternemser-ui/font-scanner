@@ -490,10 +490,12 @@ async function displayResults(data) {
     results.style.display = 'block';
   }
 
+  // Hoisted so it's in scope for both reportId generation and ReportContainer.create()
+  const urlValue = document.getElementById('url')?.value || data.url || '';
+
   // Use existing reportId from body (set by billing return) or generate new one
   let reportId = document.body.getAttribute('data-report-id') || data.reportId || null;
   if (!reportId) {
-    const urlValue = document.getElementById('url')?.value || data.url || '';
     reportId = `brand_${btoa(urlValue).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16)}`;
   }
 
@@ -977,7 +979,7 @@ ${colorCount > 12 ? `\n/* ...and ${colorCount - 12} additional colors */` : ''}
   color: var(--text-primary);
 }`,
     steps: [
-      t('reports.brand.steps.documentPrimaryColor', 'Document your brand\\'),
+      t('reports.brand.steps.documentPrimaryColor', 'Document your brand\'s primary color'),
       t('reports.brand.steps.defineSecondaryColors', 'Define 2-3 secondary/accent colors with specific use cases'),
       t('reports.brand.steps.createNeutralPalette', 'Create a neutral palette for text and backgrounds'),
       t('reports.brand.steps.addSemanticColors', 'Add semantic colors for success/error/warning states'),
@@ -994,7 +996,7 @@ ${colorCount > 12 ? `\n/* ...and ${colorCount - 12} additional colors */` : ''}
     severity: harmonyScore < 60 ? 'High' : 'Medium',
     description: harmonyScore < 60
       ? t('reports.brand.fixes.poorHarmonyDesc', 'Color harmony ensures your palette creates a cohesive, professional appearance. Your harmony score of {{score}}% indicates colors may clash or lack intentional relationship.').replace('{{score}}', Math.round(harmonyScore))
-      : t('reports.brand.fixes.goodHarmonyDesc', 'Color harmony ensures your palette creates a cohesive, professional appearance. Fine-tuning your color relationships will elevate your brand\\'),
+      : t('reports.brand.fixes.goodHarmonyDesc', 'Color harmony ensures your palette creates a cohesive, professional appearance. Fine-tuning your color relationships will elevate your brand\'s visual identity.'),
     impact: t('reports.brand.fixes.harmonyImpact', 'Professional appearance, improved user trust, better visual hierarchy'),
     problematicCode: `/* Current color analysis */
 Detected primary colors:
@@ -1527,7 +1529,7 @@ p + p { margin-top: 1rem; }
       t('reports.brand.steps.auditContrast', 'Audit all text/background combinations with a contrast checker'),
       t('reports.brand.steps.ensureNormalTextContrast', 'Ensure 4.5:1 minimum for normal text (WCAG AA)'),
       t('reports.brand.steps.ensureLargeTextContrast', 'Ensure 3:1 minimum for large text and UI elements'),
-      t('reports.brand.steps.dontRelyOnColor', 'Don\\'),
+      t('reports.brand.steps.dontRelyOnColor', 'Don\'t rely on color alone to convey information'),
       t('reports.brand.steps.addUnderlines', 'Add underlines to links, icons to buttons'),
       t('reports.brand.steps.testColorblind', 'Test with colorblind simulation tools'),
       t('reports.brand.steps.runAccessibilityAudits', 'Run automated accessibility audits (Lighthouse, axe)'),
@@ -1623,7 +1625,7 @@ h1 { font-size: 48px; }  /* Too large on mobile */
       t('reports.brand.steps.ensureTouchTargets', 'Ensure touch targets are at least 44x44px on mobile'),
       t('reports.brand.steps.testBreakpoints', 'Test brand appearance at 320px, 768px, 1024px, and 1440px'),
       t('reports.brand.steps.maintainHierarchy', 'Maintain visual hierarchy at all screen sizes'),
-      t('reports.brand.steps.useSameComponents', 'Use the same components everywhere - don\\')
+      t('reports.brand.steps.useSameComponents', 'Use the same components everywhere - don\'t create one-off variants')
     ]
   });
 
@@ -1636,7 +1638,7 @@ h1 { font-size: 48px; }  /* Too large on mobile */
     title: t('reports.brand.fixes.implementDarkMode', 'Implement dark mode support'),
     category: t('reports.brand.categories.brandExperience', 'Brand Experience'),
     severity: 'Low',
-    description: t('reports.brand.fixes.darkModeDesc', 'Dark mode is now expected by users, with 80%+ of people using it regularly. A well-designed dark mode protects your brand\\'),
+    description: t('reports.brand.fixes.darkModeDesc', 'Dark mode is now expected by users, with 80%+ of people using it regularly. A well-designed dark mode protects your brand\'s identity while reducing eye strain.'),
     impact: t('reports.brand.fixes.darkModeImpact', 'Better user experience, reduced eye strain, modern brand perception'),
     problematicCode: `/* No dark mode consideration */
 body {
@@ -1714,7 +1716,7 @@ body {
 }`,
     steps: [
       t('reports.brand.steps.createColorTokens', 'Create semantic color tokens (bg-primary, text-secondary, etc.)'),
-      t('reports.brand.steps.designDarkPalette', 'Design your dark palette - don\\'),
+      t('reports.brand.steps.designDarkPalette', 'Design your dark palette - don\'t just invert colors'),
       t('reports.brand.steps.useColorSchemeQuery', 'Use prefers-color-scheme media query for automatic switching'),
       t('reports.brand.steps.provideLightDarkVersions', 'Provide light/dark versions of logo and images'),
       t('reports.brand.steps.testDarkMode', 'Test all components in dark mode'),
@@ -1945,15 +1947,57 @@ function escapeBrandHtml(str) {
   return div.innerHTML;
 }
 
+// Attribute-safe escaper (escapeBrandHtml does not escape quotes, so it is
+// unsafe inside title="..."/style="..." contexts)
+function escapeBrandAttr(str) {
+  if (str === null || str === undefined || str === '') return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Validate a scanned CSS color before injecting it into a style attribute
+function safeBrandColor(color) {
+  if (typeof color !== 'string') return 'transparent';
+  const c = color.trim();
+  if (/^#[0-9a-fA-F]{3,8}$/.test(c)) return c;
+  if (/^(rgb|rgba|hsl|hsla)\(\s*[\d.,%\s/-]+\s*\)$/.test(c)) return c;
+  if (/^[a-zA-Z]+$/.test(c)) return c;
+  return 'transparent';
+}
+
+// Validate a scanned CSS value (font-family, border-radius, font-size) for style attributes
+function safeBrandCssValue(val, fallback) {
+  if (typeof val !== 'string' || !val.trim()) return fallback || 'inherit';
+  const v = val.trim();
+  if (/^[\w\s,.'"%()#-]+$/.test(v) && !/url\s*\(/i.test(v) && !/expression/i.test(v)) {
+    return escapeBrandAttr(v);
+  }
+  return fallback || 'inherit';
+}
+
+// Validate a scanned URL before injecting it into a src attribute
+function safeBrandUrl(url) {
+  if (typeof url !== 'string') return '';
+  const u = url.trim();
+  if (/^(https?:)?\/\//i.test(u) || u.startsWith('/') || u.startsWith('./') || /^data:image\//i.test(u)) {
+    return escapeBrandAttr(u);
+  }
+  return '';
+}
+
 // Status color helper
 function getStatusColor(status) {
-  if (!status) return 'rgba(255,255,255,0.5)';
+  if (!status) return 'var(--r-text-muted, #6B7280)';
   const s = status.toLowerCase();
   if (s === 'excellent' || s === 'detected' || s === 'present') return 'var(--accent-primary)';
   if (s === 'good') return '#90EE90';
   if (s === 'fair') return '#eab308';
   if (s === 'poor' || s === 'missing') return '#ff6b6b';
-  return 'rgba(255,255,255,0.5)';
+  return 'var(--r-text-muted, #6B7280)';
 }
 
 // Translate status words
@@ -1978,15 +2022,15 @@ function renderColorPaletteContent(data) {
       <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.colorHarmony', 'Color Harmony')}</h4>
       <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
         <div>
-          <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.harmonyType', 'Harmony Type')}:</span>
+          <span style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${t('brandConsistency.harmonyType', 'Harmony Type')}:</span>
           <span style="color: var(--r-text, #111827); margin-left: 0.5rem; text-transform: capitalize;">${translateHarmonyType(colorAnalysis.harmonyType)}</span>
         </div>
         <div>
-          <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.uniqueHues', 'Unique Hues')}:</span>
+          <span style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${t('brandConsistency.uniqueHues', 'Unique Hues')}:</span>
           <span style="color: var(--r-text, #111827); margin-left: 0.5rem;">${colorAnalysis.uniqueHueCount || '—'}</span>
         </div>
         <div>
-          <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.neutralRatio', 'Neutral Ratio')}:</span>
+          <span style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${t('brandConsistency.neutralRatio', 'Neutral Ratio')}:</span>
           <span style="color: var(--r-text, #111827); margin-left: 0.5rem;">${colorAnalysis.neutralRatio || 0}%</span>
         </div>
       </div>
@@ -1998,8 +2042,8 @@ function renderColorPaletteContent(data) {
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
           ${colorAnalysis.primaryColors.map(color => `
             <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
-              <div style="background: ${color}; width: 60px; height: 60px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2);"></div>
-              <span style="font-size: 0.7rem; color: rgba(255,255,255,0.5);">${formatColor(color)}</span>
+              <div style="background: ${safeBrandColor(color)}; width: 60px; height: 60px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2);"></div>
+              <span style="font-size: 0.7rem; color: var(--r-text-muted, #6B7280);">${escapeBrandHtml(formatColor(color))}</span>
             </div>
           `).join('')}
         </div>
@@ -2010,11 +2054,11 @@ function renderColorPaletteContent(data) {
       <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.allDetectedColors', 'All Detected Colors')} (${colors.length})</h4>
       <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; max-height: 200px; overflow-y: auto;">
         ${colors.slice(0, 40).map(color => `
-          <div class="color-swatch" style="background: ${color}; width: 32px; height: 32px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;" title="${formatColor(color)}" data-action="copy-color" data-color="${color}"></div>
+          <div class="color-swatch" style="background: ${safeBrandColor(color)}; width: 32px; height: 32px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;" title="${escapeBrandAttr(formatColor(color))}" data-action="copy-color" data-color="${escapeBrandAttr(color)}"></div>
         `).join('')}
-        ${colors.length > 40 ? `<div style="display: flex; align-items: center; color: rgba(255,255,255,0.5); font-size: 0.8rem; padding: 0 0.5rem;">+${colors.length - 40} ${t('common.more', 'more')}</div>` : ''}
+        ${colors.length > 40 ? `<div style="display: flex; align-items: center; color: var(--r-text-muted, #6B7280); font-size: 0.8rem; padding: 0 0.5rem;">+${colors.length - 40} ${t('common.more', 'more')}</div>` : ''}
       </div>
-      <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: rgba(255,255,255,0.4);">${t('brandConsistency.clickToCopy', 'Click a color to copy its value')}</p>
+      <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('brandConsistency.clickToCopy', 'Click a color to copy its value')}</p>
     </div>
     
     <!-- Export Color Palette -->
@@ -2069,15 +2113,15 @@ function renderTypographyContent(data) {
       <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.typographySummary', 'Typography Summary')}</h4>
       <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
         <div>
-          <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.totalFonts', 'Total Fonts')}:</span>
+          <span style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${t('brandConsistency.totalFonts', 'Total Fonts')}:</span>
           <span style="color: var(--r-text, #111827); margin-left: 0.5rem;">${typography.fontCount || fonts.length}</span>
         </div>
         <div>
-          <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.quality', 'Quality')}:</span>
+          <span style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${t('brandConsistency.quality', 'Quality')}:</span>
           <span style="color: ${getStatusColor(typography.fontQuality)}; margin-left: 0.5rem; text-transform: capitalize;">${translateStatus(typography.fontQuality)}</span>
         </div>
         <div>
-          <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.typographyHierarchy', 'Typography Hierarchy')}:</span>
+          <span style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${t('brandConsistency.typographyHierarchy', 'Typography Hierarchy')}:</span>
           <span style="color: ${typography.hasTypographyHierarchy ? 'var(--accent-primary)' : '#ff6b6b'}; margin-left: 0.5rem;">${typography.hasTypographyHierarchy ? t('common.yes', 'Yes') : t('common.no', 'No')}</span>
         </div>
       </div>
@@ -2088,7 +2132,7 @@ function renderTypographyContent(data) {
         <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.headingFonts', 'Heading Fonts')}</h4>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
           ${typography.headingFonts.map(font => `
-            <span style="background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-family: ${font}; color: var(--r-text, #111827);">${font}</span>
+            <span style="background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-family: ${safeBrandCssValue(font)}; color: var(--r-text, #111827);">${escapeBrandHtml(font)}</span>
           `).join('')}
         </div>
       </div>
@@ -2099,7 +2143,7 @@ function renderTypographyContent(data) {
         <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.bodyFonts', 'Body Fonts')}</h4>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
           ${typography.bodyFonts.map(font => `
-            <span style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 4px; font-family: ${font}; color: var(--r-text, #111827);">${font}</span>
+            <span style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 4px; font-family: ${safeBrandCssValue(font)}; color: var(--r-text, #111827);">${escapeBrandHtml(font)}</span>
           `).join('')}
         </div>
       </div>
@@ -2110,8 +2154,8 @@ function renderTypographyContent(data) {
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
         ${fonts.slice(0, 10).map(f => `
           <div style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
-            <span style="flex: 1; font-family: ${f.font}; color: var(--r-text, #111827);">${f.font}</span>
-            <span style="color: rgba(255,255,255,0.5); font-size: 0.8rem;">${f.count} ${t('brandConsistency.uses', 'uses')}</span>
+            <span style="flex: 1; font-family: ${safeBrandCssValue(f.font)}; color: var(--r-text, #111827);">${escapeBrandHtml(f.font)}</span>
+            <span style="color: var(--r-text-muted, #6B7280); font-size: 0.8rem;">${f.count} ${t('brandConsistency.uses', 'uses')}</span>
           </div>
         `).join('')}
       </div>
@@ -2131,13 +2175,13 @@ function renderBrandIdentityContent(data) {
           ${logos.map((logo, i) => `
             <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; text-align: center;">
               ${logo.type === 'img' && logo.src && logo.src !== 'SVG inline' ? `
-                <img src="${logo.src}" alt="${logo.alt || t('brandConsistency.logoAlt', 'Logo')}" style="max-width: 150px; max-height: 80px; object-fit: contain; background: #fff; padding: 0.5rem; border-radius: 4px;" onerror="this.style.display='none'"/>
+                <img src="${safeBrandUrl(logo.src)}" alt="${escapeBrandAttr(logo.alt) || t('brandConsistency.logoAlt', 'Logo')}" style="max-width: 150px; max-height: 80px; object-fit: contain; background: #fff; padding: 0.5rem; border-radius: 4px;" onerror="this.style.display='none'"/>
               ` : `
-                <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5);">
+                <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--r-text-muted, #6B7280);">
                   ${logo.type === 'svg' ? t('brandConsistency.svgLabel', 'SVG') : t('brandConsistency.imgLabel', 'IMG')}
                 </div>
               `}
-              <div style="margin-top: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">
+              <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--r-text-muted, #6B7280);">
                 ${logo.width || '?'}×${logo.height || '?'}px
               </div>
             </div>
@@ -2147,7 +2191,7 @@ function renderBrandIdentityContent(data) {
         <div style="padding: 1.5rem; background: rgba(255,100,100,0.1); border: 1px solid rgba(255,100,100,0.3); border-radius: 8px; text-align: center;">
           <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
           <div style="color: #ff6b6b; font-weight: 500;">${t('brandConsistency.noLogoDetected', 'No logo detected')}</div>
-          <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-top: 0.5rem;">${t('brandConsistency.addLogoTip', 'Add a logo with alt text containing "logo" for better brand recognition')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem; margin-top: 0.5rem;">${t('brandConsistency.addLogoTip', 'Add a logo with alt text containing "logo" for better brand recognition')}</div>
         </div>
       `}
     </div>
@@ -2160,7 +2204,7 @@ function renderBrandIdentityContent(data) {
         </div>
         <div>
           <div style="color: var(--r-text, #111827); font-weight: 500;">${hasFavicon ? t('brandConsistency.faviconPresent', 'Favicon Present') : t('brandConsistency.faviconMissing', 'Favicon Missing')}</div>
-          <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">
             ${hasFavicon ? t('brandConsistency.faviconPresentDesc', 'Your site has a favicon for browser tab identification') : t('brandConsistency.faviconMissingDesc', 'Add a favicon to help users identify your site in browser tabs')}
           </div>
         </div>
@@ -2178,18 +2222,18 @@ function renderUIConsistencyContent(data) {
       <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.buttonStyles', 'Button Styles')}</h4>
       <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
         <div style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-          <span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.consistency', 'Consistency')}:</span>
+          <span style="color: var(--r-text-muted, #6B7280);">${t('brandConsistency.consistency', 'Consistency')}:</span>
           <span style="color: ${getStatusColor(data.consistency?.buttonStyleConsistency)}; font-weight: 500;">${translateStatus(data.consistency?.buttonStyleConsistency)}</span>
         </div>
         ${buttonStyles.length > 0 ? `
           <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
             ${buttonStyles.slice(0, 6).map(btn => `
-              <div style="background: ${btn.backgroundColor}; color: ${btn.color}; padding: 0.5rem 1rem; border-radius: ${btn.borderRadius}; font-family: ${btn.fontFamily}; font-size: ${btn.fontSize};">
+              <div style="background: ${safeBrandColor(btn.backgroundColor)}; color: ${safeBrandColor(btn.color)}; padding: 0.5rem 1rem; border-radius: ${safeBrandCssValue(btn.borderRadius, '4px')}; font-family: ${safeBrandCssValue(btn.fontFamily)}; font-size: ${safeBrandCssValue(btn.fontSize, '1rem')};">
                 ${t('brandConsistency.sampleButton', 'Sample Button')}
               </div>
             `).join('')}
           </div>
-        ` : `<p style="color: rgba(255,255,255,0.5); margin: 0;">${t('brandConsistency.noButtonStyles', 'No button styles detected')}</p>`}
+        ` : `<p style="color: var(--r-text-muted, #6B7280); margin: 0;">${t('brandConsistency.noButtonStyles', 'No button styles detected')}</p>`}
       </div>
     </div>
     
@@ -2197,19 +2241,19 @@ function renderUIConsistencyContent(data) {
       <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.linkColors', 'Link Colors')}</h4>
       <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
         <div style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-          <span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.consistency', 'Consistency')}:</span>
+          <span style="color: var(--r-text-muted, #6B7280);">${t('brandConsistency.consistency', 'Consistency')}:</span>
           <span style="color: ${getStatusColor(data.consistency?.linkColorConsistency)}; font-weight: 500;">${translateStatus(data.consistency?.linkColorConsistency)}</span>
         </div>
         ${linkColors.length > 0 ? `
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
             ${[...new Set(linkColors)].map(color => `
               <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.05); padding: 0.5rem 0.75rem; border-radius: 4px;">
-                <div style="width: 20px; height: 20px; background: ${color}; border-radius: 4px;"></div>
-                <span style="color: ${color}; font-size: 0.85rem;">${t('brandConsistency.linkText', 'Link Text')}</span>
+                <div style="width: 20px; height: 20px; background: ${safeBrandColor(color)}; border-radius: 4px;"></div>
+                <span style="color: ${safeBrandColor(color)}; font-size: 0.85rem;">${t('brandConsistency.linkText', 'Link Text')}</span>
               </div>
             `).join('')}
           </div>
-        ` : `<p style="color: rgba(255,255,255,0.5); margin: 0;">${t('brandConsistency.noLinkColors', 'No link colors detected')}</p>`}
+        ` : `<p style="color: var(--r-text-muted, #6B7280); margin: 0;">${t('brandConsistency.noLinkColors', 'No link colors detected')}</p>`}
       </div>
     </div>
   `;
@@ -2217,7 +2261,7 @@ function renderUIConsistencyContent(data) {
 
 function renderRecommendationsContent(recommendations) {
   if (!recommendations || recommendations.length === 0) {
-    return `<p style="color: rgba(255,255,255,0.5);">${t('brandConsistency.noRecommendations', 'No recommendations at this time.')}</p>`;
+    return `<p style="color: var(--r-text-muted, #6B7280);">${t('brandConsistency.noRecommendations', 'No recommendations at this time.')}</p>`;
   }
   
   const priorityColors = {
@@ -2330,7 +2374,7 @@ function renderRecommendationsContent(recommendations) {
       noOgImage: {
         message: t('brandConsistency.rec.noOgImage.message', 'Missing Open Graph image'),
         detail: t('brandConsistency.rec.noOgImage.detail', 'No og:image meta tag found. Social shares will lack a preview image.'),
-        action: t('brandConsistency.rec.noOgImage.action', 'Add <meta property=')
+        action: t('brandConsistency.rec.noOgImage.action', 'Add the og:image meta property for social share preview images.')
       },
       noTwitterCard: {
         message: t('brandConsistency.rec.noTwitterCard.message', 'Missing Twitter Card meta tags'),
@@ -2340,7 +2384,7 @@ function renderRecommendationsContent(recommendations) {
       noAppleTouchIcon: {
         message: t('brandConsistency.rec.noAppleTouchIcon.message', 'Missing Apple Touch Icon'),
         detail: t('brandConsistency.rec.noAppleTouchIcon.detail', 'No apple-touch-icon found. iOS home screen bookmarks will use a screenshot.'),
-        action: t('brandConsistency.rec.noAppleTouchIcon.action', 'Add <link rel=')
+        action: t('brandConsistency.rec.noAppleTouchIcon.action', 'Add the apple-touch-icon link element in your HTML head.')
       },
       // Cross-page consistency recommendations
       fontVariationAcrossPages: {
@@ -2392,7 +2436,7 @@ function renderRecommendationsContent(recommendations) {
         <h4 style="margin: 0; color: var(--r-text, #111827); font-weight: 600;">${content.message}</h4>
         <span style="margin-left: auto; font-size: 0.7rem; padding: 0.2rem 0.5rem; background: ${priorityColors[rec.priority]}30; color: ${priorityColors[rec.priority]}; border-radius: 4px; text-transform: uppercase;">${priorityLabels[rec.priority] || rec.priority}</span>
       </div>
-      <p style="margin: 0 0 0.5rem 1.7rem; color: rgba(255,255,255,0.7); font-size: 0.9rem;">${content.detail}</p>
+      <p style="margin: 0 0 0.5rem 1.7rem; color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${content.detail}</p>
       ${content.action ? `<p style="margin: 0 0 0 1.7rem; color: rgba(var(--accent-primary-rgb), 0.8); font-size: 0.85rem;">→ ${content.action}</p>` : ''}
     </div>
   `}).join('');
@@ -2400,7 +2444,7 @@ function renderRecommendationsContent(recommendations) {
 
 // Color Contrast Accessibility Content
 function renderColorContrastContent(contrastAnalysis) {
-  const { pairs, summary } = contrastAnalysis;
+  const { pairs = [], summary = {} } = contrastAnalysis || {};
   
   const getContrastBadge = (level) => {
     if (level === 'AAA') return `<span style="background: ${getAccentPrimaryHex()}; color: var(--accent-primary-contrast); padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">AAA</span>`;
@@ -2410,42 +2454,42 @@ function renderColorContrastContent(contrastAnalysis) {
   
   return `
     <div style="margin-bottom: 1.5rem;">
-      <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.wcagCompliance', 'WCAG Compliance Summary')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.wcagCompliance', 'WCAG Compliance Summary')}</h4>
       <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
         <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 1.5rem; font-weight: 600; color: var(--r-text, #111827);">${summary.total}</div>
-          <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${t('brandConsistency.pairsTested', 'Pairs Tested')}</div>
+          <div style="font-size: 0.75rem; color: var(--r-text-muted, #6B7280);">${t('brandConsistency.pairsTested', 'Pairs Tested')}</div>
         </div>
         <div style="background: rgba(var(--accent-primary-rgb), 0.1); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 1.5rem; font-weight: 600; color: var(--accent-primary);">${summary.passAAA}</div>
-          <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${t('brandConsistency.passAAA', 'Pass AAA')}</div>
+          <div style="font-size: 0.75rem; color: var(--r-text-muted, #6B7280);">${t('brandConsistency.passAAA', 'Pass AAA')}</div>
         </div>
         <div style="background: rgba(144,238,144,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 1.5rem; font-weight: 600; color: #90EE90;">${summary.passAA - summary.passAAA}</div>
-          <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${t('brandConsistency.passAA', 'Pass AA Only')}</div>
+          <div style="font-size: 0.75rem; color: var(--r-text-muted, #6B7280);">${t('brandConsistency.passAA', 'Pass AA Only')}</div>
         </div>
         <div style="background: rgba(255,107,107,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 1.5rem; font-weight: 600; color: #ff6b6b;">${summary.failAA}</div>
-          <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${t('brandConsistency.fail', 'Fail')}</div>
+          <div style="font-size: 0.75rem; color: var(--r-text-muted, #6B7280);">${t('brandConsistency.fail', 'Fail')}</div>
         </div>
       </div>
       <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-        <span style="color: rgba(255,255,255,0.6);">${t('brandConsistency.complianceRate', 'Compliance Rate')}:</span>
+        <span style="color: var(--r-text-muted, #6B7280);">${t('brandConsistency.complianceRate', 'Compliance Rate')}:</span>
         <span style="color: ${getScoreColor(summary.complianceRate)}; font-weight: 600; margin-left: 0.5rem;">${summary.complianceRate}%</span>
       </div>
     </div>
     
     ${pairs.length > 0 ? `
       <div>
-        <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.samplePairs', 'Sample Color Pairs')}</h4>
+        <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.samplePairs', 'Sample Color Pairs')}</h4>
         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
           ${pairs.map(pair => `
             <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
               <div style="display: flex; gap: 0.25rem;">
-                <div style="width: 30px; height: 30px; background: ${pair.bgColor}; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);"></div>
-                <div style="width: 30px; height: 30px; background: ${pair.textColor}; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);"></div>
+                <div style="width: 30px; height: 30px; background: ${safeBrandColor(pair.bgColor)}; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);"></div>
+                <div style="width: 30px; height: 30px; background: ${safeBrandColor(pair.textColor)}; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);"></div>
               </div>
-              <div style="flex: 1; font-size: 0.85rem; color: rgba(255,255,255,0.7);">&lt;${pair.element}&gt;</div>
+              <div style="flex: 1; font-size: 0.85rem; color: var(--r-text-muted, #6B7280);">&lt;${escapeBrandHtml(pair.element)}&gt;</div>
               <div style="color: ${pair.passAA ? 'var(--accent-primary)' : '#ff6b6b'}; font-weight: 500;">${pair.ratio}:1</div>
               ${getContrastBadge(pair.level)}
             </div>
@@ -2476,23 +2520,23 @@ function renderColorUsageContent(colorUsageAnalysis) {
   
   return `
     <div style="margin-bottom: 1.5rem;">
-      <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.colorDistribution', 'Color Distribution')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.colorDistribution', 'Color Distribution')}</h4>
       <div style="display: flex; flex-direction: column; gap: 0.75rem;">
         ${Object.entries(distribution).map(([key, data]) => `
           <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="min-width: 120px; color: rgba(255,255,255,0.8);">${categoryLabels[key]}</div>
+            <div style="min-width: 120px; color: var(--r-text, #111827);">${categoryLabels[key]}</div>
             <div style="flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px; height: 20px; overflow: hidden; position: relative;">
               <div style="width: ${data.percentage}%; height: 100%; background: ${categoryColors[key]}; border-radius: 4px;"></div>
               <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--r-text, #111827);">${data.percentage}%</span>
             </div>
-            <div style="min-width: 80px; text-align: right; color: rgba(255,255,255,0.6); font-size: 0.85rem;">${data.count} ${t('common.unique', 'unique')}</div>
+            <div style="min-width: 80px; text-align: right; color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${data.count} ${t('common.unique', 'unique')}</div>
           </div>
         `).join('')}
       </div>
     </div>
     
     <div>
-      <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.topColorsByCategory', 'Top Colors by Category')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.topColorsByCategory', 'Top Colors by Category')}</h4>
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
         ${Object.entries(topColors).map(([key, colors]) => colors.length > 0 ? `
           <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px;">
@@ -2501,7 +2545,7 @@ function renderColorUsageContent(colorUsageAnalysis) {
               ${colors.slice(0, 5).map(c => `
                 <div style="display: flex; align-items: center; gap: 0.25rem; background: rgba(255,255,255,0.05); padding: 0.25rem 0.5rem; border-radius: 4px;">
                   <div style="width: 16px; height: 16px; background: ${c.color}; border-radius: 3px; border: 1px solid rgba(255,255,255,0.2);"></div>
-                  <span style="font-size: 0.7rem; color: rgba(255,255,255,0.5);">${c.count}x</span>
+                  <span style="font-size: 0.7rem; color: var(--r-text-muted, #6B7280);">${c.count}x</span>
                 </div>
               `).join('')}
             </div>
@@ -2518,7 +2562,7 @@ function renderVisualHierarchyContent(hierarchyAnalysis) {
   
   return `
     <div style="margin-bottom: 1.5rem;">
-      <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.headingProgression', 'Heading Size Progression')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.headingProgression', 'Heading Size Progression')}</h4>
       ${isProgressive ? 
         `<div style="padding: 0.75rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 6px; color: var(--accent-primary);">
           ${t('brandConsistency.progressiveHeadings', 'Headings are properly sized in descending order')}
@@ -2531,7 +2575,7 @@ function renderVisualHierarchyContent(hierarchyAnalysis) {
     
     ${headings && headings.length > 0 ? `
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.headingSizes', 'Heading Sizes')}</h4>
+        <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.headingSizes', 'Heading Sizes')}</h4>
         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
           ${headings.map(h => `
             <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
@@ -2539,8 +2583,8 @@ function renderVisualHierarchyContent(hierarchyAnalysis) {
               <div style="flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
                 <div style="width: ${Math.min(h.fontSize / 48 * 100, 100)}%; height: 100%; background: var(--accent-primary);"></div>
               </div>
-              <span style="color: rgba(255,255,255,0.6); font-size: 0.85rem; min-width: 60px;">${h.fontSizeUnit}</span>
-              <span style="color: rgba(255,255,255,0.4); font-size: 0.75rem;">${h.count}x</span>
+              <span style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem; min-width: 60px;">${h.fontSizeUnit}</span>
+              <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${h.count}x</span>
             </div>
           `).join('')}
         </div>
@@ -2549,26 +2593,26 @@ function renderVisualHierarchyContent(hierarchyAnalysis) {
     
     ${typeScale && typeScale.length > 0 ? `
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.typeScale', 'Type Scale Ratios')}</h4>
+        <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.typeScale', 'Type Scale Ratios')}</h4>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
           ${typeScale.map(s => `
             <div style="background: rgba(255,255,255,0.05); padding: 0.5rem 0.75rem; border-radius: 4px; font-size: 0.85rem;">
-              <span style="color: rgba(255,255,255,0.6);">${s.from}/${s.to}:</span>
+              <span style="color: var(--r-text-muted, #6B7280);">${s.from}/${s.to}:</span>
               <span style="color: ${s.ratio >= 1.2 && s.ratio <= 1.5 ? 'var(--accent-primary)' : '#eab308'}; margin-left: 0.25rem; font-weight: 500;">${s.ratio}</span>
             </div>
           `).join('')}
         </div>
-        <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: rgba(255,255,255,0.4);">${t('brandConsistency.idealRatio', 'Ideal ratio: 1.2-1.5 (modular scale)')}</p>
+        <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('brandConsistency.idealRatio', 'Ideal ratio: 1.2-1.5 (modular scale)')}</p>
       </div>
     ` : ''}
     
     ${bodyStyle ? `
       <div>
-        <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.bodyText', 'Body Text')}</h4>
+        <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.bodyText', 'Body Text')}</h4>
         <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-          <div><span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.fontSize', 'Font Size')}:</span> <span style="color: var(--r-text, #111827);">${bodyStyle.fontSize}</span></div>
-          <div><span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.lineHeight', 'Line Height')}:</span> <span style="color: var(--r-text, #111827);">${bodyStyle.lineHeight}</span></div>
-          <div><span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.font', 'Font')}:</span> <span style="color: var(--r-text, #111827);">${bodyStyle.fontFamily}</span></div>
+          <div><span style="color: var(--r-text-muted, #6B7280);">${t('brandConsistency.fontSize', 'Font Size')}:</span> <span style="color: var(--r-text, #111827);">${bodyStyle.fontSize}</span></div>
+          <div><span style="color: var(--r-text-muted, #6B7280);">${t('brandConsistency.lineHeight', 'Line Height')}:</span> <span style="color: var(--r-text, #111827);">${bodyStyle.lineHeight}</span></div>
+          <div><span style="color: var(--r-text-muted, #6B7280);">${t('brandConsistency.font', 'Font')}:</span> <span style="color: var(--r-text, #111827);">${bodyStyle.fontFamily}</span></div>
         </div>
       </div>
     ` : ''}
@@ -2595,7 +2639,7 @@ function renderBrandAssetsContent(brandAssets) {
   
   return `
     <div style="margin-bottom: 1.5rem;">
-      <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.metaTagCompleteness', 'Meta Tag Completeness')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.metaTagCompleteness', 'Meta Tag Completeness')}</h4>
       <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
         <div style="flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px; height: 12px; overflow: hidden;">
           <div style="width: ${completeness}%; height: 100%; background: ${getScoreColor(completeness)}; border-radius: 4px;"></div>
@@ -2605,22 +2649,22 @@ function renderBrandAssetsContent(brandAssets) {
     </div>
     
     <div>
-      <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.assetDetails', 'Asset Details')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.assetDetails', 'Asset Details')}</h4>
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
         ${assetItems.map(item => `
           <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
             <span style="font-size: 1.2rem;">${item.icon}</span>
-            <span style="flex: 1; color: rgba(255,255,255,0.8);">${item.label}</span>
+            <span style="flex: 1; color: var(--r-text, #111827);">${item.label}</span>
             ${brandAssets[item.key] ? `
-              <span style="color: var(--accent-primary); font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${brandAssets[item.key]}">
-                ${item.key === 'themeColor' ? 
-                  `<span style="display: inline-block; width: 16px; height: 16px; background: ${brandAssets[item.key]}; border-radius: 3px; vertical-align: middle; margin-right: 0.25rem;"></span>` : 
+              <span style="color: var(--accent-primary); font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeBrandAttr(brandAssets[item.key])}">
+                ${item.key === 'themeColor' ?
+                  `<span style="display: inline-block; width: 16px; height: 16px; background: ${safeBrandColor(brandAssets[item.key])}; border-radius: 3px; vertical-align: middle; margin-right: 0.25rem;"></span>` :
                   ''
-                }${brandAssets[item.key].length > 30 ? brandAssets[item.key].substring(0, 30) + '...' : brandAssets[item.key]}
+                }${escapeBrandHtml(brandAssets[item.key].length > 30 ? brandAssets[item.key].substring(0, 30) + '...' : brandAssets[item.key])}
               </span>
               <span style="color: var(--accent-primary);">✓</span>
             ` : `
-              <span style="color: rgba(255,255,255,0.4);">${t('brandConsistency.notSet', 'Not set')}</span>
+              <span style="color: var(--r-text-faint, #9CA3AF);">${t('brandConsistency.notSet', 'Not set')}</span>
               <span style="color: #ff6b6b;">✗</span>
             `}
           </div>
@@ -2630,10 +2674,10 @@ function renderBrandAssetsContent(brandAssets) {
     
     ${brandAssets.ogImage ? `
       <div style="margin-top: 1.5rem;">
-        <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.ogImagePreview', 'Open Graph Image Preview')}</h4>
+        <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.ogImagePreview', 'Open Graph Image Preview')}</h4>
         <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; text-align: center;">
-          <img src="${brandAssets.ogImage}" alt="OG Image" style="max-width: 100%; max-height: 200px; border-radius: 4px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-          <p style="display: none; color: rgba(255,255,255,0.5); margin: 0;">${t('brandConsistency.imageLoadFailed', 'Could not load image preview')}</p>
+          <img src="${safeBrandUrl(brandAssets.ogImage)}" alt="OG Image" style="max-width: 100%; max-height: 200px; border-radius: 4px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+          <p style="display: none; color: var(--r-text-muted, #6B7280); margin: 0;">${t('brandConsistency.imageLoadFailed', 'Could not load image preview')}</p>
         </div>
       </div>
     ` : ''}
@@ -2652,29 +2696,29 @@ function renderCompetitiveComparisonContent(data) {
         </svg>
       </div>
       <h3 style="margin: 0 0 0.5rem 0; color: var(--r-text, #111827); font-size: 1.2rem;">${t('brandConsistency.competitiveAnalysis', 'Competitive Brand Analysis')}</h3>
-      <p style="color: rgba(255,255,255,0.6); margin: 0 0 1.5rem 0; font-size: 0.9rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin: 0 0 1.5rem 0; font-size: 0.9rem;">
         ${t('brandConsistency.competitiveDesc', 'Compare your brand consistency against competitors. Analyze color palettes, typography, and visual identity side-by-side.')}
       </p>
       
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; text-align: left;">
         <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px;">
           <div style="color: #667eea; font-weight: 600; margin-bottom: 0.5rem;">${t('brandConsistency.feature1', 'Side-by-Side Comparison')}</div>
-          <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.feature1Desc', 'Compare up to 5 competitor sites')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${t('brandConsistency.feature1Desc', 'Compare up to 5 competitor sites')}</div>
         </div>
         <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px;">
           <div style="color: #667eea; font-weight: 600; margin-bottom: 0.5rem;">${t('brandConsistency.feature2', 'Visual Similarity Score')}</div>
-          <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.feature2Desc', 'See how your brand stacks up')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${t('brandConsistency.feature2Desc', 'See how your brand stacks up')}</div>
         </div>
         <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px;">
           <div style="color: #667eea; font-weight: 600; margin-bottom: 0.5rem;">${t('brandConsistency.feature3', 'Export Reports')}</div>
-          <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.feature3Desc', 'Client-ready PDF comparisons')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${t('brandConsistency.feature3Desc', 'Client-ready PDF comparisons')}</div>
         </div>
       </div>
       
-      <button style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: var(--r-text, #111827); font-weight: 600; cursor: pointer; font-size: 1rem;">
+      <button data-open-pricing-modal data-context="brand-consistency" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; font-size: 1rem;">
         ${t('brandConsistency.upgradeToPro', 'Upgrade to Pro')}
       </button>
-      <p style="margin: 0.75rem 0 0 0; color: rgba(255,255,255,0.4); font-size: 0.8rem;">
+      <p style="margin: 0.75rem 0 0 0; color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">
         ${t('brandConsistency.savesTime', 'Saves 2+ hours per competitive analysis')}
       </p>
     </div>
@@ -2700,7 +2744,7 @@ function renderCrossPageConsistencyContent(data) {
   
   return `
     <div style="margin-bottom: 1.5rem;">
-      <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.crossPageScore', 'Cross-Page Consistency Score')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.crossPageScore', 'Cross-Page Consistency Score')}</h4>
       <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
         <div style="width: 60px; height: 60px; position: relative;">
           <svg width="60" height="60" viewBox="0 0 60 60" style="transform: rotate(-90deg);">
@@ -2717,7 +2761,7 @@ function renderCrossPageConsistencyContent(data) {
               crossPage.score >= 50 ? t('brandConsistency.moderateVariation', 'Moderate Variation') :
               t('brandConsistency.significantVariation', 'Significant Variation')}
           </div>
-          <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+          <div style="font-size: 0.85rem; color: var(--r-text-muted, #6B7280);">
             ${t('brandConsistency.pagesAnalyzedCount', 'Analyzed {{count}} pages').replace('{{count}}', crossPage.pagesAnalyzed || data.pagesAnalyzed)}
           </div>
         </div>
@@ -2726,19 +2770,19 @@ function renderCrossPageConsistencyContent(data) {
     
     ${issues.length > 0 ? `
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.consistencyIssues', 'Consistency Issues')} (${issues.length})</h4>
+        <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.consistencyIssues', 'Consistency Issues')} (${issues.length})</h4>
         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
           ${issues.map(issue => `
             <div style="padding: 0.75rem 1rem; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid ${issue.severity === 'high' ? '#ff6b6b' : issue.severity === 'medium' ? '#eab308' : getAccentPrimaryHex()};">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.35rem;">
-                <span style="color: rgba(255,255,255,0.9); font-weight: 500;">${issue.message}</span>
+                <span style="color: var(--r-text, #111827); font-weight: 500;">${escapeBrandHtml(issue.message)}</span>
                 ${getSeverityBadge(issue.severity)}
               </div>
               ${issue.details && Array.isArray(issue.details) ? `
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
                   ${issue.details.slice(0, 5).map(d => `
-                    <span style="padding: 2px 8px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 0.75rem; color: rgba(255,255,255,0.7);">
-                      ${d.page || d}: ${d.count !== undefined ? d.count : (d.hasLogo !== undefined ? (d.hasLogo ? '✓' : '✗') : '')}
+                    <span style="padding: 2px 8px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 0.75rem; color: var(--r-text-muted, #6B7280);">
+                      ${escapeBrandHtml(d.page || d)}: ${d.count !== undefined ? d.count : (d.hasLogo !== undefined ? (d.hasLogo ? '✓' : '✗') : '')}
                     </span>
                   `).join('')}
                 </div>
@@ -2751,17 +2795,17 @@ function renderCrossPageConsistencyContent(data) {
       <div style="padding: 1.5rem; background: rgba(var(--accent-primary-rgb), 0.05); border-radius: 8px; text-align: center; border: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
         <span style="color: var(--accent-primary); font-size: 1.5rem;">✓</span>
         <p style="margin: 0.5rem 0 0 0; color: var(--accent-primary); font-weight: 500;">${t('brandConsistency.noIssuesFound', 'No consistency issues found!')}</p>
-        <p style="margin: 0.25rem 0 0 0; color: rgba(255,255,255,0.6); font-size: 0.85rem;">${t('brandConsistency.brandConsistent', 'Your brand appears consistent across all analyzed pages.')}</p>
+        <p style="margin: 0.25rem 0 0 0; color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${t('brandConsistency.brandConsistent', 'Your brand appears consistent across all analyzed pages.')}</p>
       </div>
     `}
     
     ${crossPage.pageVariations && crossPage.pageVariations.length > 0 ? `
       <div>
-        <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.metricVariation', 'Metric Variation')}</h4>
+        <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text, #111827);">${t('brandConsistency.metricVariation', 'Metric Variation')}</h4>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem;">
           ${crossPage.pageVariations.map(v => `
             <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; text-align: center;">
-              <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 0.25rem;">${v.metric}</div>
+              <div style="font-size: 0.75rem; color: var(--r-text-muted, #6B7280); text-transform: uppercase; margin-bottom: 0.25rem;">${v.metric}</div>
               <div style="font-size: 1.1rem; font-weight: 600; color: ${v.variation === 'consistent' || v.variation === 'low' || (typeof v.variation === 'number' && v.variation < 5) ? 'var(--accent-primary)' : '#eab308'};">
                 ${typeof v.variation === 'number' ? '±' + v.variation : v.variation}
               </div>
@@ -2779,16 +2823,16 @@ function renderPageBreakdownContent(pageBreakdown) {
   
   return `
     <div>
-      <h4 style="margin: 0 0 1rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.pagesAnalyzed', 'pages analyzed')}</h4>
+      <h4 style="margin: 0 0 1rem 0; color: var(--r-text, #111827);">${t('brandConsistency.pagesAnalyzed', 'pages analyzed')}</h4>
       <div style="overflow-x: auto;">
         <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
           <thead>
             <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
-              <th style="padding: 0.75rem; text-align: left; color: rgba(255,255,255,0.6); font-weight: 500;">${t('brandConsistency.page', 'Page')}</th>
-              <th style="padding: 0.75rem; text-align: center; color: rgba(255,255,255,0.6); font-weight: 500;">${t('brandConsistency.colors', 'Colors')}</th>
-              <th style="padding: 0.75rem; text-align: center; color: rgba(255,255,255,0.6); font-weight: 500;">${t('brandConsistency.fonts', 'Fonts')}</th>
-              <th style="padding: 0.75rem; text-align: center; color: rgba(255,255,255,0.6); font-weight: 500;">${t('brandConsistency.logo', 'Logo')}</th>
-              <th style="padding: 0.75rem; text-align: center; color: rgba(255,255,255,0.6); font-weight: 500;">${t('brandConsistency.buttons', 'Buttons')}</th>
+              <th style="padding: 0.75rem; text-align: left; color: var(--r-text-muted, #6B7280); font-weight: 500;">${t('brandConsistency.page', 'Page')}</th>
+              <th style="padding: 0.75rem; text-align: center; color: var(--r-text-muted, #6B7280); font-weight: 500;">${t('brandConsistency.colors', 'Colors')}</th>
+              <th style="padding: 0.75rem; text-align: center; color: var(--r-text-muted, #6B7280); font-weight: 500;">${t('brandConsistency.fonts', 'Fonts')}</th>
+              <th style="padding: 0.75rem; text-align: center; color: var(--r-text-muted, #6B7280); font-weight: 500;">${t('brandConsistency.logo', 'Logo')}</th>
+              <th style="padding: 0.75rem; text-align: center; color: var(--r-text-muted, #6B7280); font-weight: 500;">${t('brandConsistency.buttons', 'Buttons')}</th>
             </tr>
           </thead>
           <tbody>
@@ -2797,10 +2841,10 @@ function renderPageBreakdownContent(pageBreakdown) {
                 <td style="padding: 0.75rem;">
                   <div style="display: flex; align-items: center; gap: 0.5rem;">
                     ${idx === 0 ? '<span style="color: var(--accent-primary); font-size: 0.7rem;">★</span>' : ''}
-                    <span style="color: var(--r-text, #111827); font-weight: 500;">${page.pageName}</span>
+                    <span style="color: var(--r-text, #111827); font-weight: 500;">${escapeBrandHtml(page.pageName)}</span>
                   </div>
-                  <div style="font-size: 0.75rem; color: rgba(255,255,255,0.4); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${page.url}">
-                    ${page.url}
+                  <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeBrandAttr(page.url)}">
+                    ${escapeBrandHtml(page.url)}
                   </div>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
@@ -2813,7 +2857,7 @@ function renderPageBreakdownContent(pageBreakdown) {
                   <span style="color: ${page.hasLogo ? 'var(--accent-primary)' : '#ff6b6b'};">${page.hasLogo ? '✓' : '✗'}</span>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: rgba(255,255,255,0.7);">${page.buttonCount}</span>
+                  <span style="color: var(--r-text-muted, #6B7280);">${page.buttonCount}</span>
                 </td>
               </tr>
             `).join('')}
@@ -2822,7 +2866,7 @@ function renderPageBreakdownContent(pageBreakdown) {
       </div>
       
       <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
-        <p style="margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.6);">
+        <p style="margin: 0; font-size: 0.8rem; color: var(--r-text-muted, #6B7280);">
           <span style="color: var(--accent-primary);">★</span> = ${t('brandConsistency.homepage', 'Homepage (primary page)')}
         </p>
       </div>
@@ -2868,14 +2912,14 @@ window.switchBrandFixTab = function(accordionId, tabName) {
     const tabNames = ['summary', 'code', 'guide'];
     if (tabNames[i] === tabName) {
       tab.classList.add('active');
-      tab.style.background = 'rgba(255,255,255,0.1)';
-      tab.style.borderColor = 'rgba(255,255,255,0.2)';
-      tab.style.color = '#fff';
+      tab.style.background = 'var(--r-surface-2, #F8FAFC)';
+      tab.style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
+      tab.style.color = 'var(--r-text, #111827)';
     } else {
       tab.classList.remove('active');
       tab.style.background = 'transparent';
-      tab.style.borderColor = 'rgba(255,255,255,0.1)';
-      tab.style.color = '#aaa';
+      tab.style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
+      tab.style.color = 'var(--r-text-muted, #6B7280)';
     }
   });
   
@@ -3011,7 +3055,7 @@ function generateScoreBreakdown(scoreBreakdown) {
           
           return `
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <span style="min-width: 120px; font-size: 0.85rem; color: rgba(255,255,255,0.7);">${label}</span>
+              <span style="min-width: 120px; font-size: 0.85rem; color: var(--r-text-muted, #6B7280);">${label}</span>
               <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
                 <div style="height: 100%; width: ${percentage}%; background: ${color}; border-radius: 4px; transition: width 0.3s;"></div>
               </div>

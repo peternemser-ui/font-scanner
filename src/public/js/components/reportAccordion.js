@@ -1,6 +1,27 @@
 (function(window) {
-  // Translation helper
-  const t = (key, fallback) => (window.t ? window.t(key, fallback) : (window.i18n && window.i18n.t ? window.i18n.t(key) || fallback : fallback));
+  // Translation helper: falls back to provided fallback when translation key is missing
+  const t = (key, fallback) => {
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      const val = window.i18n.t(key);
+      return (val === key && fallback) ? fallback : val;
+    }
+    return fallback || key;
+  };
+
+  // HTML-escape helper for values interpolated into innerHTML
+  function esc(input) {
+    return String(input == null ? '' : input)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Allowlist validation for report IDs interpolated into markup
+  function safeReportId(reportId) {
+    return (typeof reportId === 'string' && /^[\w-]+$/.test(reportId)) ? reportId : '';
+  }
 
   function safeDomId(input) {
     const raw = String(input || '').trim();
@@ -71,12 +92,13 @@
     const formattedScore = formatScoreText(scoreTextRight);
     const scoreColorClass = getScoreColorClass(scoreTextRight);
     const severity = getSeverity(scoreTextRight);
+    const validReportId = safeReportId(reportId);
     const cardHTML = (function() {
       if (!locked) return '';
 
       // Use ProReportBlock if available
       if (window.ProReportBlock && typeof window.ProReportBlock.renderUnlockPrompt === 'function') {
-        return window.ProReportBlock.renderUnlockPrompt({ context, reportId });
+        return window.ProReportBlock.renderUnlockPrompt({ context, reportId: validReportId || null });
       }
 
       // Fallback markup - new billing model (no credits)
@@ -87,10 +109,10 @@
             <span class="pro-report-block__unlock-text">${t('reports.common.unlockThisReport', 'Unlock this report')}</span>
           </div>
           <div class="pro-report-block__unlock-buttons">
-            <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="${context}" ${reportId ? `data-report-id="${reportId}"` : ''}>
+            <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="${esc(context)}" ${validReportId ? `data-report-id="${validReportId}"` : ''}>
               ${t('reports.common.unlockFor5', 'Unlock for $5')}
             </button>
-            <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="${context}">
+            <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="${esc(context)}">
               ${t('reports.common.goPro30', 'Go Pro — $30/mo')}
             </button>
           </div>
@@ -111,11 +133,11 @@
           aria-expanded="false"
           aria-controls="${bodyId}"
         >
-          <div class="report-accordion__title">${title}</div>
+          <div class="report-accordion__title">${esc(title)}</div>
           <div class="report-accordion__meta">
             ${isPro ? '<span class="report-accordion__pro-pill">PRO</span>' : ''}
-            ${formattedScore && formattedScore !== '—' ? `<span class="report-accordion__score-badge ${scoreColorClass}">${formattedScore}</span>` : ''}
-            <span class="report-accordion__chevron">▾</span>
+            ${formattedScore && formattedScore !== '—' ? `<span class="report-accordion__score-badge ${scoreColorClass}">${esc(formattedScore)}</span>` : ''}
+            <span class="report-accordion__chevron" aria-hidden="true">▾</span>
           </div>
         </button>
         <div
@@ -150,23 +172,27 @@
   }
 
   function initInteractions() {
-    if (window.__reportAccordionInitialized) return;
-    window.__reportAccordionInitialized = true;
-    document.addEventListener('click', (e) => {
-      const header = e.target.closest('[data-accordion-toggle]');
-      if (!header) return;
-      const id = header.getAttribute('data-accordion-toggle');
-      const body = document.querySelector(`[data-accordion-body="${id}"]`);
-      if (!body) return;
-      const chevron = header.querySelector('.report-accordion__chevron');
-      const isOpen = body.classList.contains('report-accordion__body--open');
-      body.classList.toggle('report-accordion__body--open');
-      body.toggleAttribute('hidden', isOpen);
-      header.setAttribute('aria-expanded', String(!isOpen));
-      if (chevron) chevron.classList.toggle('report-accordion__chevron--open', !isOpen);
-    });
+    // Event-listener binding is guarded so the document-level listener is only attached once.
+    if (!window.__reportAccordionInitialized) {
+      window.__reportAccordionInitialized = true;
+      document.addEventListener('click', (e) => {
+        const header = e.target.closest('[data-accordion-toggle]');
+        if (!header) return;
+        const id = header.getAttribute('data-accordion-toggle');
+        const body = document.querySelector(`[data-accordion-body="${id}"]`);
+        if (!body) return;
+        const chevron = header.querySelector('.report-accordion__chevron');
+        const isOpen = body.classList.contains('report-accordion__body--open');
+        body.classList.toggle('report-accordion__body--open');
+        body.toggleAttribute('hidden', isOpen);
+        header.setAttribute('aria-expanded', String(!isOpen));
+        if (chevron) chevron.classList.toggle('report-accordion__chevron--open', !isOpen);
+      });
+    }
 
-    // Print mode: auto-expand all accordions for PDF capture
+    // Print mode: auto-expand all accordions for PDF capture.
+    // Runs on EVERY initInteractions() call so accordions rendered after the
+    // first init (e.g. late report renders) still auto-expand for PDF.
     if (new URLSearchParams(window.location.search).get('print') === '1') {
       document.querySelectorAll('[data-accordion-body]').forEach(body => {
         body.classList.add('report-accordion__body--open');

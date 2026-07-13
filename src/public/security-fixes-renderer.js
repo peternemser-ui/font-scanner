@@ -526,16 +526,16 @@ session.cookie_samesite = Strict
     id: `security-${rec.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
     severity: rec.priority || 'medium',
     icon: template.icon || (rec.priority === 'critical' ? '🔴' : rec.priority === 'high' ? '🟠' : '🟡'),
-    title: translateSecurityFixTitle(rec.title),
-    subtitle: translateOwaspRef(rec.owaspRef) || t('reports.security.securityFixes.securityBestPractice', 'Security Best Practice'),
+    title: escapeSecurityHtml(translateSecurityFixTitle(rec.title)),
+    subtitle: escapeSecurityHtml(translateOwaspRef(rec.owaspRef)) || t('reports.security.securityFixes.securityBestPractice', 'Security Best Practice'),
     category: template.category || t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
     location: template.location || t('reports.security.securityFixes.location.serverConfig', 'Server Configuration'),
     impact: template.impact || '+5 ' + t('reports.security.securityFixes.securityScore', 'Security Score'),
-    summary: template.summary || rec.description,
+    summary: template.summary || escapeSecurityHtml(rec.description),
     problematicCode: template.problematicCode || `<!-- Current issue -->\n${rec.description}`,
     fixedCode: template.fixedCode || `<!-- Recommended fix -->\n${rec.solution || 'Implement security best practices'}`,
     resources: rec.resources || [],
-    steps: template.steps || [rec.solution || 'Follow security best practices'],
+    steps: template.steps || [escapeSecurityHtml(rec.solution) || 'Follow security best practices'],
     proSteps: template.proSteps || []
   };
 }
@@ -546,7 +546,7 @@ function createGenericSecurityFix(rec) {
     icon: rec.priority === 'critical' ? '🔴' : rec.priority === 'high' ? '🟠' : '🟡',
     category: t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
     impact: rec.priority === 'critical' ? '+15 ' + t('reports.security.securityFixes.securityScore', 'Security Score') : rec.priority === 'high' ? '+10 ' + t('reports.security.securityFixes.securityScore', 'Security Score') : '+5 ' + t('reports.security.securityFixes.securityScore', 'Security Score'),
-    summary: rec.description || t('reports.security.securityFixes.genericIssueDescription', 'A security issue was detected that needs attention.'),
+    summary: escapeSecurityHtml(rec.description) || t('reports.security.securityFixes.genericIssueDescription', 'A security issue was detected that needs attention.'),
     problematicCode: `<!-- ${t('reports.security.securityFixes.currentIssue', 'Current Issue')} -->
 <!-- ${rec.title} -->
 
@@ -564,7 +564,7 @@ ${rec.solution || t('reports.security.securityFixes.implementRecommended', 'Impl
 <!-- ✓ ${t('reports.security.securityFixes.reducedAttackSurface', 'Reduced attack surface')} -->
 <!-- ✓ ${t('reports.security.securityFixes.industryBestPractices', 'Industry best practices')} -->`,
     steps: genericSteps && Array.isArray(genericSteps) ? genericSteps : [
-      rec.solution || t('reports.security.securityFixes.reviewAndImplement', 'Review and implement security recommendations'),
+      escapeSecurityHtml(rec.solution) || t('reports.security.securityFixes.reviewAndImplement', 'Review and implement security recommendations'),
       t('reports.security.securityFixes.testInStaging', 'Test changes in a staging environment first'),
       t('reports.security.securityFixes.deployAndVerify', 'Deploy to production and verify the fix')
     ]
@@ -573,7 +573,7 @@ ${rec.solution || t('reports.security.securityFixes.implementRecommended', 'Impl
 
 function renderSecurityFixAccordion(fix, index) {
   const accordionId = `secfix-${fix.id}-${index}`;
-  const severityClass = `severity-${fix.severity}`;
+  const severityClass = `severity-${escapeSecurityHtml(fix.severity)}`;
 
   return `
     <div class="fix-accordion ${severityClass}" data-fix-id="${accordionId}">
@@ -586,7 +586,7 @@ function renderSecurityFixAccordion(fix, index) {
           </div>
         </div>
         <div class="fix-badges">
-          <span class="fix-badge priority-${fix.severity}">${fix.severity.toUpperCase()}</span>
+          <span class="fix-badge priority-${escapeSecurityHtml(fix.severity)}">${escapeSecurityHtml(fix.severity.toUpperCase())}</span>
           <span class="fix-badge category">${fix.category}</span>
           <span class="fix-badge location">${fix.location}</span>
           <span class="fix-expand-icon">▼</span>
@@ -675,10 +675,10 @@ function renderSecurityFixTabs(fix, accordionId) {
       <ul class="resources-list" style="list-style: none; padding: 0; margin: 0;">
         ${fix.resources.map(r => `
           <li style="margin-bottom: 0.75rem;">
-            <a href="${r.url}" target="_blank" rel="noopener noreferrer" 
+            <a href="${escapeSecurityHtml(r.url)}" target="_blank" rel="noopener noreferrer"
                style="color: var(--accent-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
               <span>📄</span>
-              <span>${r.title}</span>
+              <span>${escapeSecurityHtml(r.title)}</span>
               <span style="font-size: 0.75rem; opacity: 0.7;">↗</span>
             </a>
           </li>
@@ -707,9 +707,13 @@ function renderSecurityFixTabs(fix, accordionId) {
 }
 
 function escapeSecurityHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  if (text == null) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // Get contextual documentation URL based on the security issue

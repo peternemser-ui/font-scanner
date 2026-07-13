@@ -447,6 +447,7 @@ async function getFullEntitlements(userId, anonId = null) {
   let bugRewardTokenBalance = 0;
   if (userId) {
     try {
+      const db = getDatabase();
       const tokenRow = await db.get(
         "SELECT COUNT(*) as count FROM bug_reward_tokens WHERE user_id = ? AND status = 'active' AND expires_at > datetime('now')",
         [userId]

@@ -211,7 +211,7 @@ urlInput.addEventListener('keypress', (e) => {
           <div>
             <strong>${t('reports.common.reportNeedsRegeneration', 'Report needs to be regenerated')}</strong><br>
             <span style="font-size: 0.9em; opacity: 0.9;">
-              ${t('reports.common.clickAnalyzeToView', 'Click ')}
+              ${t('reports.common.clickAnalyzeToView', 'Click Analyze below to regenerate this report with fresh data.')}
             </span>
           </div>
         </div>
@@ -537,11 +537,10 @@ async function analyzeAccessibility(options = {}) {
     
     // Show results after animation completes
     setTimeout(() => {
+      // displayAccessibilityResults dispatches report:ready when rendering completes
       displayAccessibilityResults(data);
       results.classList.remove('hidden');
-      window.__REPORT_READY__ = true;
       window.dispatchEvent(new CustomEvent('scan:completed'));
-      window.dispatchEvent(new CustomEvent('report:ready'));
     }, 1000);
 
   } catch (error) {
@@ -662,7 +661,6 @@ function computeWcagBreakdown(results) {
 
   const levelA = computeLevel(levelACriteria, 60);
   let levelAA = computeLevel(levelAACriteria, 80);
-  let levelAAA;
 
   // AA has very few direct criteria — supplement with overall score (70% weight)
   if (levelAACriteria.length <= 2) {
@@ -681,7 +679,7 @@ function computeWcagBreakdown(results) {
 
   // AAA: heuristic from overall accessibility score since no AAA criteria are tested
   const overallScore = results.accessibilityScore ?? 0;
-  levelAAA = {
+  const levelAAA = {
     score: Math.round(overallScore * 0.6),
     achieved: overallScore >= 98,
     criteriaPass: 0,
@@ -937,7 +935,7 @@ async function displayAccessibilityResults(resultData) {
               <circle cx="12" cy="12" r="10"/>
               <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
             </svg>
-            <span class="meta-item__text">${displayUrl}</span>
+            <span class="meta-item__text">${escapeHtmlA11y(displayUrl)}</span>
           </span>
           <span class="meta-item">
             <svg class="meta-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -959,17 +957,17 @@ async function displayAccessibilityResults(resultData) {
     const screenshotSection = document.createElement('div');
     screenshotSection.className = 'section screenshot-section';
     screenshotSection.innerHTML = `
-      <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
+      <h3 style="color: var(--r-text, #111827); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
         ${t('reports.common.pageScreenshot', 'Page Screenshot')}
       </h3>
-      <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
+      <div class="screenshot-item" style="background: var(--r-surface-2, #F8FAFC); border: 1px solid var(--r-border, rgba(0,0,0,0.08)); border-radius: 8px; overflow: hidden;">
         <img
-          src="${screenshotUrl}"
-          alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url: displayUrl })}"
+          src="${escapeHtmlA11y(screenshotUrl)}"
+          alt="${escapeHtmlA11y(t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url: displayUrl }))}"
           class="screenshot-item__img"
           style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
           data-action="open-lightbox"
-          data-screenshot-url="${screenshotUrl}"
+          data-screenshot-url="${escapeHtmlA11y(screenshotUrl)}"
           data-screenshot-title="${t('reports.common.pageScreenshot', 'Page Screenshot')}"
         />
       </div>
@@ -1231,6 +1229,11 @@ async function displayAccessibilityResults(resultData) {
       scannedAt: window.SM_SCAN_STARTED_AT || new Date().toISOString()
     });
   }
+
+  // Signal report readiness (auto-scroll etc.) for all render paths:
+  // fresh scans, stored-report restores, and payment returns.
+  window.__REPORT_READY__ = true;
+  window.dispatchEvent(new CustomEvent('report:ready'));
 }
 
 /**
@@ -1904,13 +1907,13 @@ function renderContrastContent(contrast) {
           <tbody>
             ${contrast.issues.slice(0, 10).map(issue => `
               <tr>
-                <td style="color: var(--r-text-muted, #6B7280); font-family: monospace; font-size: 0.85rem;">${issue.selector || t('reports.accessibility.unknownElement', 'Unknown element')}</td>
+                <td style="color: var(--r-text-muted, #6B7280); font-family: monospace; font-size: 0.85rem;">${issue.selector ? escapeHtmlA11y(issue.selector) : t('reports.accessibility.unknownElement', 'Unknown element')}</td>
                 <td style="text-align: center;">
                   <span style="color: ${issue.ratio < 4.5 ? '#ef4444' : '#ffa500'}; font-weight: bold;">
                     ${issue.ratio?.toFixed(2) || t('reports.common.notAvailable', 'N/A')}:1
                   </span>
                 </td>
-                <td style="text-align: center; color: var(--r-text-faint, #9CA3AF);">${issue.required || '4.5:1'}</td>
+                <td style="text-align: center; color: var(--r-text-faint, #9CA3AF);">${issue.required ? escapeHtmlA11y(issue.required) : '4.5:1'}</td>
                 <td style="text-align: center;">
                   <span style="
                     color: ${issue.ratio >= 4.5 ? '#22c55e' : '#ef4444'};
@@ -1949,6 +1952,11 @@ function renderKeyboardContent(keyboard) {
     return '<p style="color: #ff6600;">>>> ' + t('reports.accessibility.keyboardDataNotAvailable', 'Keyboard navigation data not available') + '</p>';
   }
 
+  // missingFocusIndicators may arrive as an array of elements or a plain count
+  const missingFocusCount = Array.isArray(keyboard.missingFocusIndicators)
+    ? keyboard.missingFocusIndicators.length
+    : (keyboard.missingFocusIndicators || 0);
+
   return `
     <div style="padding-left: 1rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(0,204,255,0.1); border-left: 3px solid #00ccff; border-radius: 4px; margin-bottom: 1.5rem;">
@@ -1977,10 +1985,10 @@ function renderKeyboardContent(keyboard) {
           </div>
         </div>
 
-        <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; border-left: 4px solid ${keyboard.missingFocusIndicators > 0 ? '#ffa500' : '#22c55e'};">
+        <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; border-left: 4px solid ${missingFocusCount > 0 ? '#ffa500' : '#22c55e'};">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="color: var(--r-text-muted, #6B7280);">👁️ ${t('reports.accessibility.missingFocusIndicators', 'Missing Focus Indicators')}</span>
-            <span style="color: ${keyboard.missingFocusIndicators > 0 ? '#ffa500' : '#22c55e'}; font-weight: bold; font-size: 1.2rem;">${keyboard.missingFocusIndicators || 0}</span>
+            <span style="color: ${missingFocusCount > 0 ? '#ffa500' : '#22c55e'}; font-weight: bold; font-size: 1.2rem;">${missingFocusCount}</span>
           </div>
         </div>
       </div>
@@ -1990,9 +1998,9 @@ function renderKeyboardContent(keyboard) {
         <div style="display: grid; gap: 0.75rem;">
           ${keyboard.issues.map(issue => `
             <div style="background: rgba(255,68,68,0.1); border-left: 3px solid #ef4444; padding: 1rem; border-radius: 4px;">
-              <div style="color: #ef4444; font-weight: bold; margin-bottom: 0.25rem;">${issue.type || t('reports.accessibility.keyboardIssue', 'Keyboard Issue')}</div>
-              <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${issue.description || t('reports.common.noDescriptionAvailable', 'No description available')}</div>
-              ${issue.element ? `<div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-top: 0.25rem; font-family: monospace;">${issue.element}</div>` : ''}
+              <div style="color: #ef4444; font-weight: bold; margin-bottom: 0.25rem;">${issue.type ? escapeHtmlA11y(issue.type) : t('reports.accessibility.keyboardIssue', 'Keyboard Issue')}</div>
+              <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${issue.description ? escapeHtmlA11y(issue.description) : t('reports.common.noDescriptionAvailable', 'No description available')}</div>
+              ${issue.element ? `<div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-top: 0.25rem; font-family: monospace;">${escapeHtmlA11y(issue.element)}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -2008,6 +2016,11 @@ function renderARIAContent(aria) {
   if (!aria) {
     return '<p style="color: #ff6600;">>>> ' + t('reports.accessibility.ariaDataNotAvailable', 'ARIA implementation data not available') + '</p>';
   }
+
+  // missingLabels may arrive as an array of elements or a plain count
+  const missingLabelsCount = Array.isArray(aria.missingLabels)
+    ? aria.missingLabels.length
+    : (aria.missingLabels || 0);
 
   return `
     <div style="padding-left: 1rem;">
@@ -2029,7 +2042,7 @@ function renderARIAContent(aria) {
         </div>
 
         <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; text-align: center;">
-          <div style="font-size: 2rem; color: ${aria.missingLabels > 0 ? '#ef4444' : '#22c55e'}; margin-bottom: 0.5rem;">${aria.missingLabels || 0}</div>
+          <div style="font-size: 2rem; color: ${missingLabelsCount > 0 ? '#ef4444' : '#22c55e'}; margin-bottom: 0.5rem;">${missingLabelsCount}</div>
           <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.accessibility.missingLabels', 'Missing Labels')}</div>
         </div>
 
@@ -2057,8 +2070,8 @@ function renderARIAContent(aria) {
           <tbody>
             ${aria.issues.slice(0, 10).map(issue => `
               <tr>
-                <td style="color: #bb86fc; font-weight: bold;">${issue.type || t('reports.accessibility.ariaIssue', 'ARIA Issue')}</td>
-                <td style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${issue.description || t('reports.common.noDescription', 'No description')}</td>
+                <td style="color: #bb86fc; font-weight: bold;">${issue.type ? escapeHtmlA11y(issue.type) : t('reports.accessibility.ariaIssue', 'ARIA Issue')}</td>
+                <td style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${issue.description ? escapeHtmlA11y(issue.description) : t('reports.common.noDescription', 'No description')}</td>
                 <td style="text-align: center;">
                   <span style="
                     color: ${issue.impact === 'critical' ? '#ef4444' : issue.impact === 'serious' ? '#ffa500' : '#00ccff'};
@@ -2119,7 +2132,7 @@ function renderRecommendationsContent(recommendations, fullResults) {
     <div class="a11y-fixes-container" style="margin-top: 1rem;">
       <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
         <span style="font-size: 1.75rem;">♿</span> ${t('reports.accessibility.accessibilityFixes', 'Accessibility Fixes')}
-        <span style="font-size: 0.875rem; color: var(--r-text-faint, #9CA3AF); font-weight: normal;">(${allFixes.length} ${t('reports.accessibility.improvementsFound', '{{count}} improvements found')})</span>
+        <span style="font-size: 0.875rem; color: var(--r-text-faint, #9CA3AF); font-weight: normal;">(${t('reports.accessibility.improvementsFound', '{{count}} improvements found', { count: allFixes.length })})</span>
       </h3>
       <div class="a11y-fixes-list">
   `;
@@ -2160,8 +2173,8 @@ function renderA11yFixAccordion(rec, index, fullResults) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
-            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${(typeof translateA11yFixTitle === 'function' ? translateA11yFixTitle(rec.title) : rec.title) || t('reports.accessibility.accessibilityIssue', 'Accessibility Issue')}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${rec.wcagReference || t('reports.accessibility.wcag21Compliance', 'WCAG 2.1 Compliance')}</p>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${escapeHtmlA11y(typeof translateA11yFixTitle === 'function' ? translateA11yFixTitle(rec.title) : rec.title) || t('reports.accessibility.accessibilityIssue', 'Accessibility Issue')}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${rec.wcagReference ? escapeHtmlA11y(rec.wcagReference) : t('reports.accessibility.wcag21Compliance', 'WCAG 2.1 Compliance')}</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -2192,9 +2205,9 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
     <div class="a11y-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="a11y-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
-        background: rgba(255,255,255,0.1);
+        background: var(--r-surface-2, #F8FAFC);
         color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
@@ -2222,11 +2235,11 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
     <!-- Summary Tab -->
     <div class="a11y-fix-tab-content active" id="${accordionId}-summary">
       <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
-        ${(typeof translateA11yFixDescription === 'function' ? translateA11yFixDescription(rec.title, rec.description) : rec.description) || t('reports.common.noDescriptionAvailable', 'No description available')}
+        ${escapeHtmlA11y(typeof translateA11yFixDescription === 'function' ? translateA11yFixDescription(rec.title, rec.description) : rec.description) || t('reports.common.noDescriptionAvailable', 'No description available')}
       </p>
       <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
         <div style="color: #22c55e; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.expectedImpact', 'Expected Impact')}</div>
-        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${(typeof translateA11yFixImpact === 'function' ? translateA11yFixImpact(rec.title, rec.impact) : rec.impact) || t('reports.accessibility.defaultImpact', 'Improved accessibility and user experience for all users')}</div>
+        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${escapeHtmlA11y(typeof translateA11yFixImpact === 'function' ? translateA11yFixImpact(rec.title, rec.impact) : rec.impact) || t('reports.accessibility.defaultImpact', 'Improved accessibility and user experience for all users')}</div>
       </div>
     </div>
 
@@ -2240,8 +2253,8 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
             <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
-              border: 1px solid rgba(255,255,255,0.2);
-              background: rgba(255,255,255,0.05);
+              border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
+              background: var(--r-surface-2, #F8FAFC);
               color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
@@ -2257,8 +2270,8 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
             <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
-              border: 1px solid rgba(255,255,255,0.2);
-              background: rgba(255,255,255,0.05);
+              border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
+              background: var(--r-surface-2, #F8FAFC);
               color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
@@ -2306,8 +2319,8 @@ function switchA11yFixTab(accordionId, tabName) {
   container.querySelectorAll('.a11y-fix-tab').forEach(tab => {
     tab.classList.remove('active');
     tab.style.background = 'transparent';
-    tab.style.color = '#aaa';
-    tab.style.borderColor = 'rgba(255,255,255,0.1)';
+    tab.style.color = 'var(--r-text-muted, #6B7280)';
+    tab.style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
   });
   
   // Find clicked tab and activate
@@ -2315,9 +2328,9 @@ function switchA11yFixTab(accordionId, tabName) {
   const tabIndex = tabName === 'summary' ? 0 : tabName === 'code' ? 1 : 2;
   if (tabs[tabIndex]) {
     tabs[tabIndex].classList.add('active');
-    tabs[tabIndex].style.background = 'rgba(255,255,255,0.1)';
-    tabs[tabIndex].style.color = '#fff';
-    tabs[tabIndex].style.borderColor = 'rgba(255,255,255,0.2)';
+    tabs[tabIndex].style.background = 'var(--r-surface-2, #F8FAFC)';
+    tabs[tabIndex].style.color = 'var(--r-text, #111827)';
+    tabs[tabIndex].style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
   }
   
   // Update tab content
@@ -2800,7 +2813,7 @@ function getA11yFixSteps(rec, fullResults) {
     const count = results.contrast?.issuesCount || t('reports.common.multiple', 'multiple');
     return [
       t('reports.accessibility.steps.openDevTools', 'Open browser DevTools and navigate to the Elements panel'),
-      t('reports.accessibility.steps.useAccessibilityPane', 'Use the Accessibility pane or '),
+      t('reports.accessibility.steps.useAccessibilityPane', 'Use the Accessibility pane or a contrast audit tool to inspect flagged elements'),
       t('reports.accessibility.steps.foundContrastIssues', 'Found {{count}} elements below 4.5:1 contrast ratio', {count}),
       t('reports.accessibility.steps.useWebAIM', 'Use WebAIM Contrast Checker to find compliant color alternatives'),
       t('reports.accessibility.steps.updateCSS', 'Update CSS with new color values that meet WCAG AA (4.5:1 for text)'),
@@ -2810,11 +2823,13 @@ function getA11yFixSteps(rec, fullResults) {
 
   // Form labels
   if (title.includes('label') || title.includes('form')) {
-    const count = results.aria?.missingLabels?.length || t('reports.common.some', 'some');
+    const count = (Array.isArray(results.aria?.missingLabels)
+      ? results.aria.missingLabels.length
+      : results.aria?.missingLabels) || t('reports.common.some', 'some');
     return [
       t('reports.accessibility.steps.identifyMissingLabels', 'Identify the {{count}} form inputs missing accessible labels', {count}),
       t('reports.accessibility.steps.addLabelElement', 'For each input, add a <label> element with matching for/id attributes'),
-      t('reports.accessibility.steps.useAriaLabel', 'If visual labels aren\\'),
+      t('reports.accessibility.steps.useAriaLabel', 'If visual labels aren\'t possible, use aria-label or aria-labelledby attributes'),
       t('reports.accessibility.steps.ensureLabelAssociation', 'Ensure labels are programmatically associated (not just visually positioned)'),
       t('reports.accessibility.steps.testScreenReaderLabels', 'Test with a screen reader: input purpose should be announced')
     ];
@@ -2822,7 +2837,9 @@ function getA11yFixSteps(rec, fullResults) {
 
   // Focus indicators
   if (title.includes('focus')) {
-    const count = results.keyboard?.missingFocusIndicators?.length || t('reports.common.multiple', 'multiple');
+    const count = (Array.isArray(results.keyboard?.missingFocusIndicators)
+      ? results.keyboard.missingFocusIndicators.length
+      : results.keyboard?.missingFocusIndicators) || t('reports.common.multiple', 'multiple');
     return [
       t('reports.accessibility.steps.foundFocusIssues', 'Found {{count}} interactive elements without visible focus', {count}),
       t('reports.accessibility.steps.removeCSSOutlines', 'Remove any CSS that hides outlines (outline: none, outline: 0)'),
@@ -2839,9 +2856,9 @@ function getA11yFixSteps(rec, fullResults) {
       t('reports.accessibility.steps.runHeadingCheck', 'Run a heading outline check (browser extensions or DevTools)'),
       t('reports.accessibility.steps.ensureOneH1', 'Ensure page has exactly one <h1> element'),
       t('reports.accessibility.steps.verifyHeadingOrder', 'Verify headings follow sequential order (h1 → h2 → h3)'),
-      t('reports.accessibility.steps.dontSkipLevels', 'Don\\'),
+      t('reports.accessibility.steps.dontSkipLevels', 'Don\'t skip heading levels - fix any jumps like h1 to h3'),
       t('reports.accessibility.steps.useHeadingsForStructure', 'Use headings for document structure, not for styling'),
-      t('reports.accessibility.steps.testHeadingsList', 'Test with screen reader ')
+      t('reports.accessibility.steps.testHeadingsList', 'Test with screen reader heading navigation (NVDA/JAWS: H key)')
     ];
   }
 
@@ -3028,7 +3045,7 @@ function countAccessibilityPassedChecks(results) {
  * Show error message
  */
 function showError(message) {
-  errorMessage.textContent = `>>> ${t('reports.common.error', 'Error: {{message}}')}: ${message}`;
+  errorMessage.textContent = `>>> ${t('reports.common.error', 'Error: {{message}}', { message })}`;
   errorMessage.classList.remove('hidden');
   results.classList.add('hidden');
 }
@@ -3143,7 +3160,11 @@ window.exportAccessibilityCSV = function() {
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
-  const filename = `accessibility-report-${results.url ? new URL(results.url).hostname : 'site'}-${new Date().toISOString().split('T')[0]}.csv`;
+  let csvHost = 'site';
+  try {
+    if (results.url) csvHost = new URL(results.url).hostname;
+  } catch (e) { /* keep default */ }
+  const filename = `accessibility-report-${csvHost}-${new Date().toISOString().split('T')[0]}.csv`;
 
   link.setAttribute('href', url);
   link.setAttribute('download', filename);

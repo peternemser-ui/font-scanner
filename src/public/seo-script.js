@@ -306,7 +306,7 @@ function displaySEOResults(results) {
 
     const proFixesPreview = renderSeoFixesPreview([
       t('seo.proPreview.metaTags', 'Meta tags improvements'),
-      t('seo.proPreview.structuredData', 'Structured data quick wins')
+      t('seo.proPreview.structuredDataQuickWins', 'Structured data quick wins')
     ]);
 
     const sections = [
@@ -398,6 +398,7 @@ function displaySEOResults(results) {
 
     const screenshotUrl =
       results.screenshotUrl ||
+      document.body.getAttribute('data-sm-screenshot-url') ||
       (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
 
     // Set screenshot URL body attribute for report-ui.js
@@ -458,11 +459,9 @@ function displaySEOResults(results) {
 
   // Screenshot can be generated shortly after the scan finishes.
   // If the image 404s briefly (background generation / filesystem lag), retry a few times.
-  if (reportId) {
-    const img = container.querySelector('.screenshot-item__img');
-    if (img && img.getAttribute('src')) {
-      attachScreenshotRetry(img, img.getAttribute('src'));
-    }
+  const screenshotImg = container.querySelector('.screenshot-item__img');
+  if (screenshotImg && screenshotImg.getAttribute('src')) {
+    attachScreenshotRetry(screenshotImg, screenshotImg.getAttribute('src'));
   }
 
   // Fetch AI strategic analysis content
@@ -508,7 +507,7 @@ function displaySEOResults(results) {
       if (!unlockedId || unlockedId !== document.body.getAttribute('data-report-id')) return;
 
       // Replace the Fix Code section body with the full content.
-      const body = document.querySelector('[data-accordion-body="pro-fixes"]');
+      const body = document.querySelector('[data-accordion-body="report-recommendations"]');
       if (body) {
         body.innerHTML = renderProFixes(window.currentSeoResults || results);
       }
@@ -623,7 +622,7 @@ function revealSeoProContent() {
 function renderSeoFixesPreview(previewLines = []) {
   const lines = Array.isArray(previewLines) && previewLines.length
     ? previewLines
-    : [t('seo.proPreview.metaTags', 'Meta tags improvements'), t('seo.proPreview.structuredData', 'Structured data quick wins')];
+    : [t('seo.proPreview.metaTags', 'Meta tags improvements'), t('seo.proPreview.structuredDataQuickWins', 'Structured data quick wins')];
 
   return `
     <div>
@@ -798,9 +797,9 @@ function renderSeoFixTabs(fix, accordionId) {
     <div class="seo-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="seo-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
-        background: rgba(255,255,255,0.1);
+        background: var(--r-surface-2, #F8FAFC);
         color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
@@ -846,8 +845,8 @@ function renderSeoFixTabs(fix, accordionId) {
             <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
-              border: 1px solid rgba(255,255,255,0.2);
-              background: rgba(255,255,255,0.05);
+              border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
+              background: var(--r-surface-2, #F8FAFC);
               color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
@@ -863,8 +862,8 @@ function renderSeoFixTabs(fix, accordionId) {
             <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
-              border: 1px solid rgba(255,255,255,0.2);
-              background: rgba(255,255,255,0.05);
+              border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
+              background: var(--r-surface-2, #F8FAFC);
               color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
@@ -934,8 +933,8 @@ function switchSeoFixTab(accordionId, tabName) {
 
   tabs.forEach(tab => {
     tab.style.background = 'transparent';
-    tab.style.color = '#aaa';
-    tab.style.borderColor = 'rgba(255,255,255,0.1)';
+    tab.style.color = 'var(--r-text-muted, #6B7280)';
+    tab.style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
     tab.classList.remove('active');
   });
   contents.forEach(content => {
@@ -947,9 +946,9 @@ function switchSeoFixTab(accordionId, tabName) {
   const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
   if (activeTab) {
-    activeTab.style.background = 'rgba(255,255,255,0.1)';
-    activeTab.style.color = '#fff';
-    activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+    activeTab.style.background = 'var(--r-surface-2, #F8FAFC)';
+    activeTab.style.color = 'var(--r-text, #111827)';
+    activeTab.style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
     activeTab.classList.add('active');
   }
   if (activeContent) {
@@ -1190,7 +1189,7 @@ function buildFixCards(results) {
       category: t('seo.fixCards.categories.contentStructure', 'Content Structure'),
       impact: t('seo.fixCards.headings.impact', 'Clearer page structure improves crawlability and user engagement'),
       description: headingIssueDetail,
-      problematicCode: `<!-- ${t('seo.fixCards.comments.currentHeadings', 'Current heading structure')}: -->\n<!-- H1: ${h1Count} | H2: ${headings.h2?.length || 0} | H3: ${headings.h3?.length || 0} -->\n${headingProblems.map(p => `<!-- ${p} -->`).join('\n')}\n\n${h1Count > 1 ? (headings.h1 || []).map(h => `<h1>${h.text?.substring(0, 60) || '...'}</h1>  <!-- ${t('seo.fixCards.comments.duplicateH1', 'duplicate')} -->`).join('\n') : h1Count === 0 ? `<body>\n  <!-- ${t('seo.fixCards.comments.noH1InPage', 'No H1 found in page')} -->\n  <div class="content">...</div>\n</body>` : `<!-- ${t('seo.fixCards.comments.addMoreHeadings', 'Add more H2/H3 headings to structure content')} -->`}`,
+      problematicCode: `<!-- ${t('seo.fixCards.comments.currentHeadings', 'Current heading structure')}: -->\n<!-- H1: ${h1Count} | H2: ${headings.h2?.length || 0} | H3: ${headings.h3?.length || 0} -->\n${headingProblems.map(p => `<!-- ${p} -->`).join('\n')}\n\n${h1Count > 1 ? (headings.h1 || []).map(h => `<h1>${(typeof h === 'string' ? h : h?.text || '').substring(0, 60) || '...'}</h1>  <!-- ${t('seo.fixCards.comments.duplicateH1', 'duplicate')} -->`).join('\n') : h1Count === 0 ? `<body>\n  <!-- ${t('seo.fixCards.comments.noH1InPage', 'No H1 found in page')} -->\n  <div class="content">...</div>\n</body>` : `<!-- ${t('seo.fixCards.comments.addMoreHeadings', 'Add more H2/H3 headings to structure content')} -->`}`,
       snippet: `<!-- ${t('seo.fixCards.comments.idealStructure', 'Ideal heading hierarchy')}: -->\n<h1>${meta.title ? meta.title.substring(0, 50) : t('seo.fixCards.snippets.h1Placeholder', 'Primary Page Topic with Keyword')}</h1>\n\n  <h2>${t('seo.fixCards.snippets.h2Placeholder1', 'Key Section About Subtopic A')}</h2>\n    <h3>${t('seo.fixCards.snippets.h3Placeholder', 'Supporting Detail')}</h3>\n\n  <h2>${t('seo.fixCards.snippets.h2Placeholder2', 'Key Section About Subtopic B')}</h2>\n\n  <h2>${t('seo.fixCards.snippets.h2Placeholder3', 'Summary / Call-to-Action')}</h2>\n\n<!-- ${t('seo.fixCards.comments.headingRules', 'Rules')}: -->\n<!-- ${t('seo.fixCards.comments.oneH1', '✓ Exactly one H1 per page')} -->\n<!-- ${t('seo.fixCards.comments.sequentialHeadings', '✓ Sequential levels (H1→H2→H3, never skip)')} -->\n<!-- ${t('seo.fixCards.comments.descriptiveHeadings', '✓ Descriptive text, not generic ("Section 1")')} -->`,
       steps: [
         t('seo.fixes.steps.headings.step1', 'Ensure exactly one H1 tag exists - it should be the main page title'),
@@ -1342,6 +1341,8 @@ function buildFixCards(results) {
  * Render Meta Tags section content
  */
 function renderMetaTagsContent(metaTags) {
+  // Normalize for lightweight analyzer compatibility
+  metaTags = metaTags || {};
   const charsUnit = t('seo.report.units.chars', 'chars');
   const missing = t('seo.report.status.missing', 'Missing');
   const review = t('seo.report.status.review', 'Review');
@@ -1363,7 +1364,7 @@ function renderMetaTagsContent(metaTags) {
   const metaTableData = [
     [
       titleLabel,
-      metaTags.title || `✗ ${missing}`,
+      metaTags.title ? escapeHtml(metaTags.title) : `✗ ${missing}`,
       `${metaTags.titleLength || 0} ${charsUnit}`,
       metaTags.titleLength >= 50 && metaTags.titleLength <= 60
         ? `✓ ${optimal}`
@@ -1376,7 +1377,7 @@ function renderMetaTagsContent(metaTags) {
     [
       descriptionLabel,
       metaTags.description
-        ? `${String(metaTags.description).substring(0, 50)}...`
+        ? `${escapeHtml(String(metaTags.description).substring(0, 50))}...`
         : `✗ ${missing}`,
       `${metaTags.descriptionLength || 0} ${charsUnit}`,
       metaTags.descriptionLength >= 150 && metaTags.descriptionLength <= 160
@@ -1410,7 +1411,7 @@ function renderMetaTagsContent(metaTags) {
     [
       viewportLabel,
       metaTags.viewport ? `✓ ${present}` : `✗ ${missing}`,
-      metaTags.viewport || none,
+      metaTags.viewport ? escapeHtml(metaTags.viewport) : none,
       metaTags.viewport ? `✓ ${valid}` : `✗ ${missing}`,
       t(
         'seo.report.metaTags.bestPractice.viewport',
@@ -1420,7 +1421,7 @@ function renderMetaTagsContent(metaTags) {
     [
       canonicalLabel,
       metaTags.canonical ? `✓ ${set}` : `✗ ${missing}`,
-      metaTags.canonical || none,
+      metaTags.canonical ? escapeHtml(metaTags.canonical) : none,
       metaTags.canonical ? `✓ ${valid}` : `~ ${review}`,
       t(
         'seo.report.metaTags.bestPractice.canonical',
@@ -1537,25 +1538,25 @@ function renderHeadingStructureContent(headings) {
         : headings.h1.length === 0
           ? `✗ ${missing}`
           : `~ ${multiple}`,
-      headings.h1[0] ? `"${headings.h1[0].substring(0, 40)}..."` : na
+      headings.h1[0] ? `"${escapeHtml(headings.h1[0].substring(0, 40))}..."` : na
     ],
     [
       'H2',
       headings.h2.length,
       headings.h2.length > 0 ? `✓ ${present}` : `~ ${none}`,
-      headings.h2[0] ? `"${headings.h2[0].substring(0, 40)}..."` : na
+      headings.h2[0] ? `"${escapeHtml(headings.h2[0].substring(0, 40))}..."` : na
     ],
     [
       'H3',
       headings.h3.length,
       headings.h3.length > 0 ? `✓ ${present}` : `~ ${none}`,
-      headings.h3[0] ? `"${headings.h3[0].substring(0, 40)}..."` : na
+      headings.h3[0] ? `"${escapeHtml(headings.h3[0].substring(0, 40))}..."` : na
     ],
     [
       'H4',
       headings.h4.length,
       headings.h4.length > 0 ? `✓ ${present}` : `~ ${none}`,
-      headings.h4[0] ? `"${headings.h4[0].substring(0, 40)}..."` : na
+      headings.h4[0] ? `"${escapeHtml(headings.h4[0].substring(0, 40))}..."` : na
     ]
   ];
 
@@ -1578,11 +1579,11 @@ function renderHeadingStructureContent(headings) {
       )}
 
       <p>>> ${t('seo.report.headings.totalHeadingsLabel', 'total_headings')}: ${headings.total}</p>
-      ${headings.h1.length > 0 ? `<p>>> ${t('seo.report.headings.primaryH1Label', 'primary_h1')}: "${headings.h1[0]}"</p>` : ''}
+      ${headings.h1.length > 0 ? `<p>>> ${t('seo.report.headings.primaryH1Label', 'primary_h1')}: "${escapeHtml(headings.h1[0])}"</p>` : ''}
 
       ${headings.hierarchy.length > 3 ? `
         <p>>> ${t('seo.report.headings.hierarchySampleLabel', 'hierarchy_sample')}:</p>
-        ${headings.hierarchy.slice(0, 5).map(h => `<p style="margin-left: 1rem; color: var(--r-text-faint, #9CA3AF);">${h.level.toUpperCase()}: ${h.text.substring(0, 80)}${h.text.length > 80 ? '...' : ''}</p>`).join('')}
+        ${headings.hierarchy.slice(0, 5).map(h => `<p style="margin-left: 1rem; color: var(--r-text-faint, #9CA3AF);">${h.level.toUpperCase()}: ${escapeHtml(h.text.substring(0, 80))}${h.text.length > 80 ? '...' : ''}</p>`).join('')}
         ${headings.hierarchy.length > 5 ? `<p style="margin-left: 1rem; color: var(--r-text-faint, #9CA3AF);">${t('seo.report.common.moreCount', '... {{count}} more', { count: headings.hierarchy.length - 5 })}</p>` : ''}
       ` : ''}
 
@@ -1703,10 +1704,10 @@ function renderImageAnalysisContent(images) {
   const imageRows = images.images.slice(0, 10).map(img => {
     const hasAlt = Boolean(img.alt);
     return {
-      url: truncateUrl(img.src, 40),
+      url: escapeHtml(truncateUrl(img.src, 40)),
       dimensions: `${img.width}x${img.height}`,
       altText: hasAlt
-        ? `✓ "${img.alt.substring(0, 30)}${img.alt.length > 30 ? '...' : ''}"`
+        ? `✓ "${escapeHtml(img.alt.substring(0, 30))}${img.alt.length > 30 ? '...' : ''}"`
         : `✗ ${missing}`,
       pass: hasAlt,
       recommendation: hasAlt
@@ -1828,6 +1829,9 @@ function renderLinkAnalysisContent(links) {
  * Render Mobile Responsiveness section content
  */
 function renderMobileResponsivenessContent(mobile) {
+  // Normalize for lightweight analyzer compatibility
+  mobile = mobile || {};
+  mobile.viewports = mobile.viewports || [];
   const deviceLabel = (device) => {
     if (device === 'Mobile') return t('seo.report.mobile.devices.mobile', 'Mobile');
     if (device === 'Tablet') return t('seo.report.mobile.devices.tablet', 'Tablet');
@@ -2024,7 +2028,7 @@ function renderSecurityHeadersContent(security) {
         : `~ ${missing}`,
       purpose: t('seo.report.security.purpose.forceHttps', 'Force HTTPS'),
       details:
-        security.strictTransportSecurity ||
+        (security.strictTransportSecurity && escapeHtml(security.strictTransportSecurity)) ||
         t('seo.report.security.details.hstsNotConfigured', notConfigured),
       recommended: 'max-age=31536000; includeSubDomains; preload'
     },
@@ -2042,7 +2046,7 @@ function renderSecurityHeadersContent(security) {
       status: security.xFrameOptions ? `✓ ${present}` : `~ ${missing}`,
       purpose: t('seo.report.security.purpose.clickjacking', 'Clickjacking Protection'),
       details:
-        security.xFrameOptions ||
+        (security.xFrameOptions && escapeHtml(security.xFrameOptions)) ||
         t('seo.report.security.details.canEmbed', 'Can be embedded in iframes'),
       recommended: 'DENY or SAMEORIGIN'
     },
@@ -2854,12 +2858,13 @@ function renderAdditionalChecksContent(checks) {
     }
   ];
 
+  const social = checks.socialLinks || {};
   const socialPlatforms = [
     {
       platform: 'Facebook',
-      status: checks.socialLinks.facebook ? '✓' : '✗',
+      status: social.facebook ? '✓' : '✗',
       value: t('seo.report.additional.social.value.openGraph', 'Meta Open Graph tags'),
-      details: checks.socialLinks.facebook
+      details: social.facebook
         ? t('seo.report.additional.social.details.linkPresent', 'Link present')
         : t('seo.report.additional.social.details.facebookMissing', 'No Facebook link found'),
       tip: t(
@@ -2869,9 +2874,9 @@ function renderAdditionalChecksContent(checks) {
     },
     {
       platform: 'Twitter/X',
-      status: checks.socialLinks.twitter ? '✓' : '✗',
+      status: social.twitter ? '✓' : '✗',
       value: t('seo.report.additional.social.value.twitterCard', 'Twitter Card tags'),
-      details: checks.socialLinks.twitter
+      details: social.twitter
         ? t('seo.report.additional.social.details.linkPresent', 'Link present')
         : t('seo.report.additional.social.details.twitterMissing', 'No Twitter link found'),
       tip: t(
@@ -2881,9 +2886,9 @@ function renderAdditionalChecksContent(checks) {
     },
     {
       platform: 'LinkedIn',
-      status: checks.socialLinks.linkedin ? '✓' : '✗',
+      status: social.linkedin ? '✓' : '✗',
       value: t('seo.report.additional.social.value.professional', 'Professional network'),
-      details: checks.socialLinks.linkedin
+      details: social.linkedin
         ? t('seo.report.additional.social.details.linkPresent', 'Link present')
         : t('seo.report.additional.social.details.linkedinMissing', 'No LinkedIn link found'),
       tip: t(
@@ -2893,9 +2898,9 @@ function renderAdditionalChecksContent(checks) {
     },
     {
       platform: 'Instagram',
-      status: checks.socialLinks.instagram ? '✓' : '✗',
+      status: social.instagram ? '✓' : '✗',
       value: t('seo.report.additional.social.value.visual', 'Visual content'),
-      details: checks.socialLinks.instagram
+      details: social.instagram
         ? t('seo.report.additional.social.details.linkPresent', 'Link present')
         : t('seo.report.additional.social.details.instagramMissing', 'No Instagram link found'),
       tip: t(

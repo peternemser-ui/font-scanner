@@ -405,6 +405,10 @@ async function analyze(options = {}) {
     window.SM_SCAN_STARTED_AT = scanStartedAt;
     document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
 
+    // Set up AbortController with 90 second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
+
     const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -412,8 +416,11 @@ async function analyze(options = {}) {
     const response = await fetch('/api/gdpr-compliance', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ url, scanStartedAt, lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en' })
+      body: JSON.stringify({ url, scanStartedAt, lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en' }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     loader.nextStep(2);
     loader.nextStep(3);
@@ -481,10 +488,10 @@ function getAccentPrimaryHex() {
 }
 
 function getGrade(score) {
-  if (score >= 90) return t('reports.common.status.excellent', 'Excellent');
-  if (score >= 75) return t('reports.common.status.good', 'Good');
+  if (score >= 90) return t('reports.common.statusLabels.excellent', 'Excellent');
+  if (score >= 75) return t('reports.common.statusLabels.good', 'Good');
   if (score >= 50) return t('reports.common.needsWork', 'Needs Work');
-  return t('reports.common.status.critical', 'Critical');
+  return t('reports.common.statusLabels.critical', 'Critical');
 }
 
 function getGradeLetter(score) {
@@ -883,7 +890,7 @@ function renderGdprFixAccordion(rec, index) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
-            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${rec.message || rec.title}</h4>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${escapeHtmlGdpr(rec.message || rec.title)}</h4>
             <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${category}</p>
           </div>
         </div>
@@ -896,7 +903,7 @@ function renderGdprFixAccordion(rec, index) {
             background: ${style.color}20;
             color: ${style.color};
             border: 1px solid ${style.color}40;
-          ">${rec.priorityLabel || rec.priority.toUpperCase()}</span>
+          ">${rec.priorityLabel || (rec.priority || 'medium').toUpperCase()}</span>
           <span class="gdpr-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
         </div>
       </div>
@@ -915,9 +922,9 @@ function renderGdprFixTabs(rec, accordionId) {
     <div class="gdpr-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="gdpr-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
-        background: rgba(255,255,255,0.1);
+        background: var(--r-surface-2, #F8FAFC);
         color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
@@ -945,7 +952,7 @@ function renderGdprFixTabs(rec, accordionId) {
     <!-- Summary Tab -->
     <div class="gdpr-fix-tab-content active" id="${accordionId}-summary">
       <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
-        ${rec.detail || rec.description || rec.message}
+        ${escapeHtmlGdpr(rec.detail || rec.description || rec.message)}
       </p>
       ${rec.impact ? `
       <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
@@ -1439,8 +1446,8 @@ function switchGdprFixTab(accordionId, tabName) {
 
   tabs.forEach(tab => {
     tab.style.background = 'transparent';
-    tab.style.color = '#aaa';
-    tab.style.borderColor = 'rgba(255,255,255,0.1)';
+    tab.style.color = 'var(--r-text-faint, #9CA3AF)';
+    tab.style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
     tab.classList.remove('active');
   });
   contents.forEach(content => {
@@ -1452,9 +1459,9 @@ function switchGdprFixTab(accordionId, tabName) {
   const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
   if (activeTab) {
-    activeTab.style.background = 'rgba(255,255,255,0.1)';
-    activeTab.style.color = '#fff';
-    activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+    activeTab.style.background = 'var(--r-surface-2, #F8FAFC)';
+    activeTab.style.color = 'var(--r-text, #111827)';
+    activeTab.style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
     activeTab.classList.add('active');
   }
   if (activeContent) {
@@ -1537,12 +1544,22 @@ function ensureGdprFixStyles() {
 
 function escapeHtmlGdpr(str) {
   if (!str) return '';
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function renderConsentQualityContent(data) {
   const quality = data.consentQuality || { score: 0, factors: [] };
   const consent = data.compliance?.cookieConsent || {};
+
+  // Map the stable API factor names (see gdprComplianceService.assessConsentQuality)
+  // to i18n keys and max points — never substring-match translated/display strings.
+  const factorMeta = {
+    'Cookie banner present': { key: 'reports.gdpr.factors.bannerPresent', max: 20 },
+    'Uses compliant consent library': { key: 'reports.gdpr.factors.compliantLibrary', max: 15 },
+    'Easy reject option available': { key: 'reports.gdpr.factors.rejectOption', max: 25 },
+    'Granular consent options': { key: 'reports.gdpr.factors.granularConsent', max: 20 },
+    'No pre-consent non-essential cookies': { key: 'reports.gdpr.factors.noPreConsentCookies', max: 20 }
+  };
 
   return `
     <div>
@@ -1565,15 +1582,20 @@ function renderConsentQualityContent(data) {
 
       <h4 style="color: var(--r-text-muted, #6B7280); margin: 1rem 0 0.75rem 0;">${t('reports.gdpr.qualityFactors', 'Quality Factors')}</h4>
       <div style="display: grid; gap: 0.5rem;">
-        ${(quality.factors || []).map(f => `
+        ${(quality.factors || []).map(f => {
+          const meta = factorMeta[f.name] || {};
+          const factorLabel = meta.key ? t(meta.key, f.name) : f.name;
+          const maxPoints = meta.max || 20;
+          return `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; border-left: 3px solid ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ef4444'};">
-            <span style="color: var(--r-text, #111827);">${f.name}</span>
+            <span style="color: var(--r-text, #111827);">${factorLabel}</span>
             <span style="display: flex; align-items: center; gap: 0.5rem;">
-              <span style="color: ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ef4444'}; font-weight: bold;">${f.points}/${f.name.includes('reject') ? 25 : f.name.includes('library') ? 15 : 20}</span>
+              <span style="color: ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ef4444'}; font-weight: bold;">${f.points}/${maxPoints}</span>
               <span style="color: ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ef4444'};">${f.status === 'pass' ? '✓' : f.status === 'warn' ? '~' : '✗'}</span>
             </span>
           </div>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
 
       ${!consent.hasRejectOption && consent.detected ? `
@@ -1673,7 +1695,7 @@ function renderTrackerAnalysisContent(trackers) {
         <h4 style="color: var(--r-text-muted, #6B7280); margin: 1rem 0 0.75rem 0;">${t('reports.gdpr.detectedTrackers', 'Detected Trackers')}</h4>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
           ${trackers.detected.map(tracker => `
-            <span style="background: rgba(255, 140, 0, 0.1); border: 1px solid rgba(255, 140, 0, 0.3); padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.85rem; color: #ffa500;">${tracker}</span>
+            <span style="background: rgba(255, 140, 0, 0.1); border: 1px solid rgba(255, 140, 0, 0.3); padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.85rem; color: #ffa500;">${escapeHtmlGdpr(String(tracker))}</span>
           `).join('')}
         </div>
       ` : `<p style="color: var(--accent-primary);">${t('reports.gdpr.noTrackersDetected', 'No third-party trackers detected')}</p>`}
@@ -1770,7 +1792,7 @@ function renderRisksContent(risks) {
               <h4 style="margin: 0; color: ${risk.severity === 'critical' ? '#ef4444' : risk.severity === 'high' ? '#ff8c00' : '#eab308'};">${risk.risk}</h4>
               <span style="background: ${risk.severity === 'critical' ? '#ef4444' : risk.severity === 'high' ? '#ff8c00' : '#eab308'}; color: #000; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">${getSeverityLabel(risk.severity)}</span>
             </div>
-            <p style="margin: 0 0 0.5rem 0; color: var(--r-text-muted, #6B7280);">${risk.detail}</p>
+            <p style="margin: 0 0 0.5rem 0; color: var(--r-text-muted, #6B7280);">${escapeHtmlGdpr(risk.detail)}</p>
             <p style="margin: 0; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; font-style: italic;">${t('reports.gdpr.potentialFine', 'Potential Fine:')} ${risk.fine}</p>
           </div>
         `).join('')}

@@ -390,9 +390,15 @@ async function displayResults(data) {
   data.scores.mobile = data.scores.mobile ?? 0;
   data.analysis = data.analysis || {};
   data.analysis.ctas = data.analysis.ctas || {};
+  data.analysis.ctas.examples = Array.isArray(data.analysis.ctas.examples) ? data.analysis.ctas.examples : [];
+  data.analysis.ctas.count = data.analysis.ctas.count ?? 0;
+  data.analysis.ctas.visible = data.analysis.ctas.visible ?? 0;
   data.analysis.forms = data.analysis.forms || {};
+  data.analysis.forms.details = Array.isArray(data.analysis.forms.details) ? data.analysis.forms.details : [];
   data.analysis.trustSignals = data.analysis.trustSignals || {};
   data.analysis.mobileUX = data.analysis.mobileUX || {};
+  data.analysis.mobileUX.avgFontSize = typeof data.analysis.mobileUX.avgFontSize === 'number' ? data.analysis.mobileUX.avgFontSize : 0;
+  data.analysis.mobileUX.tapTargetCompliance = typeof data.analysis.mobileUX.tapTargetCompliance === 'number' ? data.analysis.mobileUX.tapTargetCompliance : 0;
   data.recommendations = data.recommendations || [];
   data.score = data.score ?? 0;
 
@@ -848,8 +854,8 @@ function renderCROFixAccordion(fix, index) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
-            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${fix.title}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${fix.category || t('reports.cro.categories.croOptimization', 'CRO Optimization')}</p>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${escapeCROHtml(fix.title)}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${escapeCROHtml(fix.category) || t('reports.cro.categories.croOptimization', 'CRO Optimization')}</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -910,11 +916,11 @@ function renderCROFixTabs(fix, accordionId) {
     <!-- Summary Tab -->
     <div class="cro-fix-tab-content active" id="${accordionId}-summary">
       <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
-        ${fix.description}
+        ${escapeCROHtml(fix.description)}
       </p>
       <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #22c55e; padding: 0.75rem; border-radius: 4px;">
         <div style="color: #22c55e; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
-        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${fix.impact}</div>
+        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${escapeCROHtml(fix.impact)}</div>
       </div>
     </div>
 
@@ -1097,8 +1103,8 @@ function switchCROFixTab(accordionId, tabName) {
 
   tabs.forEach(tab => {
     tab.style.background = 'transparent';
-    tab.style.color = '#aaa';
-    tab.style.borderColor = 'rgba(255,255,255,0.1)';
+    tab.style.color = 'var(--r-text-muted, #6B7280)';
+    tab.style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
     tab.classList.remove('active');
   });
   contents.forEach(content => {
@@ -1110,9 +1116,9 @@ function switchCROFixTab(accordionId, tabName) {
   const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
   if (activeTab) {
-    activeTab.style.background = 'rgba(255,255,255,0.1)';
-    activeTab.style.color = '#fff';
-    activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+    activeTab.style.background = 'var(--r-surface-2, #F8FAFC)';
+    activeTab.style.color = 'var(--r-text, #111827)';
+    activeTab.style.borderColor = 'var(--r-border, rgba(0, 0, 0, 0.08))';
     activeTab.classList.add('active');
   }
   if (activeContent) {
@@ -1867,7 +1873,7 @@ function createQuickWinsSection(quickWins) {
                 padding: 0.75rem 1rem;
               ">
                 <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">${t('reports.cro.howToFix', 'How to fix:')}</div>
-                <ol style="margin: 0; padding-left: 1.25rem; color: #b0b0b0; font-size: 0.85rem; line-height: 1.6;">
+                <ol style="margin: 0; padding-left: 1.25rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; line-height: 1.6;">
                   ${win.steps.map(step => `<li>${step}</li>`).join('')}
                 </ol>
               </div>
@@ -1944,7 +1950,7 @@ function renderCTAContent(ctas) {
       </div>
 
       ${ctas.examples.length > 0 ? `
-        <h4 style="color: #bb86fc; margin: 1.5rem 0 1rem 0;">${t('reports.cro.ctaExamplesFound', 'CTA Examples Found:')}</h4>
+        <h4 style="color: var(--accent-primary); margin: 1.5rem 0 1rem 0;">${t('reports.cro.ctaExamplesFound', 'CTA Examples Found:')}</h4>
         <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
           ${ctas.examples.map(text => `
             <span style="
@@ -1954,7 +1960,7 @@ function renderCTAContent(ctas) {
               border: 1px solid rgba(var(--accent-primary-rgb), 0.4);
               color: var(--accent-primary);
               font-weight: 500;
-            ">${text}</span>
+            ">${escapeCROHtml(text)}</span>
           `).join('')}
         </div>
       ` : `
@@ -2005,16 +2011,16 @@ function renderFormContent(forms) {
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
             <tr style="border-bottom: 2px solid #333;">
-              <th style="text-align: left; padding: 0.75rem; color: #bb86fc;">${t('reports.cro.form', 'Form')}</th>
-              <th style="text-align: center; padding: 0.75rem; color: #bb86fc;">${t('reports.cro.fields', 'Fields')}</th>
-              <th style="text-align: center; padding: 0.75rem; color: #bb86fc;">${t('reports.cro.email', 'Email')}</th>
-              <th style="text-align: center; padding: 0.75rem; color: #bb86fc;">${t('reports.cro.phone', 'Phone')}</th>
-              <th style="text-align: center; padding: 0.75rem; color: #bb86fc;">${t('reports.cro.validation', 'Validation')}</th>
-              <th style="text-align: center; padding: 0.75rem; color: #bb86fc;">${t('reports.cro.autocomplete', 'Autocomplete')}</th>
+              <th style="text-align: left; padding: 0.75rem; color: var(--accent-primary);">${t('reports.cro.form', 'Form')}</th>
+              <th style="text-align: center; padding: 0.75rem; color: var(--accent-primary);">${t('reports.cro.fields', 'Fields')}</th>
+              <th style="text-align: center; padding: 0.75rem; color: var(--accent-primary);">${t('reports.cro.email', 'Email')}</th>
+              <th style="text-align: center; padding: 0.75rem; color: var(--accent-primary);">${t('reports.cro.phone', 'Phone')}</th>
+              <th style="text-align: center; padding: 0.75rem; color: var(--accent-primary);">${t('reports.cro.validation', 'Validation')}</th>
+              <th style="text-align: center; padding: 0.75rem; color: var(--accent-primary);">${t('reports.cro.autocomplete', 'Autocomplete')}</th>
             </tr>
           </thead>
           <tbody>
-            ${forms.details.map((form, idx) => `
+            ${(forms.details || []).map((form, idx) => `
               <tr style="border-bottom: 1px solid #333;">
                 <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280);">${t('reports.cro.formNumber', 'Form {{number}}', { number: idx + 1 })}</td>
                 <td style="padding: 0.75rem; text-align: center; color: ${form.fieldCount <= 5 ? '#22c55e' : form.fieldCount <= 8 ? '#eab308' : '#ef4444'}; font-weight: bold;">
@@ -2044,7 +2050,7 @@ function renderFormContent(forms) {
         padding: 1rem;
         margin-top: 1rem;
       ">
-        <h4 style="color: #bb86fc; margin: 0 0 0.5rem 0; font-size: 0.95rem;">${t('reports.cro.formOptimizationTips', 'Form Optimization Tips')}</h4>
+        <h4 style="color: var(--accent-primary); margin: 0 0 0.5rem 0; font-size: 0.95rem;">${t('reports.cro.formOptimizationTips', 'Form Optimization Tips')}</h4>
         <ul style="color: var(--r-text-muted, #6B7280); margin: 0; padding-left: 1.5rem; font-size: 0.9rem;">
           <li>${t('reports.cro.tips.keepFormsUnder5', 'Keep forms under 5 fields when possible')}</li>
           <li>${t('reports.cro.tips.useAutocomplete', 'Use autocomplete to speed up form filling')}</li>
@@ -2129,14 +2135,14 @@ function renderMobileContent(mobile) {
             height: 80px;
             margin: 0 auto 1rem;
             border-radius: 50%;
-            background: #ffffff;
+            background: var(--r-surface-2, #F8FAFC);
             border: 3px solid ${mobile.tapTargetCompliance >= 0.8 ? '#22c55e' : '#ff8c00'};
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
             font-weight: 900;
-            color: #000;
+            color: var(--r-text, #111827);
           ">${tapPercent}%</div>
           <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.cro.mobile.tapTargetCompliance', 'Tap Target Compliance')}</div>
           <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; margin-top: 0.25rem;">${t('reports.cro.mobile.minimumSize', '44×44px minimum')}</div>
@@ -2155,14 +2161,14 @@ function renderMobileContent(mobile) {
             height: 80px;
             margin: 0 auto 1rem;
             border-radius: 50%;
-            background: #ffffff;
+            background: var(--r-surface-2, #F8FAFC);
             border: 3px solid ${mobile.avgFontSize >= 16 ? '#22c55e' : '#ff8c00'};
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.3rem;
             font-weight: 900;
-            color: #000;
+            color: var(--r-text, #111827);
           ">${mobile.avgFontSize.toFixed(0)}px</div>
           <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.cro.mobile.averageFontSize', 'Average Font Size')}</div>
           <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; margin-top: 0.25rem;">${t('reports.cro.mobile.recommended16px', '16px recommended')}</div>
@@ -2181,7 +2187,7 @@ function renderMobileContent(mobile) {
             height: 80px;
             margin: 0 auto 1rem;
             border-radius: 50%;
-            background: #ffffff;
+            background: var(--r-surface-2, #F8FAFC);
             border: 3px solid ${mobile.hasViewportMeta ? '#22c55e' : '#ef4444'};
             display: flex;
             align-items: center;
@@ -2234,7 +2240,7 @@ function renderRecommendationsContent(recommendations, quickWins = []) {
 
   return `
     <div>
-      <h3 style="color: #bb86fc; margin: 0 0 1rem 0;">>> ${t('reports.cro.actionableRecommendations', 'Actionable Recommendations')}</h3>
+      <h3 style="color: var(--accent-primary); margin: 0 0 1rem 0;">>> ${t('reports.cro.actionableRecommendations', 'Actionable Recommendations')}</h3>
       <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem;">
         ${t('reports.cro.prioritizedImprovements', 'Prioritized improvements to boost your conversion rate.')}
       </p>
@@ -2258,12 +2264,12 @@ function renderRecommendationsContent(recommendations, quickWins = []) {
                   font-size: 0.75rem;
                   font-weight: bold;
                   text-transform: uppercase;
-                ">${rec.priority}</span>
-                <h4 style="color: var(--r-text-muted, #6B7280); margin: 0; font-size: 1rem;">${rec.message}</h4>
+                ">${escapeCROHtml(rec.priority)}</span>
+                <h4 style="color: var(--r-text-muted, #6B7280); margin: 0; font-size: 1rem;">${escapeCROHtml(rec.message)}</h4>
               </div>
-              <p style="color: var(--r-text-muted, #6B7280); margin: 0 0 0.5rem 0; font-size: 0.9rem;">${rec.detail}</p>
+              <p style="color: var(--r-text-muted, #6B7280); margin: 0 0 0.5rem 0; font-size: 0.9rem;">${escapeCROHtml(rec.detail)}</p>
               <p style="color: ${color}; margin: 0; font-size: 0.85rem; font-style: italic;">
-                ${t('reports.cro.impact', 'Impact')}: ${rec.impact}
+                ${t('reports.cro.impact', 'Impact')}: ${escapeCROHtml(rec.impact)}
               </p>
             </div>
           `;
@@ -2311,7 +2317,7 @@ function initCROPDFExport() {
       contentSelector: '#results, #resultsContent, .results-container',
       buttonSelector: '#exportPdfBtn, .export-pdf-btn, #downloadPdfButton',
       reportSubtitle: t('reports.cro.subtitle', 'Conversion Rate Optimization Analysis'),
-      urlInputSelector: '#urlInput, input[type="url"]',
+      urlInputSelector: '#url, input[type="url"]',
       filename: `cro-analysis-${new Date().toISOString().split('T')[0]}.pdf`
     });
   } else {

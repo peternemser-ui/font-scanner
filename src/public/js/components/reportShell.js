@@ -1,4 +1,29 @@
 (function(window) {
+  // Translation helper: falls back to provided fallback when translation key is missing
+  function t(key, fallback, params) {
+    let value = fallback || key;
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      const translated = window.i18n.t(key, params);
+      if (translated !== key) return translated;
+    }
+    if (params && typeof value === 'string') {
+      Object.keys(params).forEach(p => {
+        value = value.replace(new RegExp('\\{\\{' + p + '\\}\\}', 'g'), params[p]);
+      });
+    }
+    return value;
+  }
+
+  // HTML-escape helper for values interpolated into innerHTML
+  function esc(input) {
+    return String(input == null ? '' : input)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function getScoreColor(score) {
     const stops = [
       [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
@@ -29,10 +54,12 @@
     const dash = (safeScore / 100) * circumference;
     const dashOffset = -(circumference * 0.25);
     const subtitleHTML = subtitle ? `<div class="report-shell__donut-subtitle" style="font-size: 0.75rem; font-weight: 700; color: ${color}; margin-top: 0.15rem; letter-spacing: 0.5px;">${subtitle}</div>` : '';
+    const displayScore = typeof score === 'number' && !Number.isNaN(score) ? safeScore : '—';
+    const donutAriaLabel = t('reports.common.scoreLabel', '{{label}}: {{score}}/100', { label: label || '', score: displayScore });
     return `
       <div class="report-shell__summary-card" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
         <div class="report-shell__summary-label">${label}</div>
-        <svg class="report-shell__donut" viewBox="0 0 180 180" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
+        <svg class="report-shell__donut" viewBox="0 0 180 180" role="img" aria-label="${esc(donutAriaLabel)}" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
           <circle class="report-shell__donut-track" cx="90" cy="90" r="75" fill="none" stroke="var(--r-dial-track, #e5e7eb)" stroke-width="12"></circle>
           <circle cx="90" cy="90" r="75" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${dash} ${circumference}" stroke-dashoffset="${dashOffset}" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;"></circle>
           <text x="90" y="90" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="36" font-weight="700" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">${typeof score === 'number' && !Number.isNaN(score) ? safeScore : '—'}</text>
@@ -49,10 +76,10 @@
     // Delegate to ReportContainer if available (new system)
     if (window.ReportContainer && window.ReportContainer.renderHeader) {
       const modeTitles = {
-        full: 'Lighthouse Audit',
-        cwv: 'Core Web Vitals',
-        quick: 'Quick Scan',
-        performance: 'Performance Analysis'
+        full: t('reports.modeLabels.full', 'Lighthouse Audit'),
+        cwv: t('reports.modeLabels.cwv', 'Core Web Vitals'),
+        quick: t('reports.modeLabels.quick', 'Quick Scan'),
+        performance: t('reports.modeLabels.performance', 'Performance Analysis')
       };
       const modeLabel = modeTitles[mode] || '';
       const isRedundant =
@@ -65,7 +92,7 @@
         url,
         timestamp,
         mode,
-        title: title || 'Analysis Results',
+        title: title || t('reports.common.analysisResults', 'Analysis Results'),
         subtitle: isRedundant ? undefined : badgeText,
         showModeBadge: !isRedundant,
         showModeMeta: !isRedundant
@@ -74,23 +101,23 @@
 
     // Fallback: Legacy format with improved labels (no raw debug text)
     const modeTitles = {
-      full: 'Lighthouse Audit',
-      cwv: 'Core Web Vitals',
-      quick: 'Quick Scan',
-      performance: 'Performance Analysis',
-      security: 'Security Audit',
-      seo: 'SEO Analysis',
-      accessibility: 'Accessibility Audit',
-      fonts: 'Font Analysis'
+      full: t('reports.modeLabels.full', 'Lighthouse Audit'),
+      cwv: t('reports.modeLabels.cwv', 'Core Web Vitals'),
+      quick: t('reports.modeLabels.quick', 'Quick Scan'),
+      performance: t('reports.modeLabels.performance', 'Performance Analysis'),
+      security: t('reports.modeLabels.security', 'Security Analysis'),
+      seo: t('reports.modeLabels.seo', 'SEO Analysis'),
+      accessibility: t('reports.modeLabels.accessibility', 'Accessibility Audit'),
+      fonts: t('reports.modeLabels.fonts', 'Font Analysis')
     };
-    const displayTitle = modeTitles[mode] || 'Analysis Results';
+    const displayTitle = modeTitles[mode] || t('reports.common.analysisResults', 'Analysis Results');
 
     return `
       <div class="section" style="margin-bottom: 1.5rem;">
-        <div style="display: inline-block; padding: 0.375rem 0.875rem; background: var(--color-primary, #00FF9D); color: var(--color-black, #000); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 8px; margin-bottom: 1rem;">${displayTitle}</div>
-        <h2 style="color: var(--text-primary, #fff); font-size: 1.5rem; margin: 0 0 1rem 0;">${title || 'Analysis Results'}</h2>
-        ${url ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🌐 ${url}</p>` : ''}
-        ${timestamp ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🕒 ${timestamp}</p>` : ''}
+        <div style="display: inline-block; padding: 0.375rem 0.875rem; background: var(--color-primary, #00FF9D); color: var(--color-black, #000); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 8px; margin-bottom: 1rem;">${esc(displayTitle)}</div>
+        <h2 style="color: var(--text-primary, #fff); font-size: 1.5rem; margin: 0 0 1rem 0;">${esc(title || t('reports.common.analysisResults', 'Analysis Results'))}</h2>
+        ${url ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🌐 ${esc(url)}</p>` : ''}
+        ${timestamp ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🕒 ${esc(timestamp)}</p>` : ''}
       </div>
     `;
   }
@@ -114,7 +141,7 @@
   function renderDeviceCard({ title, icon, topMetricsHTML, bottomMetricsHTML }) {
     return `
       <div class="report-shell__card">
-        <div class="report-shell__card-title">${icon || ''} ${title}</div>
+        <div class="report-shell__card-title">${icon || ''} ${esc(title)}</div>
         ${topMetricsHTML || ''}
         ${bottomMetricsHTML || ''}
       </div>

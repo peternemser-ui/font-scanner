@@ -33,7 +33,7 @@
     const img = element.querySelector('img') || element;
     return {
       src: img.src || img.dataset.src || element.dataset.src || '',
-      alt: img.alt || element.dataset.alt || 'Screenshot',
+      alt: img.alt || element.dataset.alt || _t('reports.common.screenshot', 'Screenshot'),
       device: element.dataset.device || '',
       title: element.dataset.title || ''
     };
@@ -158,7 +158,7 @@
     // Build gallery from images
     currentGallery = images.map(img => {
       if (typeof img === 'string') {
-        return { src: img, alt: 'Screenshot', device: '' };
+        return { src: img, alt: _t('reports.common.screenshot', 'Screenshot'), device: '' };
       } else if (img instanceof Element) {
         return getImageData(img);
       } else {

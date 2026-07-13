@@ -14,6 +14,7 @@ class I18n {
     this.fallbackLanguage = 'en';
     this.supportedLanguages = SUPPORTED_LOCALES;
     this.initialized = false;
+    this._loadGeneration = 0; // Monotonic counter — stale fetches must not overwrite newer translations
   }
 
   /**
@@ -124,15 +125,23 @@ class I18n {
   }
 
   /**
-   * Load translation file for a language
+   * Load translation file for a language.
+   * Uses a fetch generation counter so a slow, earlier fetch (e.g. from init())
+   * cannot overwrite translations loaded by a newer call (e.g. forceLocale()
+   * in print mode) — that race caused mixed-language reports.
    */
   async loadTranslations(lang) {
+    const generation = ++this._loadGeneration;
     try {
       const response = await fetch(`/i18n/${lang}.json`);
       if (!response.ok) throw new Error(`Failed to load ${lang}.json`);
 
-      this.translations = await response.json();
+      const data = await response.json();
+      if (generation !== this._loadGeneration) return; // Stale fetch — a newer load has started
+      this.translations = data;
     } catch (error) {
+      if (generation !== this._loadGeneration) return; // Stale fetch — ignore its failure too
+
       console.error(`Failed to load translations for ${lang}, falling back to ${this.fallbackLanguage}:`, error);
 
       if (lang !== this.fallbackLanguage) {
@@ -530,8 +539,27 @@ window.i18n = new I18n();
 window.i18n.SUPPORTED_LOCALES = SUPPORTED_LOCALES;
 window.i18n.STORAGE_KEY = STORAGE_KEY;
 
-// Convenience alias: t() function at window level
-window.t = (key, params) => window.i18n.t(key, params);
+// Convenience alias: t() function at window level.
+// Official signature: t(key, fallback, params) — returns the fallback (when
+// provided) instead of the raw key on a missing translation.
+// Backward compatible: t(key, paramsObject) still works (2nd arg object = params).
+window.t = (key, fallback, params) => {
+  if (fallback && typeof fallback === 'object') {
+    params = fallback;
+    fallback = undefined;
+  }
+  const value = window.i18n.t(key, params);
+  if (value === key && typeof fallback === 'string') {
+    let out = fallback;
+    if (params) {
+      Object.keys(params).forEach(param => {
+        out = out.replace(new RegExp(`{{${param}}}`, 'g'), params[param]);
+      });
+    }
+    return out;
+  }
+  return value;
+};
 
 // Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {

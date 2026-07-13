@@ -110,7 +110,8 @@
       "scrollLeft": "Scroll navigation left",
       "scrollRight": "Scroll navigation right",
       "closeMenu": "Close navigation menu"
-    }
+    },
+    "managePlan": "Manage Plan"
   },
   "userMenu": {
     "ariaLabel": "User menu",
@@ -181,7 +182,8 @@
     "couldNotReach": "Could not reach the website. Please check the URL is correct.",
     "connectionRefused": "Connection refused. The website may be down.",
     "portalSessionFailed": "Failed to create portal session",
-    "billingPortalFailed": "Failed to open billing portal. Please try again."
+    "billingPortalFailed": "Failed to open billing portal. Please try again.",
+    "analysisTimeout": "Analysis timed out after 5 minutes. The website may be too slow or complex. Try Quick scan instead."
   },
   "shell": {
     "pleaseEnterUrl": "Please enter a URL",
@@ -807,7 +809,7 @@
         "network": "Network performance metrics measure how quickly your server responds and delivers content. Time to First Byte (TTFB) indicates server processing speed, while DNS lookup and SSL negotiation times reveal connection overhead. Optimizing these metrics requires attention to both server configuration and network infrastructure.",
         "caching": "Effective caching reduces server load and dramatically improves repeat-visit performance. Properly configured cache headers ensure browsers store and reuse static resources. This section evaluates your caching strategy, identifying resources that could benefit from longer cache durations.",
         "recommendations": "Based on the performance analysis, these recommendations target the most impactful improvements. Addressing high-priority items first will deliver the greatest gains in load time and Core Web Vitals scores.",
-        "dimensionalGrades": "This section provides a multi-dimensional view of your site\\",
+        "dimensionalGrades": "This section provides a multi-dimensional view of your site's quality across performance, accessibility, best practices, and SEO.",
         "crossBrowser": "This section compares performance between desktop and mobile environments. Mobile users often experience slower performance due to network conditions and device constraints. Understanding the gap between desktop and mobile helps prioritize optimization efforts for the platform most of your visitors use."
       },
       "resources": {
@@ -917,6 +919,11 @@
         "issue": "Issue",
         "stepByStep": "Step-by-Step Fix Guide"
       }
+    },
+    "lighthouse": {
+      "unavailableTitle": "Performance Metrics Temporarily Unavailable",
+      "unavailableMessage": "Performance metrics are temporarily unavailable. Other report sections are unaffected.",
+      "retryButton": "Retry Analysis"
     }
   },
   "accessibility": {
@@ -1327,7 +1334,8 @@
           "recommendations": "Recommendations"
         }
       },
-      "unlockToView": "Unlock to view:"
+      "unlockToView": "Unlock to view:",
+      "structuredDataQuickWins": "Structured data quick wins"
     },
     "fixes": {
       "previewIntro": "Preview of fix packs:",
@@ -2584,7 +2592,8 @@
       "noFollowLinks": "No-Follow Links",
       "noFollowExplain": "These links don't pass SEO value",
       "ofTotal": "of total"
-    }
+    },
+    "overallScore": "SEO Score"
   },
   "loader": {
     "started": "Started:",
@@ -2783,7 +2792,11 @@
     "comprehensiveAnalysisInProgress": "Comprehensive analysis in progress...",
     "mayTake30To60Seconds": "This may take 30-60 seconds",
     "detectingAnalyticsAndTracking": "Detecting analytics and tracking tags...",
-    "mayTake20To45Seconds": "This may take 20-45 seconds"
+    "mayTake20To45Seconds": "This may take 20-45 seconds",
+    "analyzingCitationsReviews": "Analyzing citations & reviews",
+    "checkingDirectories": "Checking directories, multi-location, reputation...",
+    "compilingGeoSeo": "Compiling GEO SEO insights...",
+    "analyzingGeoSeo": "GEO SEO ANALYZER"
   },
   "common": {
     "error": "Error",
@@ -3452,7 +3465,8 @@
       "justNow": "Just now",
       "minutesAgo": "{n}m ago",
       "hoursAgo": "{n}h ago",
-      "daysAgo": "{n}d ago"
+      "daysAgo": "{n}d ago",
+      "unknown": "Unknown date"
     },
     "reportTypes": {
       "report": "Report"
@@ -3543,7 +3557,12 @@
     "monthlyDesc": "Unlimited scans + 250 reports",
     "proAnnual": "Pro Annual",
     "annualDesc": "Unlimited scans + unlimited reports",
-    "save60": "Save $60"
+    "save60": "Save $60",
+    "page": {
+      "paymentCanceled": "Payment was canceled. No charges were made.",
+      "paymentSuccess": "Payment successful! Redirecting to your account...",
+      "alreadyPro": "You already have Pro! Redirecting to your account..."
+    }
   },
   "reports": {
     "modeLabels": {
@@ -3898,7 +3917,35 @@
       "impactLabel": "Impact: ",
       "noResourceBreakdown": "Resource breakdown not available.",
       "partial": "Partial",
-      "diagnostic": "Diagnostic"
+      "diagnostic": "Diagnostic",
+      "recommendedAction": "Recommended Action",
+      "stepN": "Step {{n}}",
+      "noDataAvailable": "No data available for this section.",
+      "excelExportSuccess": "Excel export downloaded successfully",
+      "proBadge": "PRO",
+      "proSectionLocked": "This section is included in the Pro report. Use the Unlock Report options below to view it.",
+      "sectionLoadError": "This section could not be loaded. Please try refreshing the page.",
+      "markHelpful": "Mark as helpful",
+      "markNotHelpful": "Mark as not helpful",
+      "helpful": "Helpful",
+      "notHelpful": "Not helpful",
+      "sinceLastScan": "Since last scan",
+      "topPct": "Top {{pct}}%",
+      "betterThan": "Better than {{pct}}%",
+      "checkoutUnavailable": "Checkout is unavailable right now.",
+      "reportUnlocked": "Report Unlocked!",
+      "proActivated": "Pro subscription activated!",
+      "proActivatedUnlocking": "Pro subscription activated! Unlocking premium content...",
+      "runScanFirstToBuy": "Run a scan first to buy this report.",
+      "runScanFirst": "Run a scan first.",
+      "paymentServiceError": "Payment service error. Please try again later.",
+      "unlockReport5Usd": "Unlock Report ($5 USD)",
+      "scoreLabel": "{{label}}: {{score}}/100",
+      "statusLabels": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "critical": "Critical"
+      }
     },
     "fonts": {
       "title": "Fonts & Typography Report",
@@ -4292,7 +4339,9 @@
       "fontFixes": "Font Fixes",
       "improvementsFound": "improvements found",
       "fontDisplayIssueDetected": "Font display issue detected",
-      "moreIssues": "more issues"
+      "moreIssues": "more issues",
+      "stability": "Stability",
+      "typography": "Typography"
     },
     "seo": {
       "title": "SEO Analysis Report"
@@ -4583,7 +4632,10 @@
       "report": {
         "recommendations.noneTitle": "Strong Security Posture",
         "recommendations.noneBody": "Your site follows security best practices. Continue monitoring for new vulnerabilities."
-      }
+      },
+      "recommendationsLoadError": "Recommendations could not be loaded.",
+      "cspLabel": "CSP (Content Security Policy)",
+      "hstsLabel": "HSTS (HTTP Strict Transport Security)"
     },
     "accessibility": {
       "title": "Accessibility Report",
@@ -4737,7 +4789,7 @@
         "testWithExtensions": "Test with browser extensions like axe DevTools or WAVE",
         "identifyMissingLabels": "Identify the {{count}} form inputs missing accessible labels",
         "addLabelElement": "For each input, add a <label> element with matching for/id attributes",
-        "useAriaLabel": "If visual labels aren\\",
+        "useAriaLabel": "If visual labels aren't possible, use aria-label or aria-labelledby attributes",
         "ensureLabelAssociation": "Ensure labels are programmatically associated (not just visually positioned)",
         "testScreenReaderLabels": "Test with a screen reader: input purpose should be announced",
         "foundFocusIssues": "Found {{count}} interactive elements without visible focus",
@@ -4749,7 +4801,7 @@
         "runHeadingCheck": "Run a heading outline check (browser extensions or DevTools)",
         "ensureOneH1": "Ensure page has exactly one <h1> element",
         "verifyHeadingOrder": "Verify headings follow sequential order (h1 → h2 → h3)",
-        "dontSkipLevels": "Don\\",
+        "dontSkipLevels": "Don't skip heading levels - fix any jumps like h1 to h3",
         "useHeadingsForStructure": "Use headings for document structure, not for styling",
         "testHeadingsList": "Test with screen reader ",
         "replaceGenericDivs": "Replace generic <div> elements with semantic HTML5 elements",
@@ -5036,13 +5088,13 @@
       "coreWebVitalsNotAvailable": "Core Web Vitals data not available",
       "info": "Info",
       "whatAreCoreWebVitals": "What are Core Web Vitals?",
-      "coreWebVitalsDescription": "Core Web Vitals are Google\\",
+      "coreWebVitalsDescription": "Core Web Vitals are Google's metrics for measuring real-world user experience: loading performance, interactivity, and visual stability. They directly influence your search rankings.",
       "largestContentfulPaint": "Largest Contentful Paint (LCP)",
       "firstInputDelay": "First Input Delay (FID)",
       "cumulativeLayoutShift": "Cumulative Layout Shift (CLS)",
       "timeToFirstByte": "Time to First Byte (TTFB)",
       "firstContentfulPaint": "First Contentful Paint (FCP)",
-      "learnMoreDescription": "Core Web Vitals are part of Google\\",
+      "learnMoreDescription": "Core Web Vitals are part of Google's page experience ranking signals. Improving these metrics can boost your search rankings and keep visitors on your site longer.",
       "resourceAnalysisNotAvailable": "Resource analysis data not available",
       "platformAgnosticMetrics": "Platform-Agnostic Metrics",
       "resourceDataDescription": "Resource data is collected during page analysis and applies universally to both desktop and mobile experiences.",
@@ -5252,7 +5304,8 @@
         "ttfb": "Time to First Byte",
         "connectionTime": "Connection Time",
         "cacheHitRate": "Cache Hit Rate",
-        "uncachedResources": "Uncached Resources"
+        "uncachedResources": "Uncached Resources",
+        "title": "Diagnostics"
       },
       "report": {
         "recommendations.noneTitle": "Excellent Performance",
@@ -5363,7 +5416,11 @@
           "description": "Web font loading is not optimized. Use font-display strategy and preloading.",
           "impact": "Improve text display delay"
         }
-      }
+      },
+      "additionalChecks": "Additional Checks",
+      "diagnostic": "Diagnostic",
+      "noAdditionalChecks": "No additional checks available.",
+      "excelTitle": "Site Mechanic - Performance Report"
     },
     "cwv": {
       "title": "Core Web Vitals",
@@ -5477,12 +5534,12 @@
       "understandingScoresTitle": "Understanding Your Scores",
       "report": {
         "desktop": {
-          "passedDesc": "All desktop Core Web Vitals meet Google\\",
-          "failedDesc": "One or more desktop metrics fall below Google\\"
+          "passedDesc": "All desktop Core Web Vitals meet Google's recommended thresholds.",
+          "failedDesc": "One or more desktop metrics fall below Google's recommended thresholds."
         },
         "mobile": {
-          "passedDesc": "All mobile Core Web Vitals meet Google\\",
-          "failedDesc": "One or more mobile metrics fall below Google\\"
+          "passedDesc": "All mobile Core Web Vitals meet Google's recommended thresholds.",
+          "failedDesc": "One or more mobile metrics fall below Google's recommended thresholds."
         },
         "comparison": {
           "context": "Comparison Context",
@@ -5518,7 +5575,7 @@
           "recommendations": "Based on your Core Web Vitals analysis, these recommendations target the highest-impact improvements for loading speed, interactivity, and visual stability.",
           "coreVitals": "These three metrics are the official Core Web Vitals that Google uses as ranking signals. LCP measures loading performance, INP measures interactivity responsiveness, and CLS measures visual stability. Each metric is shown with mobile (70% weight) and desktop (30% weight) values side by side.",
           "additionalMetrics": "Beyond the three Core Web Vitals, these additional metrics provide deeper insight into your page performance. First Contentful Paint (FCP) measures how quickly the first visible content appears, Speed Index (SI) measures how quickly content is visually displayed, and Time to Interactive (TTI) measures when the page becomes fully interactive.",
-          "bestPractices": "This section provides Google\\"
+          "bestPractices": "This section provides Google's recommended best practices for improving your Core Web Vitals scores."
         },
         "vitals": {
           "lcp": "Largest Contentful Paint (LCP)",
@@ -5575,7 +5632,8 @@
         "accessibilityDesc": "WCAG compliance, screen reader compatibility, color contrast",
         "fonts": "Font Analysis",
         "fontsDesc": "Font loading performance, web font optimization, typography"
-      }
+      },
+      "exploreToolsHelper": "Scans are free to run. Optional paid exports (PDF/share/data) are available inside each tool."
     },
     "mobile": {
       "title": "Mobile Testing Report",
@@ -5730,7 +5788,7 @@
         "useCdn": "Use a Content Delivery Network (CDN)",
         "setFontSize": "Set body font-size to at least 16px",
         "useRelativeUnits": "Use relative units (rem/em) instead of fixed pixels",
-        "testOnDevices": "Test on actual devices at arm\\",
+        "testOnDevices": "Test on actual devices at arm's length",
         "increaseButtonSize": "Increase button/link size to at least 44x44 pixels",
         "addPadding": "Add padding around interactive elements",
         "ensureSpacing": "Ensure adequate spacing between tap targets",
@@ -6151,7 +6209,14 @@
           "noneTitle": "Healthy Link Profile",
           "noneBody": "Your site has a healthy link profile with no significant issues. Continue monitoring to maintain link health."
         }
-      }
+      },
+      "scanFailed": "Failed to analyze links. Please try again.",
+      "noBrokenLinks": "No broken links found. All links are healthy.",
+      "noRedirects": "No redirects detected.",
+      "noWorkingLinks": "No working links found.",
+      "noExternalLinks": "No external links found.",
+      "noAnchorData": "No anchor text data available.",
+      "noRecommendations": "No recommendations at this time."
     },
     "brand": {
       "analysisFailed": "Analysis failed",
@@ -6168,7 +6233,7 @@
         "improveColorHarmony": "Improve color harmony (Score: {{score}}%)",
         "improveColorHarmonyNoScore": "Improve color harmony",
         "poorHarmonyDesc": "Color harmony ensures your palette creates a cohesive, professional appearance. Your harmony score of {{score}}% indicates colors may clash or lack intentional relationship.",
-        "goodHarmonyDesc": "Color harmony ensures your palette creates a cohesive, professional appearance. Fine-tuning your color relationships will elevate your brand\\",
+        "goodHarmonyDesc": "Color harmony ensures your palette creates a cohesive, professional appearance. Color harmony ensures your palette creates a cohesive, professional appearance. Fine-tuning your color relationships will elevate your brand's visual identity.",
         "harmonyImpact": "Professional appearance, improved user trust, better visual hierarchy",
         "consolidateTypography": "Consolidate typography ({{count}} fonts detected)",
         "optimizeTypography": "Optimize typography system",
@@ -6196,7 +6261,7 @@
         "responsiveDesc": "Your brand should feel cohesive whether viewed on a phone, tablet, or desktop. This includes consistent typography scaling, proper logo sizing, and maintaining visual hierarchy at all screen sizes.",
         "responsiveImpact": "Consistent brand experience, improved mobile engagement, professional appearance",
         "implementDarkMode": "Implement dark mode support",
-        "darkModeDesc": "Dark mode is now expected by users, with 80%+ of people using it regularly. A well-designed dark mode protects your brand\\",
+        "darkModeDesc": "Dark mode is now expected by users, with 80%+ of people using it regularly. Dark mode is now expected by users, with 80%+ of people using it regularly. A well-designed dark mode protects your brand's identity while reducing eye strain.",
         "darkModeImpact": "Better user experience, reduced eye strain, modern brand perception"
       },
       "categories": {
@@ -6210,7 +6275,7 @@
         "brandExperience": "Brand Experience"
       },
       "steps": {
-        "documentPrimaryColor": "Document your brand\\",
+        "documentPrimaryColor": "Document your brand's primary color",
         "defineSecondaryColors": "Define 2-3 secondary/accent colors with specific use cases",
         "createNeutralPalette": "Create a neutral palette for text and backgrounds",
         "addSemanticColors": "Add semantic colors for success/error/warning states",
@@ -6253,7 +6318,7 @@
         "auditContrast": "Audit all text/background combinations with a contrast checker",
         "ensureNormalTextContrast": "Ensure 4.5:1 minimum for normal text (WCAG AA)",
         "ensureLargeTextContrast": "Ensure 3:1 minimum for large text and UI elements",
-        "dontRelyOnColor": "Don\\",
+        "dontRelyOnColor": "Don't rely on color alone to convey information",
         "addUnderlines": "Add underlines to links, icons to buttons",
         "testColorblind": "Test with colorblind simulation tools",
         "runAccessibilityAudits": "Run automated accessibility audits (Lighthouse, axe)",
@@ -6264,9 +6329,9 @@
         "ensureTouchTargets": "Ensure touch targets are at least 44x44px on mobile",
         "testBreakpoints": "Test brand appearance at 320px, 768px, 1024px, and 1440px",
         "maintainHierarchy": "Maintain visual hierarchy at all screen sizes",
-        "useSameComponents": "Use the same components everywhere - don\\",
+        "useSameComponents": "Use the same components everywhere - don't create one-off variants",
         "createColorTokens": "Create semantic color tokens (bg-primary, text-secondary, etc.)",
-        "designDarkPalette": "Design your dark palette - don\\",
+        "designDarkPalette": "Design your dark palette - don't just invert colors",
         "useColorSchemeQuery": "Use prefers-color-scheme media query for automatic switching",
         "provideLightDarkVersions": "Provide light/dark versions of logo and images",
         "testDarkMode": "Test all components in dark mode",
@@ -7367,7 +7432,7 @@
           "step6": "Allow users to change their mind later via cookie settings link"
         },
         "https": {
-          "step1": "Obtain SSL certificate from a trusted provider or use free Let\\",
+          "step1": "Obtain SSL certificate from a trusted provider or use free Let's Encrypt",
           "step2": "Install certificate on your web server",
           "step3": "Configure server to redirect all HTTP traffic to HTTPS",
           "step4": "Update all internal links to use HTTPS",
@@ -7574,6 +7639,13 @@
           "category": "Category",
           "trackers": "Trackers"
         }
+      },
+      "factors": {
+        "bannerPresent": "Cookie banner present",
+        "compliantLibrary": "Uses compliant consent library",
+        "rejectOption": "Easy reject option available",
+        "granularConsent": "Granular consent options",
+        "noPreConsentCookies": "No pre-consent non-essential cookies"
       }
     },
     "hosting": {
@@ -7828,7 +7900,13 @@
         "recommendations": "Recommendations",
         "recommendations.noneTitle": "Solid Hosting Setup",
         "recommendations.noneBody": "Your hosting configuration follows best practices. Continue monitoring for performance changes."
-      }
+      },
+      "invalidResponse": "The analysis returned invalid data. Please try again.",
+      "budgetOptionsHidden": "{{count}} budget options hidden as inadequate for this tier",
+      "noPricingData": "Pricing data is not available for this scan.",
+      "noSavingsFound": "No savings opportunities detected for this site.",
+      "noRecommendedHosts": "No host recommendations are available for this scan.",
+      "noProviderComparison": "Provider comparison data is not available for this scan."
     },
     "ipReputation": {
       "title": "IP Reputation Analysis",
@@ -8001,6 +8079,22 @@
         "recommendations": "Recommendations",
         "recommendations.noneTitle": "Good Reputation Standing",
         "recommendations.noneBody": "Your IP has a clean reputation. Continue monitoring for changes and maintain security best practices."
+      },
+      "guide": {
+        "difficultyIntermediate": "INTERMEDIATE",
+        "time15to30": "15-30 minutes",
+        "adminAccess": "Administrator access",
+        "verifyApplied": "Verify the change was applied correctly",
+        "testFunctionality": "Test functionality",
+        "monitorIssues": "Monitor for issues"
+      },
+      "defaultSteps": {
+        "reviewIssue": "Review the current issue and understand its impact",
+        "researchFix": "Research the specific fix for your environment",
+        "implementAction": "Implement the recommended action",
+        "testFix": "Test to verify the fix is working correctly",
+        "setUpMonitoring": "Set up monitoring to prevent recurrence",
+        "documentChange": "Document the change for future reference"
       }
     },
     "geoSeo": {
@@ -8120,6 +8214,13 @@
           "addGbpLinks": "Add links to your Google Business Profile",
           "includeSocial": "Include Facebook, Instagram, or LinkedIn",
           "placeIconsFooter": "Place icons in footer for visibility"
+        },
+        "time": {
+          "5min": "5 minutes",
+          "10min": "10 minutes",
+          "15min": "15 minutes",
+          "20min": "20 minutes",
+          "30min": "30 minutes"
         }
       },
       "report": {
@@ -8181,7 +8282,21 @@
         "recommendations": "Recommendations",
         "recommendations.noneTitle": "Strong Local SEO",
         "recommendations.noneBody": "Your site follows local SEO best practices. Continue monitoring your local presence and NAP consistency for sustained rankings."
-      }
+      },
+      "citationsDirectoryAnalysis": "Citations & Directory Analysis",
+      "citationsDesc": "Citations are mentions of your business on external directories and platforms. Consistent citations boost local search rankings.",
+      "noDirectoryLinks": "No directory links detected on page",
+      "directoryBadges": "Directory Badges Detected",
+      "noDirectoryBadges": "No directory badges detected",
+      "geoContentPages": "Geo Content Pages",
+      "multiLocationAnalysis": "Multi-Location & Geo Pages Analysis",
+      "multiLocationDesc": "Multi-location signals help search engines associate your business with specific geographic areas and serve relevant results.",
+      "locationLandingPages": "Location Landing Pages",
+      "noLocationPages": "No location landing pages detected",
+      "reviewsReputationAnalysis": "Reviews & Reputation Analysis",
+      "reviewsDesc": "Reviews and reputation signals influence local search rankings and customer trust. Displaying ratings and linking to review platforms improves credibility.",
+      "totalReviews": "Total Reviews",
+      "noReviewPlatformLinks": "No review platform links detected. Consider linking to Google, Yelp, or industry-specific review sites."
     },
     "crawler": {
       "title": "Site Crawler Report",
@@ -8373,6 +8488,18 @@
         "sectionsOnlyOnePage": "{{count}} sections have only 1 page",
         "multipleUrlFormats": "Multiple URL formats detected ({{count}} types)",
         "wellOrganizedStructure": "Well-organized site structure"
+      },
+      "hostingTypes": {
+        "managedWordPress": "Managed WordPress",
+        "webOpsPlatform": "WebOps Platform",
+        "jamstack": "JAMstack",
+        "edgePlatform": "Edge Platform",
+        "paas": "PaaS",
+        "cloudInfrastructure": "Cloud Infrastructure",
+        "edgeCdn": "Edge/CDN",
+        "ecommerce": "E-commerce",
+        "websiteBuilder": "Website Builder",
+        "sharedHosting": "Shared Hosting"
       }
     },
     "siteCrawler": {
@@ -8687,7 +8814,8 @@
       },
       "healthScore": "Tag Health Score",
       "totalIssues": "Total Issues",
-      "performanceScore": "Performance Score"
+      "performanceScore": "Performance Score",
+      "noPerformanceData": "No script performance data available for this page."
     },
     "metrics": {
       "overall": "Overall",
@@ -9169,6 +9297,10 @@
         "totalImpact": "Addressing all identified issues could improve your overall score by approximately {{points}} points",
         "totalImpactClean": "Your score is strong. Focus on maintaining current performance and monitoring for regressions."
       }
+    },
+    "print": {
+      "header": "Site Mechanic Report",
+      "confidential": "Confidential"
     }
   },
   "auto_scan": "true",
@@ -9830,5 +9962,11 @@
     "redeemToken": "Use Reward Token",
     "tokenRedeemed": "Report unlocked with reward token!",
     "tokenExpiry": "Expires {{date}}"
+  },
+  "rateLimit": {
+    "blocked": "You've been temporarily blocked due to too many requests. Please wait ",
+    "exceeded": "You've reached the request limit. Upgrade for higher limits, or try again in ",
+    "exceededPro": "You've reached the request limit. Please try again in ",
+    "upgradeLink": "Upgrade for higher limits"
   }
 }

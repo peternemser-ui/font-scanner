@@ -24,6 +24,16 @@ function t(key, fallback, params = {}) {
   return value;
 }
 
+// HTML-escape helper for interpolating untrusted values (e.g. user-supplied URLs) into innerHTML
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize PageShell for unified page structure
   const shell = window.PageShell.init('#page-container', {
@@ -1311,7 +1321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
-        throw new Error('Analysis timed out after 5 minutes. The website may be too slow or complex. Try Quick scan instead.');
+        throw new Error(t('errors.analysisTimeout', 'Analysis timed out after 5 minutes. The website may be too slow or complex. Try Quick scan instead.'));
       }
       throw err;
     }
@@ -1361,74 +1371,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('[PerformanceHub] CWV fetch error:', fetchErr);
       throw fetchErr;
     }
-  }
-
-  /**
-   * Create a report header with color-coded section and mode indicator
-   */
-  function createReportHeader(mode, url) {
-    const modeConfig = {
-      'quick': {
-        title: 'Speed & UX Report: Quick Scan',
-        icon: '⚡',
-        color: '#3b82f6',
-        bgColor: 'rgba(59, 130, 246, 0.1)',
-        borderColor: '#3b82f6'
-      },
-      'full': {
-        title: 'Speed & UX Report: Lighthouse Audit',
-        icon: '🔍',
-        color: '#8b5cf6',
-        bgColor: 'rgba(139, 92, 246, 0.1)',
-        borderColor: '#8b5cf6'
-      },
-      'cwv': {
-        title: 'Speed & UX Report: Core Web Vitals',
-        icon: '📊',
-        color: '#10b981',
-        bgColor: 'rgba(16, 185, 129, 0.1)',
-        borderColor: '#10b981'
-      }
-    };
-
-    const config = modeConfig[mode] || modeConfig.quick;
-
-    return `
-      <div class="report-header" style="
-        background: ${config.bgColor};
-        border: 2px solid ${config.borderColor};
-        border-radius: 12px;
-        padding: 1.5rem 2rem;
-        margin-bottom: 2rem;
-        animation: slideInFromTop 0.5s ease-out;
-      ">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <span style="font-size: 2.5rem; line-height: 1;">${config.icon}</span>
-            <div>
-              <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: ${config.color};">
-                ${config.title}
-              </h2>
-              <p style="margin: 0.25rem 0 0 0; color: rgba(255,255,255,0.7); font-size: 0.9rem;">
-                <strong style="color: ${config.color};">URL:</strong> ${url}
-              </p>
-            </div>
-          </div>
-          <div style="text-align: right;">
-            <div style="
-              background: var(--r-surface-2, #F8FAFC);
-              border: 1px solid ${config.borderColor};
-              border-radius: 8px;
-              padding: 0.5rem 1rem;
-              font-size: 0.85rem;
-              color: rgba(255,255,255,0.9);
-            ">
-              <strong style="color: ${config.color};">${t('reports.common.generated', 'Generated')}:</strong> ${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString()}
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
   }
 
   /**
@@ -1503,7 +1445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${details ? `
           <details style="margin-top: 1.5rem; text-align: left; background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px;">
             <summary style="cursor: pointer; color: #fca5a5; font-weight: 600; margin-bottom: 0.5rem;">${t('reports.common.technicalDetails', 'Technical Details')}</summary>
-            <pre style="color: #fca5a5; font-size: 0.85rem; margin: 0.5rem 0 0 0; overflow-x: auto;">${JSON.stringify(details, null, 2)}</pre>
+            <pre style="color: #fca5a5; font-size: 0.85rem; margin: 0.5rem 0 0 0; overflow-x: auto;">${escapeHtml(JSON.stringify(details, null, 2))}</pre>
           </details>
         ` : ''}
         <button data-action="reload" style="margin-top: 1.5rem; background: #ef4444; border: none; color: var(--r-text, #111827); padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
@@ -1565,9 +1507,9 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="report-shell__card">
         <div class="report-shell__metric-grid">
           ${metrics.map(m => `
-            <div class="metric-card" style="background: var(--bg-tertiary, #1a1a1a); border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); border-radius: 12px; padding: 1.25rem;">
+            <div class="metric-card" style="background: var(--r-surface-1, #FFFFFF); border: 1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius: 12px; padding: 1.25rem;">
               <div style="font-weight: 700; color: #22c55e; margin-bottom: 0.75rem; font-size: 1.05rem;">${m.label}</div>
-              <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary, #111); border-radius: 8px; color: ${m.color}; font-weight: 700; font-size: 1.25rem;">${m.value}</div>
+              <div style="text-align: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px; color: ${m.color}; font-weight: 700; font-size: 1.25rem;">${m.value}</div>
             </div>
           `).join('')}
         </div>
@@ -1614,21 +1556,21 @@ document.addEventListener('DOMContentLoaded', () => {
     ].join('');
 
     // Build screenshot HTML for Quick Scan report
-    const screenshotHTML = screenshotUrl ? `
+    const screenshotHTML = `
       <div class="screenshot-section" style="margin-bottom: 1.5rem;">
         <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
           ${t('reports.common.pageScreenshot', 'Page Screenshot')}
         </h3>
         <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
-          <img
-            src="${screenshotUrl}"
-            alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url })}"
+          ${screenshotUrl ? `<img
+            src="${escapeHtml(screenshotUrl)}"
+            alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url: escapeHtml(url) })}"
             class="screenshot-item__img perf-hub-screenshot"
             style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
-          />
+          />` : `<div style="padding: 2rem; text-align: center; color: var(--r-text-muted, #6B7280);">${t('reports.common.screenshotUnavailable', 'This site blocks automated screenshots')}</div>`}
         </div>
       </div>
-    ` : '';
+    `;
 
     const html = `
       ${ReportShell.renderReportHeader({ title: t('reports.performanceHub.quickScanTitle', 'Speed & UX Report: Quick Scan'), url, timestamp: generatedAt, badgeText: t('reports.performanceHub.quickScanBadge', 'Quick Scan'), mode: 'quick' })}
@@ -1821,6 +1763,8 @@ document.addEventListener('DOMContentLoaded', () => {
       ReportAccordion.createSection({ id: 'lh-performance-metrics', title: t('reports.performance.performanceMetrics', 'Performance Metrics'), scoreTextRight: formatScoreText(overallPerf), contentHTML: performanceMetricsContent }),
       ReportAccordion.createSection({ id: 'lh-cwv', title: t('reports.performance.coreWebVitals', 'Core Web Vitals'), scoreTextRight: formatScoreText(overallPerf), contentHTML: cwvContent }),
       ReportAccordion.createSection({ id: 'lh-resources', title: t('reports.performance.resourceBreakdown', 'Resource Breakdown'), scoreTextRight: null, contentHTML: resourcesContent }),
+      ReportAccordion.createSection({ id: 'lh-diagnostics', title: t('reports.performance.diagnostics.title', 'Diagnostics'), scoreTextRight: null, contentHTML: `<div class="report-shell__card">${diagnosticsContent}</div>` }),
+      ReportAccordion.createSection({ id: 'lh-additional-checks', title: t('reports.performance.additionalChecks', 'Additional Checks'), scoreTextRight: null, contentHTML: `<div class="report-shell__card">${additionalChecksContent}</div>` }),
       ReportAccordion.createSection({ id: 'lh-fixes', title: t('reports.common.fixCodeRecommendations', 'Recommendations & Fixes'), scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent }),
       ReportAccordion.createSection({ id: 'ai-strategic-analysis', title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'), isPro: true, locked: proLocked, context: 'performance-lighthouse', reportId: reportId, scoreTextRight: null, contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>' })
     ].join('');
@@ -1833,21 +1777,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Build screenshot HTML
-    const screenshotHTML = screenshotUrl ? `
+    const screenshotHTML = `
       <div class="screenshot-section" style="margin-bottom: 1.5rem;">
         <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
           ${t('reports.common.pageScreenshot', 'Page Screenshot')}
         </h3>
         <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
-          <img
-            src="${screenshotUrl}"
-            alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url })}"
+          ${screenshotUrl ? `<img
+            src="${escapeHtml(screenshotUrl)}"
+            alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url: escapeHtml(url) })}"
             class="screenshot-item__img perf-hub-screenshot"
             style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
-          />
+          />` : `<div style="padding: 2rem; text-align: center; color: var(--r-text-muted, #6B7280);">${t('reports.common.screenshotUnavailable', 'This site blocks automated screenshots')}</div>`}
         </div>
       </div>
-    ` : '';
+    `;
 
     // Lighthouse unavailability banner — shown when both desktop + mobile Lighthouse fell back
     const lighthouseUnavailableBanner = (results.lighthouseUnavailable || data.lighthouseUnavailable) ? `
@@ -2118,7 +2062,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const entries = [
       { label: 'LCP', d: formatMsCompact(d.lcpMs), m: formatMsCompact(m.lcpMs), dVal: d.lcpMs, mVal: m.lcpMs, thresholds: { good: 2500, poor: 4000 }, max: 6000 },
       { label: 'CLS', d: formatCls(d.clsNum), m: formatCls(m.clsNum), dVal: d.clsNum, mVal: m.clsNum, thresholds: { good: 0.1, poor: 0.25 }, max: 0.5, isCls: true },
-      { label: 'TBT/FID', d: formatMsCompact(d.inpMs || d.fidMs), m: formatMsCompact(m.inpMs || m.fidMs), dVal: d.inpMs || d.fidMs, mVal: m.inpMs || m.fidMs, thresholds: { good: 200, poor: 500 }, max: 800 },
+      { label: 'TBT/FID', d: formatMsCompact(d.inpMs || d.fidMs), m: formatMsCompact(m.inpMs || m.fidMs), dVal: d.inpMs || d.fidMs, mVal: m.inpMs || m.fidMs, thresholds: { good: CWV_THRESHOLDS.inp.good, poor: CWV_THRESHOLDS.inp.poor }, max: 800 },
       { label: 'FCP', d: formatMsCompact(d.fcpMs), m: formatMsCompact(m.fcpMs), dVal: d.fcpMs, mVal: m.fcpMs, thresholds: { good: 1800, poor: 3000 }, max: 5000 },
       { label: 'TTFB', d: valueOrDash(ttfbValue), m: '—', single: true },
       { label: t('reports.performance.domInteractive', 'DOM Interactive'), d: valueOrDash(domInteractiveValue), m: '—', single: true }
@@ -2158,29 +2102,29 @@ document.addEventListener('DOMContentLoaded', () => {
         ${chartHtml}
         <div class="report-shell__metric-grid">
           ${entries.map(entry => {
-            const dColor = entry.thresholds ? (entry.dVal <= entry.thresholds.good ? '#22c55e' : entry.dVal <= entry.thresholds.poor ? '#f59e0b' : '#ef4444') : 'var(--text-primary, #fff)';
-            const mColor = entry.thresholds ? (entry.mVal <= entry.thresholds.good ? '#22c55e' : entry.mVal <= entry.thresholds.poor ? '#f59e0b' : '#ef4444') : 'var(--text-primary, #fff)';
+            const dColor = entry.thresholds ? (entry.dVal <= entry.thresholds.good ? '#22c55e' : entry.dVal <= entry.thresholds.poor ? '#f59e0b' : '#ef4444') : 'var(--r-text, #111827)';
+            const mColor = entry.thresholds ? (entry.mVal <= entry.thresholds.good ? '#22c55e' : entry.mVal <= entry.thresholds.poor ? '#f59e0b' : '#ef4444') : 'var(--r-text, #111827)';
             
             // For single-value metrics (TTFB, DOM Interactive), show centered value
             if (entry.single) {
               return `
-              <div class="metric-card" style="background: var(--bg-tertiary, #1a1a1a); border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); border-radius: 12px; padding: 1.25rem;">
+              <div class="metric-card" style="background: var(--r-surface-1, #FFFFFF); border: 1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius: 12px; padding: 1.25rem;">
                 <div style="font-weight: 700; color: #22c55e; margin-bottom: 0.75rem; font-size: 1.1rem;">${entry.label}</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary, #fff); text-align: center; padding: 0.5rem; background: var(--bg-secondary, #111); border-radius: 8px;">${entry.d}</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--r-text, #111827); text-align: center; padding: 0.5rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">${entry.d}</div>
               </div>
               `;
             }
-            
+
             return `
-            <div class="metric-card" style="background: var(--bg-tertiary, #1a1a1a); border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); border-radius: 12px; padding: 1.25rem;">
+            <div class="metric-card" style="background: var(--r-surface-1, #FFFFFF); border: 1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius: 12px; padding: 1.25rem;">
               <div style="font-weight: 700; color: #22c55e; margin-bottom: 1rem; font-size: 1.1rem;">${entry.label}</div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary, #111); border-radius: 8px;">
-                  <div style="color: var(--text-muted, #9ca3af); font-size: 0.8rem; margin-bottom: 0.35rem;">Desktop</div>
+                <div style="text-align: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
+                  <div style="color: var(--r-text-muted, #6B7280); font-size: 0.8rem; margin-bottom: 0.35rem;">${t('reports.performance.desktop', 'Desktop')}</div>
                   <div style="color: ${dColor}; font-weight: 700; font-size: 1.25rem;">${entry.d}</div>
                 </div>
-                <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary, #111); border-radius: 8px;">
-                  <div style="color: var(--text-muted, #9ca3af); font-size: 0.8rem; margin-bottom: 0.35rem;">Mobile</div>
+                <div style="text-align: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
+                  <div style="color: var(--r-text-muted, #6B7280); font-size: 0.8rem; margin-bottom: 0.35rem;">${t('reports.performance.mobile', 'Mobile')}</div>
                   <div style="color: ${mColor}; font-weight: 700; font-size: 1.25rem;">${entry.m}</div>
                 </div>
               </div>
@@ -2229,15 +2173,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const dColor = getScoreColor(e.d);
             const mColor = getScoreColor(e.m);
             return `
-            <div class="metric-card" style="background: var(--bg-tertiary, #1a1a1a); border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); border-radius: 12px; padding: 1.25rem;">
+            <div class="metric-card" style="background: var(--r-surface-1, #FFFFFF); border: 1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius: 12px; padding: 1.25rem;">
               <div style="font-weight: 700; color: #22c55e; margin-bottom: 1rem; font-size: 1.1rem;">${e.label}</div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary, #111); border-radius: 8px;">
-                  <div style="color: var(--text-muted, #9ca3af); font-size: 0.8rem; margin-bottom: 0.35rem;">Desktop</div>
+                <div style="text-align: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
+                  <div style="color: var(--r-text-muted, #6B7280); font-size: 0.8rem; margin-bottom: 0.35rem;">${t('reports.performance.desktop', 'Desktop')}</div>
                   <div style="color: ${dColor}; font-weight: 700; font-size: 1.25rem;">${valueOrDash(e.d)}</div>
                 </div>
-                <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary, #111); border-radius: 8px;">
-                  <div style="color: var(--text-muted, #9ca3af); font-size: 0.8rem; margin-bottom: 0.35rem;">Mobile</div>
+                <div style="text-align: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
+                  <div style="color: var(--r-text-muted, #6B7280); font-size: 0.8rem; margin-bottom: 0.35rem;">${t('reports.performance.mobile', 'Mobile')}</div>
                   <div style="color: ${mColor}; font-weight: 700; font-size: 1.25rem;">${valueOrDash(e.m)}</div>
                 </div>
               </div>
@@ -2254,7 +2198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const items = [
       { label: 'LCP', d: formatMsCompact(d.lcpMs), m: formatMsCompact(m.lcpMs), target: '≤ 2.5s', dVal: d.lcpMs, mVal: m.lcpMs, thresholds: { good: 2500, poor: 4000 }, max: 6000 },
       { label: 'CLS', d: formatCls(d.clsNum), m: formatCls(m.clsNum), target: '≤ 0.1', dVal: d.clsNum, mVal: m.clsNum, thresholds: { good: 0.1, poor: 0.25 }, max: 0.5, isCls: true },
-      { label: 'INP/TBT', d: formatMsCompact(d.inpMs || d.fidMs), m: formatMsCompact(m.inpMs || m.fidMs), target: '≤ 200ms', dVal: d.inpMs || d.fidMs, mVal: m.inpMs || m.fidMs, thresholds: { good: 200, poor: 500 }, max: 800 },
+      { label: 'INP/TBT', d: formatMsCompact(d.inpMs || d.fidMs), m: formatMsCompact(m.inpMs || m.fidMs), target: '≤ 200ms', dVal: d.inpMs || d.fidMs, mVal: m.inpMs || m.fidMs, thresholds: { good: CWV_THRESHOLDS.inp.good, poor: CWV_THRESHOLDS.inp.poor }, max: 800 },
       { label: 'FCP', d: formatMsCompact(d.fcpMs), m: formatMsCompact(m.fcpMs), target: '≤ 1.8s', dVal: d.fcpMs, mVal: m.fcpMs, thresholds: { good: 1800, poor: 3000 }, max: 5000 }
     ];
     
@@ -2292,7 +2236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="report-shell__metric-grid">
           ${items.map(item => {
             const getColor = (val) => {
-              if (val === null || val === undefined) return 'var(--text-primary, #fff)';
+              if (val === null || val === undefined) return 'var(--r-text, #111827)';
               if (val <= item.thresholds.good) return '#22c55e';
               if (val <= item.thresholds.poor) return '#f59e0b';
               return '#ef4444';
@@ -2300,18 +2244,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const dColor = getColor(item.dVal);
             const mColor = getColor(item.mVal);
             return `
-            <div class="metric-card" style="background: var(--bg-tertiary, #1a1a1a); border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); border-radius: 12px; padding: 1.25rem;">
+            <div class="metric-card" style="background: var(--r-surface-1, #FFFFFF); border: 1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius: 12px; padding: 1.25rem;">
               <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <div style="font-weight: 700; color: #22c55e; font-size: 1.1rem;">${item.label}</div>
-                <div style="color: var(--text-muted, #9ca3af); font-size: 0.85rem; padding: 0.2rem 0.5rem; background: var(--bg-secondary, #111); border-radius: 4px;">Target: ${item.target}</div>
+                <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem; padding: 0.2rem 0.5rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px;">${t('reports.cwv.target', 'Target')}: ${item.target}</div>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary, #111); border-radius: 8px;">
-                  <div style="color: var(--text-muted, #9ca3af); font-size: 0.8rem; margin-bottom: 0.35rem;">Desktop</div>
+                <div style="text-align: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
+                  <div style="color: var(--r-text-muted, #6B7280); font-size: 0.8rem; margin-bottom: 0.35rem;">${t('reports.performance.desktop', 'Desktop')}</div>
                   <div style="color: ${dColor}; font-weight: 700; font-size: 1.25rem;">${item.d}</div>
                 </div>
-                <div style="text-align: center; padding: 0.75rem; background: var(--bg-secondary, #111); border-radius: 8px;">
-                  <div style="color: var(--text-muted, #9ca3af); font-size: 0.8rem; margin-bottom: 0.35rem;">Mobile</div>
+                <div style="text-align: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
+                  <div style="color: var(--r-text-muted, #6B7280); font-size: 0.8rem; margin-bottom: 0.35rem;">${t('reports.performance.mobile', 'Mobile')}</div>
                   <div style="color: ${mColor}; font-weight: 700; font-size: 1.25rem;">${item.m}</div>
                 </div>
               </div>
@@ -2397,7 +2341,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return `
       <ul style="margin:0; padding-left:1.1rem; display:grid; gap:0.5rem; color: var(--text-secondary, #e5e7eb);">
-        ${combined.slice(0, 10).map(d => `<li><strong style="color: var(--text-primary, #fff);">${d.title || d.name || 'Diagnostic'}</strong>${d.description ? ` — ${d.description}` : ''}</li>`).join('')}
+        ${combined.slice(0, 10).map(d => `<li><strong style="color: var(--text-primary, #fff);">${d.title || d.name || t('reports.performance.diagnostic', 'Diagnostic')}</strong>${d.description ? ` — ${d.description}` : ''}</li>`).join('')}
       </ul>
     `;
   }
@@ -2427,7 +2371,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderAdditionalChecksSection(results) {
     const checks = results.checks || [];
     if (!checks.length) {
-      return '<div style="color: var(--text-muted, #9ca3af);">No additional checks available.</div>';
+      return '<div style="color: var(--text-muted, #9ca3af);">' + t('reports.performance.noAdditionalChecks', 'No additional checks available.') + '</div>';
     }
     return `
       <ul style="margin:0; padding-left:1.1rem; display:grid; gap:0.4rem; color: var(--text-secondary, #e5e7eb);">
@@ -2484,8 +2428,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return 40;
     }
     if (metric === 'inp') {
-      if (avg <= 200) return 95;
-      if (avg <= 400) return 70;
+      if (avg <= CWV_THRESHOLDS.inp.good) return 95;
+      if (avg <= CWV_THRESHOLDS.inp.poor) return 70;
       return 40;
     }
     // lcp / generic ms
@@ -2523,37 +2467,37 @@ document.addEventListener('DOMContentLoaded', () => {
     return `
       <div class="report-shell__card">
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-bottom:1rem;">
-          <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
+          <div style="background:var(--r-surface-1, #FFFFFF); border:1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius:10px; padding:1rem;">
             <div style="font-weight:700; color:#22c55e; margin-bottom:0.5rem;">${t('reports.cwv.lcp', 'LCP')} (${t('reports.cwv.lcpName', 'Largest Contentful Paint')})</div>
-            <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
-              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.lcpMs)}</strong></span>
-              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.lcpMs)}</strong></span>
+            <div style="display:flex; justify-content:space-between; color:var(--r-text-muted, #6B7280);">
+              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--r-text, #111827);">${formatMsCompact(d.lcpMs)}</strong></span>
+              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--r-text, #111827);">${formatMsCompact(m.lcpMs)}</strong></span>
             </div>
-            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.lcp.target}</div>
+            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--r-text-muted, #6B7280);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.lcp.target}</div>
           </div>
-          <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
+          <div style="background:var(--r-surface-1, #FFFFFF); border:1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius:10px; padding:1rem;">
             <div style="font-weight:700; color:#22c55e; margin-bottom:0.5rem;">${t('reports.cwv.cls', 'CLS')} (${t('reports.cwv.clsName', 'Cumulative Layout Shift')})</div>
-            <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
-              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatCls(d.clsNum)}</strong></span>
-              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatCls(m.clsNum)}</strong></span>
+            <div style="display:flex; justify-content:space-between; color:var(--r-text-muted, #6B7280);">
+              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--r-text, #111827);">${formatCls(d.clsNum)}</strong></span>
+              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--r-text, #111827);">${formatCls(m.clsNum)}</strong></span>
             </div>
-            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.cls.target}</div>
+            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--r-text-muted, #6B7280);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.cls.target}</div>
           </div>
-          <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
+          <div style="background:var(--r-surface-1, #FFFFFF); border:1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius:10px; padding:1rem;">
             <div style="font-weight:700; color:#22c55e; margin-bottom:0.5rem;">${t('reports.cwv.inp', 'INP/TBT')} (${t('reports.cwv.inpName', 'Interaction to Next Paint')})</div>
-            <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
-              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.inpMs || d.fidMs)}</strong></span>
-              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.inpMs || m.fidMs)}</strong></span>
+            <div style="display:flex; justify-content:space-between; color:var(--r-text-muted, #6B7280);">
+              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--r-text, #111827);">${formatMsCompact(d.inpMs || d.fidMs)}</strong></span>
+              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--r-text, #111827);">${formatMsCompact(m.inpMs || m.fidMs)}</strong></span>
             </div>
-            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.inp.target}</div>
+            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--r-text-muted, #6B7280);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.inp.target}</div>
           </div>
-          <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
+          <div style="background:var(--r-surface-1, #FFFFFF); border:1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius:10px; padding:1rem;">
             <div style="font-weight:700; color:#22c55e; margin-bottom:0.5rem;">${t('reports.cwv.fcp', 'FCP')} (${t('reports.cwv.fcpName', 'First Contentful Paint')})</div>
-            <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
-              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.fcpMs)}</strong></span>
-              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.fcpMs)}</strong></span>
+            <div style="display:flex; justify-content:space-between; color:var(--r-text-muted, #6B7280);">
+              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--r-text, #111827);">${formatMsCompact(d.fcpMs)}</strong></span>
+              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--r-text, #111827);">${formatMsCompact(m.fcpMs)}</strong></span>
             </div>
-            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">${t('reports.cwv.target', 'Target')}: ≤ 1.8s</div>
+            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--r-text-muted, #6B7280);">${t('reports.cwv.target', 'Target')}: ≤ 1.8s</div>
           </div>
         </div>
         <div style="margin-top:1rem;">
@@ -2565,7 +2509,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderCWVDetailSection(metric, desktop, mobile) {
-    const thresholds = { LCP: { good: 2500, poor: 4000 }, CLS: { good: 0.1, poor: 0.25 }, INP: { good: 200, poor: 400 } };
+    const thresholds = { LCP: { good: CWV_THRESHOLDS.lcp.good, poor: CWV_THRESHOLDS.lcp.poor }, CLS: { good: CWV_THRESHOLDS.cls.good, poor: CWV_THRESHOLDS.cls.poor }, INP: { good: CWV_THRESHOLDS.inp.good, poor: CWV_THRESHOLDS.inp.poor } };
     const map = {
       LCP: { d: desktop.coreWebVitals?.lcpMs, m: mobile.coreWebVitals?.lcpMs, target: '≤ 2.5s', max: 5000 },
       CLS: { d: desktop.coreWebVitals?.clsNum, m: mobile.coreWebVitals?.clsNum, target: '≤ 0.1', max: 0.4 },
@@ -2597,30 +2541,30 @@ document.addEventListener('DOMContentLoaded', () => {
     return `
       <div class="report-shell__card">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
-          <span style="font-weight:700; color:#e5e7eb;">${t('reports.cwv.target', 'Target')}:</span>
+          <span style="font-weight:700; color:var(--r-text, #111827);">${t('reports.cwv.target', 'Target')}:</span>
           <span style="color:#22c55e; font-weight:600;">${entry.target || '—'}</span>
         </div>
         <div style="display:grid; gap:1rem; margin-bottom:1rem;">
-          <div style="background:#111b16; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:1rem;">
+          <div style="background:var(--r-surface-1, #FFFFFF); border:1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius:10px; padding:1rem;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-              <span style="font-weight:700; color:#e5e7eb;">${t('reports.performance.desktop', 'Desktop')}</span>
+              <span style="font-weight:700; color:var(--r-text, #111827);">${t('reports.performance.desktop', 'Desktop')}</span>
               <span style="font-weight:800; font-size:1.1rem; color:${dColor};">${dDisplay}</span>
             </div>
-            <div style="height:12px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden;">
+            <div style="height:12px; background:var(--r-surface-2, #F8FAFC); border-radius:999px; overflow:hidden;">
               <div style="height:100%; width:${getBarWidth(dVal, entry.max)}; background:${dColor}; border-radius:999px; transition:width 0.5s ease;"></div>
             </div>
           </div>
-          <div style="background:#111b16; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:1rem;">
+          <div style="background:var(--r-surface-1, #FFFFFF); border:1px solid var(--r-border, rgba(0,0,0,0.10)); border-radius:10px; padding:1rem;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-              <span style="font-weight:700; color:#e5e7eb;">${t('reports.performance.mobile', 'Mobile')}</span>
+              <span style="font-weight:700; color:var(--r-text, #111827);">${t('reports.performance.mobile', 'Mobile')}</span>
               <span style="font-weight:800; font-size:1.1rem; color:${mColor};">${mDisplay}</span>
             </div>
-            <div style="height:12px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden;">
+            <div style="height:12px; background:var(--r-surface-2, #F8FAFC); border-radius:999px; overflow:hidden;">
               <div style="height:100%; width:${getBarWidth(mVal, entry.max)}; background:${mColor}; border-radius:999px; transition:width 0.5s ease;"></div>
             </div>
           </div>
         </div>
-        <div style="background:rgba(0,255,65,0.06); border:1px solid rgba(0,255,65,0.2); border-radius:8px; padding:0.75rem; color:#c7f5d9; font-size:0.9rem;">
+        <div style="background:rgba(0,255,65,0.06); border:1px solid rgba(0,255,65,0.2); border-radius:8px; padding:0.75rem; color:var(--r-text, #111827); font-size:0.9rem;">
           <strong style="color:#22c55e;">💡 ${t('reports.common.howToImprove', 'How to improve')}:</strong> ${tips[metric] || t('reports.cwv.tips.default', 'Optimize render-blocking resources, compress images, and reduce JS long tasks.')}
         </div>
       </div>
@@ -2902,21 +2846,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Build screenshot HTML for CWV report
-    const screenshotHTML = screenshotUrl ? `
+    const screenshotHTML = `
       <div class="screenshot-section" style="margin-bottom: 1.5rem;">
         <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
           ${t('reports.common.pageScreenshot', 'Page Screenshot')}
         </h3>
         <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
-          <img
-            src="${screenshotUrl}"
-            alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url })}"
+          ${screenshotUrl ? `<img
+            src="${escapeHtml(screenshotUrl)}"
+            alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url: escapeHtml(url) })}"
             class="screenshot-item__img perf-hub-screenshot"
             style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
-          />
+          />` : `<div style="padding: 2rem; text-align: center; color: var(--r-text-muted, #6B7280);">${t('reports.common.screenshotUnavailable', 'This site blocks automated screenshots')}</div>`}
         </div>
       </div>
-    ` : '';
+    `;
 
     const html = `
       ${ReportShell.renderReportHeader({ title: t('reports.performanceHub.cwvTitle', 'Speed & UX Report: Core Web Vitals'), url, timestamp, badgeText: t('reports.performanceHub.cwvBadge', 'Core Web Vitals'), mode: 'cwv' })}
@@ -3010,7 +2954,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="cwv-metric" style="margin-bottom: 0.5rem;">
           <div class="cwv-metric-header">
             <span class="cwv-metric-name">INP</span>
-            <span class="cwv-metric-badge ${getCWVRating(inp, 200, 500)}">${getCWVLabel(inp, 200, 500)}</span>
+            <span class="cwv-metric-badge ${getCWVRating(inp, CWV_THRESHOLDS.inp.good, CWV_THRESHOLDS.inp.poor)}">${getCWVLabel(inp, CWV_THRESHOLDS.inp.good, CWV_THRESHOLDS.inp.poor)}</span>
           </div>
           <div class="cwv-metric-value">${formatMs(inp)}</div>
         </div>
@@ -3144,7 +3088,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const valueText = metric === 'cls'
       ? `${formatCls(desktopValue)} / ${formatCls(mobileValue)}`
       : `${formatMsCompact(desktopValue)} / ${formatMsCompact(mobileValue)}`;
-    return `${label} · ${valueText} · Target ${targetText} (${status.badge})`;
+    return `${label} · ${valueText} · ${t('reports.cwv.target', 'Target')} ${targetText} (${status.badge})`;
   }
 
   function renderRiskBanner(statuses) {
@@ -3390,8 +3334,8 @@ document.addEventListener('DOMContentLoaded', () => {
       chips = { dns: 'ok', tls: 'fail', http: 'unknown' };
     }
 
-    const title = t(`scanError.${titleKey}`, titleFallback, { domain });
-    const subtitle = t(`scanError.${subtitleKey}`, subtitleFallback, { domain });
+    const title = t(`scanError.${titleKey}`, titleFallback, { domain: escapeHtml(domain) });
+    const subtitle = t(`scanError.${subtitleKey}`, subtitleFallback, { domain: escapeHtml(domain) });
 
     // Reason text (raw error message, if it adds value beyond the subtitle)
     const reasonText = (errorName || message || '').slice(0, 120);
@@ -3423,7 +3367,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Reason pill HTML
-    const reasonHtml = reasonText ? `<span class="scan-error-state__reason">${t('scanError.reason', 'Reason: {{reason}}', { reason: reasonText })}</span>` : '';
+    const reasonHtml = reasonText ? `<span class="scan-error-state__reason">${t('scanError.reason', 'Reason: {{reason}}', { reason: escapeHtml(reasonText) })}</span>` : '';
 
     // Quick checks list
     const checks = [
@@ -3449,7 +3393,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <button type="button" class="scan-error-state__btn-secondary" data-action="try-again">
               ${t('scanError.tryAgain', 'Try again')}
             </button>
-            <a class="scan-error-state__btn-tertiary" href="https://${domain}" target="_blank" rel="noopener noreferrer">
+            <a class="scan-error-state__btn-tertiary" href="https://${escapeHtml(domain)}" target="_blank" rel="noopener noreferrer">
               ${t('scanError.openInBrowser', 'Open in browser')} ${arrowUpRightIcon}
             </a>
           </div>
@@ -3474,7 +3418,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
               <div class="scan-error-state__details-row">
                 <span class="scan-error-state__details-label">${t('scanError.attemptedUrl', 'Attempted URL')}</span>
-                <span class="scan-error-state__details-value">${attemptedUrl}</span>
+                <span class="scan-error-state__details-value">${escapeHtml(attemptedUrl)}</span>
               </div>
               <div class="scan-error-state__details-row">
                 <span class="scan-error-state__details-label">${t('scanError.failedStep', 'Failed step')}</span>
@@ -4074,7 +4018,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .join('')}
             </div>
 
-            <p class="pro-report-block__helper-text">Scans are free to run. Optional paid exports (PDF/share/data) are available inside each tool.</p>
+            <p class="pro-report-block__helper-text">${t('reports.performanceHub.exploreToolsHelper', 'Scans are free to run. Optional paid exports (PDF/share/data) are available inside each tool.')}</p>
           </div>
         </div>
       `;
@@ -4537,9 +4481,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const rows = [];
 
     // Header section
-    rows.push(['Site Mechanic - Performance Report']);
-    rows.push(['Generated', new Date().toISOString()]);
-    rows.push(['URL', url]);
+    rows.push([t('reports.performance.excelTitle', 'Site Mechanic - Performance Report')]);
+    rows.push([t('reports.common.generated', 'Generated'), new Date().toISOString()]);
+    rows.push([t('reports.common.url', 'URL'), url]);
     rows.push([t('reports.common.mode', 'Mode'), mode.toUpperCase()]);
     rows.push([]);
 
@@ -4592,7 +4536,7 @@ document.addEventListener('DOMContentLoaded', () => {
     URL.revokeObjectURL(link.href);
 
     if (window.ReportUI?.toast) {
-      window.ReportUI.toast('Excel export downloaded successfully');
+      window.ReportUI.toast(t('reports.common.excelExportSuccess', 'Excel export downloaded successfully'));
     }
   }
 
@@ -4608,312 +4552,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Expose display functions globally for billing return flow
   window.displayPerformanceResults = displayResults;
   window.displayCWVResults = displayCWVResults;
-
-  // ==================== PAYMENT GATE FUNCTIONS ====================
-
-  /**
-   * Check if user has paid for a specific report
-   */
-  async function checkPaymentStatus(reportType, url) {
-    // Check localStorage for payment status
-    const paymentKey = `paid_${reportType}_${url}`;
-    const paidTimestamp = localStorage.getItem(paymentKey);
-
-    if (paidTimestamp) {
-      // Payment is valid for 24 hours
-      const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
-      if (parseInt(paidTimestamp) > oneDayAgo) {
-
-        return true;
-      }
-    }
-
-    // Check URL params for payment success
-    const params = new URLSearchParams(window.location.search);
-    const paymentSuccess = params.get('payment') === 'success';
-    const paramReportType = params.get('type');
-    const paramUrl = params.get('url');
-
-    if (paymentSuccess && paramReportType === reportType && paramUrl === url) {
-      // Store payment in localStorage
-      localStorage.setItem(paymentKey, Date.now().toString());
-
-      // Clean up URL params
-      window.history.replaceState({}, '', window.location.pathname);
-
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Show payment gate modal
-   */
-  function showPaymentGate(reportType, url) {
-    const config = {
-      cwv: {
-        title: t('reports.cwv.reportTitle', 'Core Web Vitals Report'),
-        icon: '📊',
-        description: t('reports.cwv.reportDescription', 'Get detailed Core Web Vitals analysis including LCP, INP, and CLS metrics for both mobile and desktop.'),
-        features: [
-          t('reports.cwv.featureMobileDesktop', 'Mobile & Desktop CWV metrics'),
-          t('reports.cwv.featureRankingImpact', 'Google ranking impact analysis'),
-          t('reports.cwv.featureBreakdowns', 'Detailed metric breakdowns'),
-          t('reports.common.featureRecommendations', 'Actionable recommendations'),
-          t('reports.common.featurePdfExport', 'Professional PDF export')
-        ],
-        color: '#10b981'
-      },
-      lighthouse: {
-        title: t('reports.performance.lighthouseFullAudit', 'Lighthouse Full Audit'),
-        icon: '🔍',
-        description: t('reports.performance.lighthouseDescription', 'Complete Lighthouse performance audit with detailed scores and optimization recommendations.'),
-        features: [
-          t('reports.performance.featureScores', 'Performance, Accessibility, Best Practices scores'),
-          t('reports.performance.featureMobileDesktop', 'Mobile & Desktop analysis'),
-          t('reports.performance.featureMetrics', 'Detailed performance metrics'),
-          t('reports.performance.featureOpportunities', 'Specific optimization opportunities'),
-          t('reports.common.featurePdfExport', 'Professional PDF export')
-        ],
-        color: '#8b5cf6'
-      }
-    };
-
-    const info = config[reportType];
-    const modalHTML = `
-      <div id="paymentGateModal" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: var(--modal-backdrop, rgba(0, 0, 0, 0.85));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        backdrop-filter: blur(8px);
-      ">
-        <div style="
-          background: var(--bg-card);
-          border: 2px solid ${info.color};
-          border-radius: 12px;
-          padding: 2.5rem;
-          max-width: 500px;
-          width: 90%;
-          box-shadow: var(--shadow-2xl);
-          animation: slideIn 0.3s ease-out;
-        ">
-          <!-- Header -->
-          <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">${info.icon}</div>
-            <h2 style="color: ${info.color}; margin: 0 0 0.5rem 0; font-size: 1.75rem;">${info.title}</h2>
-            <p style="color: var(--color-text-secondary, #6b7280); margin: 0; font-size: 1rem;">${info.description}</p>
-          </div>
-
-          <!-- Features -->
-          <div style="background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
-            <h3 style="color: var(--color-text, #fff); margin: 0 0 1rem 0; font-size: 1.1rem;">What's included:</h3>
-            <ul style="list-style: none; padding: 0; margin: 0;">
-              ${info.features.map(feature => `
-                <li style="color: var(--color-text-secondary, #6b7280); margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
-                  <span style="position: absolute; left: 0; color: ${info.color};">✓</span>
-                  ${feature}
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-
-          <!-- Pricing Options -->
-          <div style="text-align: center; margin-bottom: 1.5rem;">
-            <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;">
-              <div style="flex: 1; background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem;">
-                <div style="font-size: 1.5rem; font-weight: bold; color: ${info.color};">$5</div>
-                <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">${t('reports.common.thisReportOnly', 'This report only')}</div>
-              </div>
-              <div style="flex: 1; background: var(--color-primary-dim); border: 1px solid var(--color-primary); border-radius: 8px; padding: 1rem;">
-                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);">$30/mo</div>
-                <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">${t('reports.common.allReports', 'All reports')}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <button id="proceedPaymentBtn" style="
-              background: ${info.color};
-              border: none;
-              color: var(--r-text, #111827);
-              padding: 0.875rem 1.5rem;
-              border-radius: 8px;
-              cursor: pointer;
-              font-weight: 700;
-              font-size: 1rem;
-              transition: all 0.2s;
-              box-shadow: 0 4px 12px ${info.color}40;
-            " class="perf-payment-btn perf-payment-btn--primary">
-              ${t('reports.common.unlockFor5', 'Unlock for $5')}
-            </button>
-            <button id="goProBtn" class="perf-payment-btn perf-payment-btn--outline" style="
-              background: transparent;
-              border: 2px solid var(--color-primary);
-              color: var(--color-primary);
-              padding: 0.875rem 1.5rem;
-              border-radius: 8px;
-              cursor: pointer;
-              font-weight: 600;
-              font-size: 1rem;
-              transition: all 0.2s;
-            ">
-              ${t('reports.common.goPro30', 'Go Pro — $30/mo')}
-            </button>
-            <button id="cancelPaymentBtn" style="
-              background: transparent;
-              border: none;
-              color: var(--color-text-muted, #6b7280);
-              padding: 0.5rem;
-              cursor: pointer;
-              font-size: 0.875rem;
-            ">
-              ${t('nav.cancel', 'Cancel')}
-          </div>
-
-          <!-- Trust badges -->
-          <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
-            <div style="color: var(--color-text-muted, #6b7280); font-size: 0.8rem; margin-bottom: 0.5rem;">
-              🔒 ${t('reports.common.securePayments', 'Secure payments by Stripe')}
-            </div>
-            <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">
-              ${t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.')}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <style>
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(-20px) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      </style>
-    `;
-
-    // Add modal to page
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    // Add event listeners
-    document.getElementById('cancelPaymentBtn').addEventListener('click', () => {
-      document.getElementById('paymentGateModal').remove();
-      analyzeButton.disabled = false;
-      buttonText.textContent = t('common.analyze', 'Analyze');
-      if (loader) loader.complete();
-    });
-
-    document.getElementById('proceedPaymentBtn').addEventListener('click', () => {
-      createPaymentSession(reportType, url);
-    });
-
-    // Go Pro button opens pricing modal
-    document.getElementById('goProBtn').addEventListener('click', () => {
-      document.getElementById('paymentGateModal').remove();
-      if (window.PricingModal && typeof window.PricingModal.open === 'function') {
-        window.PricingModal.open();
-      }
-    });
-  }
-
-  /**
-   * Create Stripe checkout session
-   */
-  async function createPaymentSession(reportType, url) {
-    const proceedBtn = document.getElementById('proceedPaymentBtn');
-    proceedBtn.disabled = true;
-    proceedBtn.textContent = t('common.creatingCheckout', 'Creating checkout...');
-
-    try {
-      const startedAt = document.body.getAttribute('data-sm-scan-started-at') || window.SM_SCAN_STARTED_AT || '';
-      const analyzerKey = document.body.getAttribute('data-sm-analyzer-key') || window.SM_ANALYZER_KEY || '';
-      const reportId =
-        document.body.getAttribute('data-report-id') ||
-        (window.ReportUI && typeof window.ReportUI.makeReportId === 'function'
-          ? window.ReportUI.makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt })
-          : window.ReportUI && typeof window.ReportUI.computeReportId === 'function'
-          ? window.ReportUI.computeReportId(url, startedAt, analyzerKey)
-          : '');
-
-      const params = new URLSearchParams(window.location.search);
-      params.delete('session_id');
-      params.delete('sessionId');
-      params.delete('canceled');
-      if (reportId) params.set('reportId', reportId);
-      // Include URL and report type for resuming analysis after payment
-      params.set('url', url);
-      params.set('report_type', reportType);
-      params.set('auto_scan', 'true'); // Auto-run scan after payment
-      const returnUrl = `${window.location.origin}${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
-
-      // Get auth token for authenticated checkout (check both key names)
-      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;  // Include token for tracking even on public endpoint
-      }
-
-      // Use authenticated billing endpoint ONLY if logged in AND have reportId
-      // Otherwise use public payment endpoint (no reportId required)
-      const useAuthEndpoint = token && reportId;
-      const endpoint = useAuthEndpoint ? '/api/billing/checkout' : '/api/payment/create-report-payment';
-      const payload = useAuthEndpoint ? {
-        purchaseType: 'single_report',
-        reportId: reportId,
-        returnUrl
-      } : {
-        reportType: reportType,
-        url: url,
-        returnUrl
-      };
-
-      console.log('[Performance Hub Payment] Request:', { endpoint, payload, hasToken: !!token, reportId, useAuthEndpoint });
-      
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
-      console.log('[Performance Hub Payment] Response:', { status: response.status, data });
-      console.log('[Performance Hub Payment] Full response data:', JSON.stringify(data, null, 2));
-
-      if (!response.ok) {
-        const errorMsg = data?.error || data?.message || JSON.stringify(data) || 'Failed to create payment session';
-        console.error('[Performance Hub Payment] Error:', errorMsg);
-        console.error('[Performance Hub Payment] Full error object:', data);
-        throw new Error(errorMsg);
-      }
-
-      if (!data.checkoutUrl && !data.url) {
-        console.error('[Performance Hub Payment] No checkout URL in response:', data);
-        throw new Error('Payment session created but no checkout URL received');
-      }
-
-      // Redirect to Stripe Checkout
-      window.location.href = data.checkoutUrl || data.url;
-
-    } catch (error) {
-      console.error('[Performance Hub Payment] Exception:', error);
-      proceedBtn.disabled = false;
-      proceedBtn.textContent = t('reports.common.unlockFor5', 'Unlock for $5');
-      alert(`Payment error: ${error.message}`);
-    }
-  }
 
   // ==================== EVENT DELEGATION (CSP-COMPLIANT) ====================
   // Handle data-action buttons without inline onclick handlers

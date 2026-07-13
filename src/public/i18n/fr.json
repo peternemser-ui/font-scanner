@@ -110,7 +110,8 @@
       "scrollRight": "Faire défiler la navigation vers la droite",
       "closeMenu": "Fermer le menu de navigation"
     },
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "managePlan": "Gérer le forfait"
   },
   "userMenu": {
     "ariaLabel": "Menu utilisateur",
@@ -296,6 +297,94 @@
     "runningAudit": "Audit en cours...",
     "scan": {
       "runAudit": "Lancer l'audit"
+    },
+    "pleaseEnterValidUrl": "Veuillez saisir une URL valide",
+    "exploreByCategory": "Explorer par catégorie",
+    "clientReadyReports": "Rapports prêts à présenter au client",
+    "copyLink": "Copier le lien",
+    "copied": "Copié !",
+    "viewFix": "Voir la correction",
+    "noCriticalIssuesFound": "Aucun problème critique détecté",
+    "siteInGoodShape": "Votre site est en bon état !",
+    "score": "Score",
+    "viewDetails": "Voir les détails",
+    "error": "Erreur",
+    "reportSubtitle": "Analyse complète du site web",
+    "severityCritical": "CRITIQUE",
+    "severityWarning": "AVERTISSEMENT",
+    "fixNow": "CORRIGER MAINTENANT",
+    "review": "À VÉRIFIER",
+    "issueCount": "{{count}} problème(s)",
+    "noIssuesFoundGoodShape": "Aucun problème critique ou avertissement détecté. Votre site est en bon état !",
+    "noPriorityIssues": "Aucun problème prioritaire à afficher.",
+    "categories": {
+      "performanceUx": "Performance et UX",
+      "performanceUxDesc": "Vitesse, Core Web Vitals, mobile",
+      "seoIndexing": "SEO et indexation",
+      "seoIndexingDesc": "Métadonnées, structure, explorabilité",
+      "accessibility": "Accessibilité",
+      "accessibilityDesc": "Conformité WCAG, violations",
+      "securityTrust": "Sécurité et confiance",
+      "securityTrustDesc": "SSL, en-têtes, vulnérabilités",
+      "fonts": "Polices",
+      "fontsDesc": "Chargement des polices, optimisation"
+    },
+    "recommendations": {
+      "seoLabel": "SEO",
+      "seoAdvice": "Améliorez les balises meta, les titres et l'optimisation du contenu",
+      "performanceLabel": "Performance",
+      "performanceAdvice": "Optimisez les images, minifiez les ressources et exploitez la mise en cache",
+      "accessibilityLabel": "Accessibilité",
+      "accessibilityAdvice": "Corrigez le contraste des couleurs, ajoutez des libellés ARIA et améliorez la navigation au clavier",
+      "securityLabel": "Sécurité",
+      "securityAdvice": "Ajoutez des en-têtes de sécurité, activez HTTPS et corrigez les vulnérabilités",
+      "typographyLabel": "Typographie",
+      "typographyAdvice": "Optimisez le chargement des polices et améliorez la hiérarchie typographique",
+      "allGood": "Excellent ! Tous les domaines sont performants. Continuez comme ça !"
+    },
+    "issues": {
+      "seoCritical": "L'état général du SEO est critique",
+      "seoNeedsImprovement": "Le SEO doit être amélioré",
+      "performanceCritical": "La vitesse de chargement des pages est critiquement lente",
+      "performanceNeedsImprovement": "La performance des pages pourrait être améliorée",
+      "accessibilityCritical": "Obstacles majeurs à l'accessibilité détectés",
+      "accessibilityNeedsImprovement": "Améliorations d'accessibilité nécessaires",
+      "securityCritical": "Vulnérabilités de sécurité détectées",
+      "securityNeedsImprovement": "Les en-têtes de sécurité pourraient être renforcés",
+      "typographyNeedsImprovement": "Le chargement des polices peut nuire à la performance"
+    },
+    "guide": {
+      "excellentWork": "Excellent travail !",
+      "allCategoriesGood": "Votre site est performant dans toutes les catégories. Lancez des analyses détaillées pour des informations plus approfondies.",
+      "clickEachCategory": "Cliquez sur chaque catégorie pour voir quoi corriger et pourquoi c'est important.",
+      "fixesCount": "{{count}} corrections",
+      "whyItMatters": "Pourquoi c'est important :",
+      "viewFullReport": "Voir le rapport complet",
+      "seoWhy": "Les moteurs de recherche ont besoin de signaux clairs pour classer vos pages. Un SEO médiocre signifie moins de trafic organique.",
+      "seoAction1": "Ajoutez des balises title uniques (50-60 caractères) à chaque page",
+      "seoAction2": "Rédigez des méta-descriptions convaincantes (150-160 caractères)",
+      "seoAction3": "Utilisez une hiérarchie de titres correcte (H1 → H2 → H3)",
+      "seoAction4": "Ajoutez un texte alternatif à toutes les images",
+      "performanceWhy": "Les pages lentes font fuir les visiteurs. Chaque seconde de délai réduit les conversions de 7 %.",
+      "performanceAction1": "Compressez et diffusez les images au format WebP",
+      "performanceAction2": "Activez la mise en cache du navigateur avec des en-têtes appropriés",
+      "performanceAction3": "Minifiez le CSS, le JavaScript et le HTML",
+      "performanceAction4": "Mettez en place le chargement différé pour les images sous la ligne de flottaison",
+      "accessibilityWhy": "Les problèmes d'accessibilité excluent 15 % des utilisateurs et créent une responsabilité juridique (ADA/WCAG).",
+      "accessibilityAction1": "Assurez un rapport de contraste des couleurs d'au moins 4,5:1",
+      "accessibilityAction2": "Ajoutez des libellés ARIA aux éléments interactifs",
+      "accessibilityAction3": "Rendez toutes les fonctionnalités accessibles au clavier",
+      "accessibilityAction4": "Ajoutez des liens d'évitement vers le contenu pour les lecteurs d'écran",
+      "securityWhy": "L'absence d'en-têtes de sécurité rend votre site vulnérable aux attaques XSS, au détournement de clics et au vol de données.",
+      "securityAction1": "Ajoutez l'en-tête Content-Security-Policy",
+      "securityAction2": "Activez HSTS (Strict-Transport-Security)",
+      "securityAction3": "Définissez X-Content-Type-Options: nosniff",
+      "securityAction4": "Configurez X-Frame-Options pour empêcher le détournement de clics",
+      "typographyWhy": "Un mauvais chargement des polices provoque des décalages de mise en page et un rendu lent, ce qui nuit aux Core Web Vitals.",
+      "typographyAction1": "Utilisez font-display: swap pour les polices web",
+      "typographyAction2": "Préchargez les polices critiques dans le <head>",
+      "typographyAction3": "Limitez les familles de polices à 2-3 maximum",
+      "typographyAction4": "Sous-ensemblez les polices pour n'inclure que les caractères nécessaires"
     }
   },
   "fontScanner": {
@@ -687,7 +776,7 @@
         "network": "Les métriques de performance réseau mesurent la rapidité avec laquelle votre serveur répond et livre le contenu. Le Temps jusqu'au Premier Octet (TTFB) indique la vitesse de traitement du serveur, tandis que les temps de recherche DNS et de négociation SSL révèlent la surcharge de connexion. L'optimisation de ces métriques nécessite une attention à la configuration du serveur et à l'infrastructure réseau.",
         "caching": "Une mise en cache efficace réduit la charge du serveur et améliore considérablement les performances lors des visites répétées. Des en-têtes de cache correctement configurés garantissent que les navigateurs stockent et réutilisent les ressources statiques. Cette section évalue votre stratégie de cache, identifiant les ressources qui pourraient bénéficier de durées de cache plus longues.",
         "recommendations": "Sur la base de l'analyse de performance, ces recommandations ciblent les améliorations les plus impactantes. Traiter les éléments de haute priorité en premier apportera les plus grands gains en temps de chargement et en scores Core Web Vitals.",
-        "dimensionalGrades": "Cette section offre une vue multidimensionnelle de votre site\\",
+        "dimensionalGrades": "Cette section offre une vue multidimensionnelle de la qualité de votre site en matière de performance, d'accessibilité, de bonnes pratiques et de SEO.",
         "crossBrowser": "Cette section compare les performances entre les environnements ordinateur et mobile. Les utilisateurs mobiles subissent souvent des performances plus lentes en raison des conditions réseau et des contraintes des appareils. Comprendre l'écart entre ordinateur et mobile permet de prioriser les efforts d'optimisation pour la plateforme utilisée par la majorité de vos visiteurs."
       },
       "resources": {
@@ -797,6 +886,11 @@
         "issue": "Problème",
         "stepByStep": "Guide de correction étape par étape"
       }
+    },
+    "lighthouse": {
+      "unavailableTitle": "Métriques de performance temporairement indisponibles",
+      "unavailableMessage": "Les métriques de performance sont temporairement indisponibles. Les autres sections du rapport ne sont pas affectées.",
+      "retryButton": "Relancer l'analyse"
     }
   },
   "accessibility": {
@@ -1207,7 +1301,8 @@
           "recommendations": "Recommandations"
         }
       },
-      "unlockToView": "Débloquer pour voir :"
+      "unlockToView": "Débloquer pour voir :",
+      "structuredDataQuickWins": "Gains rapides en données structurées"
     },
     "fixes": {
       "previewIntro": "Aperçu du pack de corrections :",
@@ -2464,7 +2559,8 @@
       "noFollowLinks": "Liens No-Follow",
       "noFollowExplain": "Ces liens ne transmettent pas de valeur SEO",
       "ofTotal": "du total"
-    }
+    },
+    "overallScore": "Score SEO"
   },
   "loader": {
     "started": "Démarré:",
@@ -2663,7 +2759,11 @@
     "mayTake20To45Seconds": "Cela peut prendre entre 20 et 45 secondes",
     "mayTake30To60Seconds": "Cela peut prendre entre 30 et 60 secondes",
     "mayTakeTime": "Cela peut prendre entre 30 et 60 secondes pour les sites complexes",
-    "scanTiming": "Durée de l'analyse"
+    "scanTiming": "Durée de l'analyse",
+    "analyzingCitationsReviews": "Analyse des citations et des avis",
+    "checkingDirectories": "Vérification des annuaires, multi-localisation, réputation...",
+    "compilingGeoSeo": "Compilation des informations GEO SEO...",
+    "analyzingGeoSeo": "ANALYSEUR GEO SEO"
   },
   "common": {
     "error": "Erreur",
@@ -3133,7 +3233,8 @@
     "couldNotReach": "Impossible d'atteindre le site web. Veuillez verifier que l'URL est correcte.",
     "connectionRefused": "Connexion refusee. Le site web est peut-etre hors service.",
     "portalSessionFailed": "Échec de la création de la session du portail",
-    "billingPortalFailed": "Impossible d'ouvrir le portail de facturation. Veuillez réessayer."
+    "billingPortalFailed": "Impossible d'ouvrir le portail de facturation. Veuillez réessayer.",
+    "analysisTimeout": "L'analyse a expiré après 5 minutes. Le site web est peut-être trop lent ou trop complexe. Essayez plutôt une analyse rapide."
   },
   "shell": {
     "pleaseEnterUrl": "Veuillez saisir une URL",
@@ -3229,7 +3330,38 @@
     "accountAndBilling": "Compte et facturation",
     "logoutFailed": "Échec de la déconnexion. Veuillez réessayer.",
     "pro": "Pro",
-    "payAsYouGo": "Paiement à l'usage"
+    "payAsYouGo": "Paiement à l'usage",
+    "notAvailable": "N/A",
+    "unknownSite": "Inconnu",
+    "expand": "Développer",
+    "passwordChanged": "Mot de passe modifié avec succès !",
+    "compareComingSoon": "La fonctionnalité de comparaison arrive bientôt !",
+    "billing": {
+      "paymentSuccess": "Paiement réussi ! Votre forfait a été mis à jour.",
+      "checkoutCanceled": "Le paiement a été annulé. Aucun montant n'a été prélevé.",
+      "proActivated": "Paiement réussi ! Vos fonctionnalités Pro sont désormais actives.",
+      "dayPass": "Pass journée",
+      "monthly": "Mensuel",
+      "yearly": "Annuel",
+      "cancelsOn": "Résiliation le {{date}}",
+      "hoursLeft": "{{hours}} h restantes",
+      "syncedPurchases": "{{count}} nouvel(s) achat(s) synchronisé(s)"
+    },
+    "usage": {
+      "scansCount": "{{used}} / {{limit}} analyses"
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement des données du compte.",
+      "loginToRefresh": "Veuillez vous connecter pour actualiser",
+      "refreshFailed": "Échec de l'actualisation : {{message}}",
+      "billingPortalFailed": "Échec de l'ouverture du portail de facturation",
+      "passwordsNoMatch": "Les nouveaux mots de passe ne correspondent pas",
+      "passwordMinLength": "Le mot de passe doit comporter au moins 8 caractères",
+      "passwordUppercase": "Le mot de passe doit contenir une lettre majuscule",
+      "passwordLowercase": "Le mot de passe doit contenir une lettre minuscule",
+      "passwordNumber": "Le mot de passe doit contenir un chiffre",
+      "changePasswordFailed": "Échec de la modification du mot de passe"
+    }
   },
   "pricing": {
     "title": "Passer à Site Mechanic Pro",
@@ -3316,9 +3448,18 @@
       "currentPlan": "Plan actuel",
       "loginToUpgrade": "Connectez-vous pour mettre à niveau",
       "redirecting": "Redirection vers le paiement..."
+    },
+    "page": {
+      "paymentCanceled": "Le paiement a été annulé. Aucun montant n'a été prélevé.",
+      "paymentSuccess": "Paiement réussi ! Redirection vers votre compte...",
+      "alreadyPro": "Vous avez déjà Pro ! Redirection vers votre compte..."
     }
   },
   "reports": {
+    "print": {
+      "header": "Rapport Site Mechanic",
+      "confidential": "Confidentiel"
+    },
     "modeLabels": {
       "full": "Audit Lighthouse",
       "cwv": "Core Web Vitals",
@@ -3627,6 +3768,15 @@
       "noResourceBreakdown": "Répartition des ressources non disponible.",
       "partial": "Partiel",
       "diagnostic": "Diagnostic",
+      "checkoutUnavailable": "Le paiement est indisponible pour le moment.",
+      "reportUnlocked": "Rapport déverrouillé !",
+      "proActivated": "Abonnement Pro activé !",
+      "proActivatedUnlocking": "Abonnement Pro activé ! Déverrouillage du contenu premium...",
+      "runScanFirstToBuy": "Lancez d'abord une analyse pour acheter ce rapport.",
+      "runScanFirst": "Lancez d'abord une analyse.",
+      "paymentServiceError": "Erreur du service de paiement. Veuillez réessayer plus tard.",
+      "unlockReport5Usd": "Déverrouiller le rapport (5 USD)",
+      "scoreLabel": "{{label}} : {{score}}/100",
       "suggestions": "Suggestions :",
       "suggestionWait": "Patientez quelques instants et réessayez",
       "suggestionSpecificPage": "Testez une page spécifique plutôt que la page d'accueil",
@@ -3636,7 +3786,31 @@
       "analysisFailedRetry": "L'analyse a échoué. Veuillez réessayer.",
       "exportAndShare": "Exporter et partager les résultats (Pro)",
       "downloadCsv": "Télécharger le CSV",
-      "proExportLocked": "Export Pro verrouillé"
+      "proExportLocked": "Export Pro verrouillé",
+      "pro": "PRO",
+      "thisReportOnly": "Ce rapport uniquement",
+      "allReports": "Tous les rapports",
+      "whatsIncluded": "Ce qui est inclus :",
+      "pagesScanned": "Pages analysées",
+      "recommendedAction": "Action recommandée",
+      "stepN": "Étape {{n}}",
+      "noDataAvailable": "Aucune donnée disponible pour cette section.",
+      "excelExportSuccess": "Export Excel téléchargé avec succès",
+      "proBadge": "PRO",
+      "proSectionLocked": "Cette section est incluse dans le rapport Pro. Utilisez les options Débloquer le rapport ci-dessous pour la consulter.",
+      "sectionLoadError": "Cette section n'a pas pu être chargée. Veuillez essayer d'actualiser la page.",
+      "markHelpful": "Marquer comme utile",
+      "markNotHelpful": "Marquer comme non utile",
+      "helpful": "Utile",
+      "notHelpful": "Non utile",
+      "sinceLastScan": "Depuis la dernière analyse",
+      "topPct": "Top {{pct}} %",
+      "betterThan": "Meilleur que {{pct}} %",
+      "statusLabels": {
+        "excellent": "Excellent",
+        "good": "Bon",
+        "critical": "Critique"
+      }
     },
     "ui": {
       "webAnalysisReport": "Rapport d'Analyse Web",
@@ -4064,7 +4238,9 @@
       "fontFixes": "Corrections de polices",
       "improvementsFound": "améliorations trouvées",
       "fontDisplayIssueDetected": "Problème d'affichage de police détecté",
-      "moreIssues": "autres problèmes"
+      "moreIssues": "autres problèmes",
+      "stability": "Stabilité",
+      "typography": "Typographie"
     },
     "seo": {
       "title": "Rapport d'Analyse SEO"
@@ -4355,7 +4531,10 @@
       "thirdPartyScriptsAnalysis": "Analyse des scripts tiers",
       "totalExternalScripts": "Total des scripts externes",
       "withSri": "Avec SRI",
-      "coverage": "Couverture"
+      "coverage": "Couverture",
+      "recommendationsLoadError": "Les recommandations n'ont pas pu être chargées.",
+      "cspLabel": "CSP (Content Security Policy)",
+      "hstsLabel": "HSTS (HTTP Strict Transport Security)"
     },
     "accessibility": {
       "title": "Rapport d'Accessibilité",
@@ -4782,7 +4961,8 @@
         "ttfb": "Temps jusqu'au premier octet",
         "connectionTime": "Temps de connexion",
         "cacheHitRate": "Taux de succès du cache",
-        "uncachedResources": "Ressources non mises en cache"
+        "uncachedResources": "Ressources non mises en cache",
+        "title": "Diagnostics"
       },
       "report": {
         "recommendations.noneTitle": "Performance excellente",
@@ -5135,7 +5315,11 @@
           "description": "Le chargement des polices web n’est pas optimisé. Utilisez la stratégie font-display et le préchargement.",
           "impact": "Améliorer le délai d’affichage du texte"
         }
-      }
+      },
+      "additionalChecks": "Vérifications supplémentaires",
+      "diagnostic": "Diagnostic",
+      "noAdditionalChecks": "Aucune vérification supplémentaire disponible.",
+      "excelTitle": "Site Mechanic - Rapport de performance"
     },
     "cwv": {
       "title": "Core Web Vitals",
@@ -5239,15 +5423,15 @@
           "recommendations": "Sur la base de votre analyse Core Web Vitals, ces recommandations ciblent les améliorations à plus fort impact pour la vitesse de chargement, l'interactivité et la stabilité visuelle.",
           "coreVitals": "Ces trois métriques sont les Core Web Vitals officiels que Google utilise comme signaux de classement. Le LCP mesure la performance de chargement, l'INP mesure la réactivité de l'interactivité et le CLS mesure la stabilité visuelle. Chaque métrique est affichée avec les valeurs mobile (pondération de 70 %) et ordinateur (pondération de 30 %) côte à côte.",
           "additionalMetrics": "Beyond the three Core Web Vitals, these additional metrics provide deeper insight into your page performance. First Contentful Paint (FCP) measures how quickly the first visible content appears, Speed Index (SI) measures how quickly content is visually displayed, and Time to Interactive (TTI) measures when the page becomes fully interactive.",
-          "bestPractices": "Cette section fournit les recommandations de Google\\"
+          "bestPractices": "Cette section fournit les recommandations de Google pour améliorer vos scores Core Web Vitals."
         },
         "desktop": {
-          "passedDesc": "Tous les Core Web Vitals ordinateur respectent les seuils de Google\\",
-          "failedDesc": "Une ou plusieurs métriques ordinateur sont en dessous des seuils de Google\\"
+          "passedDesc": "Tous les Core Web Vitals ordinateur respectent les seuils recommandés par Google.",
+          "failedDesc": "Une ou plusieurs métriques ordinateur sont en dessous des seuils recommandés par Google."
         },
         "mobile": {
-          "passedDesc": "Tous les Core Web Vitals mobiles respectent les seuils de Google\\",
-          "failedDesc": "Une ou plusieurs métriques mobiles sont en dessous des seuils de Google\\"
+          "passedDesc": "Tous les Core Web Vitals mobiles respectent les seuils recommandés par Google.",
+          "failedDesc": "Une ou plusieurs métriques mobiles sont en dessous des seuils recommandés par Google."
         },
         "comparison": {
           "context": "Contexte de comparaison",
@@ -5304,7 +5488,11 @@
       "recommendationsAvailable": "{{count}} recommandation(s) disponible(s)",
       "understandingScoresTitle": "Comprendre vos scores",
       "passingCwvTitle": "Core Web Vitals conformes",
-      "failingCwvTitle": "Core Web Vitals non conformes"
+      "failingCwvTitle": "Core Web Vitals non conformes",
+      "includedMobileDesktop": "Métriques CWV mobile et ordinateur",
+      "includedRankingImpact": "Analyse de l'impact sur le classement Google",
+      "includedMetricBreakdowns": "Répartitions détaillées des métriques",
+      "includedRecommendations": "Recommandations concrètes"
     },
     "performanceHub": {
       "quickScanTitle": "Rapport Vitesse et UX : Scan Rapide",
@@ -5343,7 +5531,8 @@
         "accessibilityDesc": "Conformité WCAG, compatibilité lecteur d'écran, contraste des couleurs",
         "fonts": "Analyse des Polices",
         "fontsDesc": "Performance de chargement des polices, optimisation des polices web, typographie"
-      }
+      },
+      "exploreToolsHelper": "Les analyses sont gratuites. Des exports payants optionnels (PDF/partage/données) sont disponibles dans chaque outil."
     },
     "mobile": {
       "title": "Rapport de Test Mobile",
@@ -5919,7 +6108,14 @@
         "recommendedFix": "Correction recommandée",
         "missingSecurityAttributes": "Attributs de sécurité manquants",
         "addRelNoopener": "Ajouter rel=\"noopener\""
-      }
+      },
+      "scanFailed": "Échec de l'analyse des liens. Veuillez réessayer.",
+      "noBrokenLinks": "Aucun lien brisé détecté. Tous les liens sont valides.",
+      "noRedirects": "Aucune redirection détectée.",
+      "noWorkingLinks": "Aucun lien fonctionnel détecté.",
+      "noExternalLinks": "Aucun lien externe détecté.",
+      "noAnchorData": "Aucune donnée de texte d'ancrage disponible.",
+      "noRecommendations": "Aucune recommandation pour le moment."
     },
     "brand": {
       "analysisFailed": "L'analyse a échoué",
@@ -7263,6 +7459,13 @@
           "category": "Catégorie",
           "trackers": "Traceurs"
         }
+      },
+      "factors": {
+        "bannerPresent": "Bandeau de cookies présent",
+        "compliantLibrary": "Utilise une bibliothèque de consentement conforme",
+        "rejectOption": "Option de refus facile disponible",
+        "granularConsent": "Options de consentement granulaire",
+        "noPreConsentCookies": "Aucun cookie non essentiel avant consentement"
       }
     },
     "hosting": {
@@ -7517,7 +7720,13 @@
       "visit": "Visiter",
       "proTip": "Conseil de pro",
       "proTipText": "Les prix affichés sont des prix de départ avec facturation annuelle. La facturation mensuelle est généralement 20 à 30 % plus chère. Le pourcentage de correspondance indique dans quelle mesure le fournisseur répond à vos besoins. Tenez compte de vos besoins en trafic, de vos exigences en support et de vos plans de mise à l'échelle lors du choix d'un hébergeur.",
-      "pdfSubtitle": "Analyse des performances et de l'infrastructure d'hébergement"
+      "pdfSubtitle": "Analyse des performances et de l'infrastructure d'hébergement",
+      "invalidResponse": "L'analyse a renvoyé des données invalides. Veuillez réessayer.",
+      "budgetOptionsHidden": "{{count}} options économiques masquées car inadaptées à ce niveau",
+      "noPricingData": "Aucune donnée tarifaire n'est disponible pour cette analyse.",
+      "noSavingsFound": "Aucune opportunité d'économie détectée pour ce site.",
+      "noRecommendedHosts": "Aucune recommandation d'hébergeur n'est disponible pour cette analyse.",
+      "noProviderComparison": "Les données de comparaison des fournisseurs ne sont pas disponibles pour cette analyse."
     },
     "ipReputation": {
       "title": "Analyse de Réputation IP",
@@ -7690,7 +7899,23 @@
       "noCommonlyAttackedPorts": "Aucun port couramment attaqué trouvé ouvert",
       "scannedPorts": "Ports scannés",
       "portSecurityScan": "Scan de sécurité des ports",
-      "pdfSubtitle": "Réputation IP et analyse de sécurité"
+      "pdfSubtitle": "Réputation IP et analyse de sécurité",
+      "guide": {
+        "difficultyIntermediate": "INTERMÉDIAIRE",
+        "time15to30": "15-30 minutes",
+        "adminAccess": "Accès administrateur",
+        "verifyApplied": "Vérifiez que la modification a été appliquée correctement",
+        "testFunctionality": "Testez la fonctionnalité",
+        "monitorIssues": "Surveillez les problèmes"
+      },
+      "defaultSteps": {
+        "reviewIssue": "Examinez le problème actuel et comprenez son impact",
+        "researchFix": "Recherchez la correction spécifique à votre environnement",
+        "implementAction": "Mettez en œuvre l'action recommandée",
+        "testFix": "Testez pour vérifier que la correction fonctionne correctement",
+        "setUpMonitoring": "Mettez en place une surveillance pour éviter que le problème ne se reproduise",
+        "documentChange": "Documentez la modification pour référence ultérieure"
+      }
     },
     "geoSeo": {
       "title": "Rapport GEO SEO",
@@ -7809,6 +8034,13 @@
           "addGbpLinks": "Ajoutez des liens vers votre profil Google Business",
           "includeSocial": "Incluez Facebook, Instagram ou LinkedIn",
           "placeIconsFooter": "Placez les icônes dans le pied de page pour plus de visibilité"
+        },
+        "time": {
+          "5min": "5 minutes",
+          "10min": "10 minutes",
+          "15min": "15 minutes",
+          "20min": "20 minutes",
+          "30min": "30 minutes"
         }
       },
       "report": {
@@ -7870,7 +8102,21 @@
         },
         "recommendations.noneTitle": "SEO local solide",
         "recommendations.noneBody": "Votre site respecte les bonnes pratiques de SEO local. Continuez à surveiller votre présence locale et la cohérence NAP pour maintenir votre positionnement."
-      }
+      },
+      "citationsDirectoryAnalysis": "Analyse des citations et des annuaires",
+      "citationsDesc": "Les citations sont des mentions de votre entreprise sur des annuaires et plateformes externes. Des citations cohérentes améliorent le classement dans les recherches locales.",
+      "noDirectoryLinks": "Aucun lien d'annuaire détecté sur la page",
+      "directoryBadges": "Badges d'annuaire détectés",
+      "noDirectoryBadges": "Aucun badge d'annuaire détecté",
+      "geoContentPages": "Pages de contenu géographique",
+      "multiLocationAnalysis": "Analyse multi-localisation et pages géographiques",
+      "multiLocationDesc": "Les signaux multi-localisation aident les moteurs de recherche à associer votre entreprise à des zones géographiques spécifiques et à proposer des résultats pertinents.",
+      "locationLandingPages": "Pages de destination par localisation",
+      "noLocationPages": "Aucune page de destination par localisation détectée",
+      "reviewsReputationAnalysis": "Analyse des avis et de la réputation",
+      "reviewsDesc": "Les avis et les signaux de réputation influencent le classement dans les recherches locales et la confiance des clients. Afficher les notes et créer des liens vers les plateformes d'avis renforce la crédibilité.",
+      "totalReviews": "Nombre total d'avis",
+      "noReviewPlatformLinks": "Aucun lien vers une plateforme d'avis détecté. Envisagez de créer des liens vers Google, Yelp ou des sites d'avis spécialisés dans votre secteur."
     },
     "crawler": {
       "title": "Rapport du Crawler de Site",
@@ -8062,6 +8308,18 @@
         "sectionsOnlyOnePage": "{{count}} sections n'ont qu'une seule page",
         "multipleUrlFormats": "Plusieurs formats d'URL détectés ({{count}} types)",
         "wellOrganizedStructure": "Structure de site bien organisée"
+      },
+      "hostingTypes": {
+        "managedWordPress": "WordPress infogéré",
+        "webOpsPlatform": "Plateforme WebOps",
+        "jamstack": "JAMstack",
+        "edgePlatform": "Plateforme Edge",
+        "paas": "PaaS",
+        "cloudInfrastructure": "Infrastructure cloud",
+        "edgeCdn": "Edge/CDN",
+        "ecommerce": "E-commerce",
+        "websiteBuilder": "Créateur de site web",
+        "sharedHosting": "Hébergement mutualisé"
       }
     },
     "siteCrawler": {
@@ -8376,7 +8634,8 @@
       },
       "healthScore": "Score de santé des balises",
       "totalIssues": "Total Issues",
-      "performanceScore": "Score de performance"
+      "performanceScore": "Score de performance",
+      "noPerformanceData": "Aucune donnée de performance des scripts disponible pour cette page."
     },
     "metrics": {
       "seo": "SEO",
@@ -9039,7 +9298,8 @@
       "justNow": "À l'instant",
       "minutesAgo": "il y a {n}m",
       "hoursAgo": "il y a {n}h",
-      "daysAgo": "il y a {n}j"
+      "daysAgo": "il y a {n}j",
+      "unknown": "Date inconnue"
     },
     "loadMoreRemaining": "Charger plus ({n} restants)",
     "reportTypes": {
@@ -9682,5 +9942,35 @@
       "ip-reputation": "Réputation IP",
       "competitive": "Analyse Concurrentielle"
     }
+  },
+  "bugReport": {
+    "trigger": "Vous avez repéré un problème de données ? Signalez-le et gagnez un déblocage gratuit",
+    "drawerTitle": "Signaler un problème",
+    "categoryLabel": "Quel type de problème ?",
+    "categories": {
+      "wrongData": "Données erronées",
+      "missingSection": "Section manquante",
+      "displayIssue": "Problème d'affichage",
+      "crashError": "Plantage / Erreur",
+      "other": "Autre"
+    },
+    "descriptionPlaceholder": "Décrivez ce qui ne va pas (minimum 30 caractères)...",
+    "submitBtn": "Envoyer le signalement",
+    "successTitle": "Signalement envoyé !",
+    "successMsg": "Vous gagnerez un déblocage de rapport gratuit si nous confirmons ce bug.",
+    "loginRequired": "Connectez-vous pour signaler des bugs et gagner des déblocages de rapport gratuits",
+    "signIn": "Se connecter",
+    "limitReached": "Vous avez atteint la limite quotidienne de signalements",
+    "duplicateDetected": "Un signalement similaire a été envoyé récemment",
+    "tokenBalance": "{{count}} jeton(s) de récompense disponible(s)",
+    "redeemToken": "Utiliser un jeton de récompense",
+    "tokenRedeemed": "Rapport débloqué avec un jeton de récompense !",
+    "tokenExpiry": "Expire le {{date}}"
+  },
+  "rateLimit": {
+    "blocked": "Vous avez été temporairement bloqué en raison d'un trop grand nombre de requêtes. Veuillez patienter ",
+    "exceeded": "Vous avez atteint la limite de requêtes. Passez à une offre supérieure pour des limites plus élevées, ou réessayez dans ",
+    "exceededPro": "Vous avez atteint la limite de requêtes. Veuillez réessayer dans ",
+    "upgradeLink": "Passez à une offre supérieure pour des limites plus élevées"
   }
 }

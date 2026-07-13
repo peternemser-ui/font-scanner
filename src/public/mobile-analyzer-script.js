@@ -409,6 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
     data.performanceSummary = data.performanceSummary || { average: 0 };
     data.readabilitySummary = data.readabilitySummary || { average: 0 };
     data.accessibilitySummary = data.accessibilitySummary || { average: 0 };
+    data.recommendations = Array.isArray(data.recommendations) ? data.recommendations : [];
 
     const url = document.getElementById('urlInput').value;
     const timestamp = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
@@ -443,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
           <img
             src="${screenshotUrl}"
-            alt="${t('reports.common.screenshotAlt', 'Screenshot of')} ${url}"
+            alt="${t('reports.common.screenshotAlt', 'Screenshot of')} ${escapeHtmlForMobile(url)}"
             class="screenshot-item__img"
             style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
             data-action="open-lightbox"
@@ -477,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border-primary, rgba(255,255,255,0.1));">
                 <h4 style="margin-bottom: 1rem;">${device.device || key}</h4>
                 <div style="color: #ff6b6b; padding: 1rem; background: rgba(255,107,107,0.1); border-radius: 8px;">
-                  ${t('reports.mobile.errorCapturingDevice', 'Error capturing this device')}: ${device.error}
+                  ${t('reports.mobile.errorCapturingDevice', 'Error capturing this device')}: ${escapeHtmlForMobile(String(device.error))}
                 </div>
               </div>
             `;
@@ -494,14 +495,14 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="text-align: center;">
                     <img src="${portraitSrc}" alt="${device.device} portrait" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" data-action="open-image">
                     <div style="margin-top: 0.5rem; color: var(--text-muted, #888); font-size: 0.85rem;">📱 ${deviceWidth}x${deviceHeight}</div>
-                    <a href="${portraitSrc}" download="${device.device}-portrait.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</a>
+                    <a href="${portraitSrc}" data-action="open-image" data-image-src="${portraitSrc}" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</a>
                   </div>
                 ` : ''}
                 ${landscapeSrc ? `
                   <div style="text-align: center;">
                     <img src="${landscapeSrc}" alt="${device.device} landscape" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" data-action="open-image">
                     <div style="margin-top: 0.5rem; color: var(--text-muted, #888); font-size: 0.85rem;">🖥️ ${deviceHeight}x${deviceWidth}</div>
-                    <a href="${landscapeSrc}" download="${device.device}-landscape.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</a>
+                    <a href="${landscapeSrc}" data-action="open-image" data-image-src="${landscapeSrc}" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</a>
                   </div>
                 ` : ''}
                 ${!portraitSrc && !landscapeSrc ? `
@@ -620,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ].join('');
     
     // Summary stats
-    const issuesCount = data.recommendations.filter(r => r.severity === 'high').length;
+    const issuesCount = data.recommendations.filter(r => r.severity === 'high' || r.severity === 'error').length;
     const summaryStats = {
       issues: issuesCount,
       recommendations: data.recommendations.length,
@@ -651,6 +652,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const ssTitle = this.getAttribute('data-screenshot-title');
         if (ssUrl && window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
           window.ScreenshotLightbox.open(ssUrl, ssTitle || t('reports.common.screenshot', 'Screenshot'));
+        }
+      });
+    }
+
+    // Device screenshot enlarge handler (delegated; bound once)
+    if (!resultsContent.__mobileDeviceImageHandlerBound) {
+      resultsContent.__mobileDeviceImageHandlerBound = true;
+      resultsContent.addEventListener('click', function (e) {
+        const openImageEl = e.target.closest('[data-action="open-image"]');
+        if (!openImageEl) return;
+        e.preventDefault();
+        const imgSrc = openImageEl.getAttribute('data-image-src') || openImageEl.getAttribute('src');
+        if (imgSrc && window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
+          window.ScreenshotLightbox.open(imgSrc, openImageEl.getAttribute('alt') || t('reports.common.screenshot', 'Screenshot'));
         }
       });
     }
@@ -933,7 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="report-shell__card">
           <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
             <strong>${t('reports.mobile.status', 'Status')}:</strong> ${firstDevice.viewportMetaTag?.present ? `✅ ${t('reports.mobile.present', 'Present')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}<br>
-            ${firstDevice.viewportMetaTag?.content ? `<strong>${t('reports.mobile.content', 'Content')}:</strong> <code style="background: var(--r-surface-2, #F8FAFC); padding: 0.25rem 0.5rem; border-radius: 4px;">${firstDevice.viewportMetaTag.content}</code>` : ''}
+            ${firstDevice.viewportMetaTag?.content ? `<strong>${t('reports.mobile.content', 'Content')}:</strong> <code style="background: var(--r-surface-2, #F8FAFC); padding: 0.25rem 0.5rem; border-radius: 4px;">${escapeHtmlForMobile(firstDevice.viewportMetaTag.content)}</code>` : ''}
           </div>
         </div>
       `
@@ -1122,511 +1137,6 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   window.copyMobileShareLink = function() { alert(t('reports.common.shareLinkComingSoon', 'Share link coming soon')); };
   window.downloadMobileCSV = function() { alert(t('reports.common.csvExportComingSoon', 'CSV export coming soon')); };
-
-  function getScoreClass(score) {
-    if (score >= 80) return 'excellent';
-    if (score >= 60) return 'good';
-    if (score >= 40) return 'warning';
-    return 'error';
-  }
-
-  function getScoreColor(score) {
-    const stops = [
-      [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
-      [20,'#D96A06'],[25,'#E07E00'],[30,'#E89200'],[35,'#F0A400'],
-      [40,'#F5B300'],[45,'#FAC200'],[50,'#FFD000'],[55,'#FFD600'],
-      [60,'#FFDC00'],[65,'#FFE100'],[70,'#F0DD00'],[75,'#D2D400'],
-      [80,'#A0C800'],[85,'#6BBD28'],[90,'#38B249'],[95,'#1FAD4F'],
-      [100,'#0AA64F']
-    ];
-    const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
-    const idx = Math.min(Math.floor(s / 5), 19);
-    const [s1, c1] = stops[idx];
-    const [, c2] = stops[Math.min(idx + 1, 20)];
-    const t = (s - s1) / 5;
-    const p = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
-    const [r1,g1,b1] = p(c1);
-    const [r2,g2,b2] = p(c2);
-    const r = Math.round(r1+(r2-r1)*t);
-    const g = Math.round(g1+(g2-g1)*t);
-    const b = Math.round(b1+(b2-b1)*t);
-    return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
-  }
-
-  function getScoreRGB(score) {
-    if (score >= 80) return '16, 185, 129';
-    if (score >= 60) return '245, 158, 11';
-    return '239, 68, 68';
-  }
-
-  /**
-   * Add ASCII art patience message to loading container
-                          <div style="border: 4px solid #333; border-radius: 12px; padding: 4px; background: #1a1a1a;">
-                            <img src="${device.screenshot}" alt="${device.device} portrait" 
-                                 style="width: 120px; height: auto; border-radius: 12px; cursor: zoom-in;"
-                                 class="device-screenshot" />
-                          </div>
-                          <div class="orientation-label">${t('reports.mobile.portrait', 'Portrait')}<br>${device.viewport.width}×${device.viewport.height}</div>
-                          <div class="screenshot-zoom-hint" style="margin-top: 0.5rem; cursor: pointer; color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;" data-action="click-screenshot">
-                            🔍 <span style="text-decoration: underline;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</span>
-                          </div>
-                        </div>
-                      ` : ''}
-                      ${device.landscapeScreenshot ? `
-                        <div class="orientation-item">
-                          <div style="border: 4px solid #333; border-radius: 12px; padding: 4px; background: #1a1a1a;">
-                            <img src="${device.landscapeScreenshot}" alt="${device.device} landscape" 
-                                 style="width: 180px; height: auto; border-radius: 12px; cursor: zoom-in;"
-                                 class="device-screenshot" />
-                          </div>
-                          <div class="orientation-label">${t('reports.mobile.landscape', 'Landscape')}<br>${device.viewport.height}×${device.viewport.width}</div>
-                          <div class="screenshot-zoom-hint" style="margin-top: 0.5rem; cursor: pointer; color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;" data-action="click-screenshot">
-                            🔍 <span style="text-decoration: underline;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</span>
-                          </div>
-                        </div>
-                      ` : ''}
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. Viewport Meta Tag Analysis -->
-        ${firstDevice.viewportMeta ? `
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <div class="accordion-header-left">
-              <span class="accordion-icon">📐</span>
-              <span class="accordion-title">${t('reports.mobile.viewportMetaTag', 'Viewport Meta Tag')}</span>
-            </div>
-            <div class="accordion-header-right">
-              <span class="accordion-score ${getScoreClass(firstDevice.viewportMeta.score)}">${firstDevice.viewportMeta.score}/100</span>
-              <span class="accordion-chevron">▼</span>
-            </div>
-          </div>
-          <div class="accordion-content">
-            <div class="accordion-body">
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.metaTagPresent', 'Meta Tag Present')}:</span>
-                <span class="metric-value">${firstDevice.viewportMeta.exists ? `✅ ${t('reports.common.yes', 'Yes')}` : `❌ ${t('reports.common.no', 'No')}`}</span>
-              </div>
-              ${firstDevice.viewportMeta.content ? `
-                <div style="background: var(--r-surface-2, #F8FAFC); padding: 0.75rem; border-radius: 4px; margin: 0.5rem 0; font-family: monospace; font-size: 0.85rem;">
-                  ${firstDevice.viewportMeta.content}
-                </div>
-              ` : ''}
-              ${firstDevice.viewportMeta.issues?.length > 0 ? `
-                <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">${t('reports.common.issuesFound', 'Issues Found')}:</h5>
-                ${firstDevice.viewportMeta.issues.map(issue => `
-                  <div class="issue-item issue-${issue.severity}">${issue.message}</div>
-                `).join('')}
-              ` : `<p style="color: #10b981;">✅ ${t('reports.mobile.noViewportIssues', 'No viewport issues detected')}</p>`}
-            </div>
-          </div>
-        </div>
-        ` : ''}
-
-        <!-- 3. PWA Readiness -->
-        ${firstDevice.pwaReadiness ? `
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <div class="accordion-header-left">
-              <span class="accordion-icon">📲</span>
-              <span class="accordion-title">${t('reports.mobile.pwaReadiness', 'PWA Readiness')}</span>
-            </div>
-            <div class="accordion-header-right">
-              <span class="accordion-score ${getScoreClass(firstDevice.pwaReadiness.score)}">${firstDevice.pwaReadiness.score}/100</span>
-              <span class="accordion-chevron">▼</span>
-            </div>
-          </div>
-          <div class="accordion-content">
-            <div class="accordion-body">
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.installable', 'Installable')}:</span>
-                <span class="metric-value">${firstDevice.pwaReadiness.installable ? `✅ ${t('reports.common.yes', 'Yes')}` : `❌ ${t('reports.common.no', 'No')}`}</span>
-              </div>
-              <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">${t('reports.mobile.pwaChecklist', 'PWA Checklist')}:</h5>
-              ${firstDevice.pwaReadiness.checklist?.map(item => `
-                <div class="checklist-item">
-                  <span class="${item.status === 'pass' ? 'checklist-pass' : 'checklist-fail'}">
-                    ${item.status === 'pass' ? '✓' : '✗'}
-                  </span>
-                  <span>${item.item}</span>
-                </div>
-              `).join('') || ''}
-            </div>
-          </div>
-        </div>
-        ` : ''}
-
-        <!-- 4. Dark Mode Support -->
-        ${firstDevice.darkModeSupport ? `
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <div class="accordion-header-left">
-              <span class="accordion-icon">🌙</span>
-              <span class="accordion-title">${t('reports.mobile.darkModeSupport', 'Dark Mode Support')}</span>
-            </div>
-            <div class="accordion-header-right">
-              <span class="accordion-score ${getScoreClass(firstDevice.darkModeSupport.score)}">${firstDevice.darkModeSupport.score}/100</span>
-              <span class="accordion-chevron">▼</span>
-            </div>
-          </div>
-          <div class="accordion-content">
-            <div class="accordion-body">
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.darkModeSupported', 'Dark Mode Supported')}:</span>
-                <span class="metric-value">${firstDevice.darkModeSupport.supported ? `✅ ${t('reports.common.yes', 'Yes')}` : `❌ ${t('reports.common.no', 'No')}`}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.prefersColorScheme', 'prefers-color-scheme')}:</span>
-                <span class="metric-value">${firstDevice.darkModeSupport.hasMediaQuery ? `✅ ${t('reports.mobile.detected', 'Detected')}` : `❌ ${t('reports.mobile.notFound', 'Not found')}`}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.colorSchemeMeta', 'color-scheme meta')}:</span>
-                <span class="metric-value">${firstDevice.darkModeSupport.hasColorSchemeMeta ? `✅ ${firstDevice.darkModeSupport.colorSchemeValue || t('reports.mobile.present', 'Present')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.themeToggle', 'Theme Toggle')}:</span>
-                <span class="metric-value">${firstDevice.darkModeSupport.hasThemeToggle ? `✅ ${t('reports.mobile.found', 'Found')}` : `❌ ${t('reports.mobile.notFound', 'Not found')}`}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.cssVariables', 'CSS Variables')}:</span>
-                <span class="metric-value">${firstDevice.darkModeSupport.cssVariablesCount || 0} ${t('reports.mobile.defined', 'defined')}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        ` : ''}
-
-        <!-- 5. Above the Fold Analysis -->
-        ${firstDevice.aboveTheFold ? `
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <div class="accordion-header-left">
-              <span class="accordion-icon">👁️</span>
-              <span class="accordion-title">${t('reports.mobile.aboveTheFold', 'Above the Fold')}</span>
-            </div>
-            <div class="accordion-header-right">
-              <span class="accordion-score ${getScoreClass(firstDevice.aboveTheFold.criticalContentScore)}">${firstDevice.aboveTheFold.criticalContentScore}/100</span>
-              <span class="accordion-chevron">▼</span>
-            </div>
-          </div>
-          <div class="accordion-content">
-            <div class="accordion-body">
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.headlineH1H2', 'Headline (H1/H2)')}:</span>
-                <span class="metric-value">${firstDevice.aboveTheFold.hasHeadline ? `✅ ${t('reports.mobile.present', 'Present')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.heroImage', 'Hero Image')}:</span>
-                <span class="metric-value">${firstDevice.aboveTheFold.hasHeroImage ? `✅ ${t('reports.mobile.present', 'Present')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.callToAction', 'Call-to-Action')}:</span>
-                <span class="metric-value">${firstDevice.aboveTheFold.hasCTA ? `✅ ${t('reports.mobile.found', 'Found')}` : `⚠️ ${t('reports.mobile.notDetected', 'Not detected')}`}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.imagesAboveFold', 'Images Above Fold')}:</span>
-                <span class="metric-value">${firstDevice.aboveTheFold.imageCount || 0}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.renderBlockingScripts', 'Render-blocking Scripts')}:</span>
-                <span class="metric-value ${firstDevice.aboveTheFold.renderBlockingScripts > 3 ? 'color: #ef4444' : ''}">${firstDevice.aboveTheFold.renderBlockingScripts || 0}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        ` : ''}
-
-        <!-- 6. Mobile SEO -->
-        ${firstDevice.mobileSEO ? `
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <div class="accordion-header-left">
-              <span class="accordion-icon">🔍</span>
-              <span class="accordion-title">${t('reports.mobile.mobileSeo', 'Mobile SEO')}</span>
-            </div>
-            <div class="accordion-header-right">
-              <span class="accordion-score ${getScoreClass(firstDevice.mobileSEO.score)}">${firstDevice.mobileSEO.score}/100</span>
-              <span class="accordion-chevron">▼</span>
-            </div>
-          </div>
-          <div class="accordion-content">
-            <div class="accordion-body">
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.titleTag', 'Title Tag')}:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.hasTitle ? `✅ ${firstDevice.mobileSEO.titleLength} ${t('reports.mobile.chars', 'chars')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.metaDescription', 'Meta Description')}:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.hasMetaDescription ? `✅ ${firstDevice.mobileSEO.descriptionLength} ${t('reports.mobile.chars', 'chars')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.viewportMeta', 'Viewport Meta')}:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.hasViewport ? `✅ ${t('reports.mobile.present', 'Present')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.canonicalUrl', 'Canonical URL')}:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.hasCanonical ? `✅ ${t('reports.mobile.set', 'Set')}` : `⚠️ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.structuredData', 'Structured Data')}:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.structuredDataCount || 0} ${t('reports.mobile.schemas', 'schemas')}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.clickToCallLinks', 'Click-to-Call Links')}:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.clickToCallLinks || 0}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.h1Tags', 'H1 Tags')}:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.h1Count === 1 ? `✅ 1 (${t('reports.mobile.good', 'good')})` : `${firstDevice.mobileSEO.h1Count || 0} (${t('reports.mobile.shouldBeOne', 'should be 1')})`}</span>
-              </div>
-              ${firstDevice.mobileSEO.issues?.length > 0 ? `
-                <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">${t('reports.common.issues', 'issues')}:</h5>
-                ${firstDevice.mobileSEO.issues.map(issue => `
-                  <div class="issue-item issue-${issue.type}">${issue.item}</div>
-                `).join('')}
-              ` : ''}
-            </div>
-          </div>
-        </div>
-        ` : ''}
-
-        <!-- 7. Input Field Analysis -->
-        ${firstDevice.inputAnalysis ? `
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <div class="accordion-header-left">
-              <span class="accordion-icon">⌨️</span>
-              <span class="accordion-title">${t('reports.mobile.inputFields', 'Input Fields')}</span>
-            </div>
-            <div class="accordion-header-right">
-              <span class="accordion-score ${getScoreClass(firstDevice.inputAnalysis.score)}">${firstDevice.inputAnalysis.score}/100</span>
-              <span class="accordion-chevron">▼</span>
-            </div>
-          </div>
-          <div class="accordion-content">
-            <div class="accordion-body">
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.totalInputs', 'Total Inputs')}:</span>
-                <span class="metric-value">${firstDevice.inputAnalysis.total || 0}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.emailInputs', 'Email Inputs (type=email)')}:</span>
-                <span class="metric-value">${firstDevice.inputAnalysis.emailInputs || 0}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.phoneInputs', 'Phone Inputs (type=tel)')}:</span>
-                <span class="metric-value">${firstDevice.inputAnalysis.telInputs || 0}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.autocompleteEnabled', 'Autocomplete Enabled')}:</span>
-                <span class="metric-value">${firstDevice.inputAnalysis.autocompleteEnabled || 0}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">${t('reports.mobile.missingLabels', 'Missing Labels')}:</span>
-                <span class="metric-value ${firstDevice.inputAnalysis.missingLabels > 0 ? 'color: #ef4444' : ''}">${firstDevice.inputAnalysis.missingLabels || 0}</span>
-              </div>
-              ${firstDevice.inputAnalysis.issues?.length > 0 ? `
-                <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">${t('reports.mobile.optimizationSuggestions', 'Optimization Suggestions')}:</h5>
-                ${firstDevice.inputAnalysis.issues.map(issue => `
-                  <div class="issue-item issue-warning">${issue.field}: ${issue.issue}</div>
-                `).join('')}
-              ` : `<p style="color: #10b981; margin-top: 1rem;">✅ ${t('reports.mobile.inputFieldsWellOptimized', 'Input fields are well-optimized for mobile')}</p>`}
-            </div>
-          </div>
-        </div>
-        ` : ''}
-
-        <!-- 8. Touch Targets -->
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <div class="accordion-header-left">
-              <span class="accordion-icon">👆</span>
-              <span class="accordion-title">${t('reports.mobile.touchTargets', 'Touch Targets')}</span>
-            </div>
-            <div class="accordion-header-right">
-              <span class="accordion-score ${getScoreClass(data.touchTargetsSummary.average)}">${data.touchTargetsSummary.average}%</span>
-              <span class="accordion-chevron">▼</span>
-            </div>
-          </div>
-          <div class="accordion-content">
-            <div class="accordion-body">
-              <p style="color: var(--r-text-faint, #9CA3AF); margin-bottom: 1rem;">${t('reports.mobile.wcagTouchTargetRequirement', 'WCAG AAA requires touch targets to be at least 44x44 pixels.')}</p>
-              ${Object.entries(data.devices).map(([key, device]) => {
-                if (device.error || !device.touchTargets) return '';
-                return `
-                  <div style="margin-bottom: 1rem;">
-                    <strong>${device.device}</strong>: ${device.touchTargets.compliancePercentage}% ${t('reports.mobile.compliant', 'Compliant')}
-                    ${device.touchTargets.issues > 0 ? `<span style="color: #ef4444;"> (${device.touchTargets.issues} ${t('reports.mobile.undersized', 'undersized')})</span>` : ''}
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        </div>
-
-        <!-- 9. Performance Metrics -->
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <div class="accordion-header-left">
-              <span class="accordion-icon">⚡</span>
-              <span class="accordion-title">${t('reports.mobile.performanceMetrics', 'Performance Metrics')}</span>
-            </div>
-            <div class="accordion-header-right">
-              <span class="accordion-score ${getScoreClass(data.performanceSummary.average)}">${data.performanceSummary.average}/100</span>
-              <span class="accordion-chevron">▼</span>
-            </div>
-          </div>
-          <div class="accordion-content">
-            <div class="accordion-body">
-              ${Object.entries(data.devices).map(([key, device]) => {
-                if (device.error || !device.performance) return '';
-                return `
-                  <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
-                    <strong style="color: #22c55e;">${device.device}</strong>
-                    <div class="metric-row">
-                      <span class="metric-label">${t('reports.mobile.firstPaintLabel', 'First Paint')}:</span>
-                      <span class="metric-value">${device.performance.firstPaint}ms</span>
-                    </div>
-                    <div class="metric-row">
-                      <span class="metric-label">${t('reports.mobile.firstContentfulPaint', 'First Contentful Paint')}:</span>
-                      <span class="metric-value">${device.performance.firstContentfulPaint}ms</span>
-                    </div>
-                    <div class="metric-row">
-                      <span class="metric-label">${t('reports.mobile.domContentLoadedLabel', 'DOM Content Loaded')}:</span>
-                      <span class="metric-value">${device.performance.domContentLoaded}ms</span>
-                    </div>
-                    <div class="metric-row">
-                      <span class="metric-label">${t('reports.mobile.pageLoadComplete', 'Page Load Complete')}:</span>
-                      <span class="metric-value">${device.performance.loadComplete}ms</span>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Recommendations -->
-      ${data.recommendations.length > 0 ? `
-        <h3 style="margin-top: 2rem; margin-bottom: 1rem;">💡 ${t('reports.common.recommendations', 'Recommendations')}</h3>
-        ${data.recommendations.map(rec => `
-          <div class="recommendation-card ${rec.severity}">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-              <strong>${rec.title}</strong>
-              <span class="score-badge score-${rec.severity}" style="margin: 0;">
-                ${rec.category}
-              </span>
-            </div>
-            <div style="font-size: 0.9rem; color: var(--r-text-faint, #9CA3AF);">${rec.suggestion}</div>
-          </div>
-        `).join('')}
-      ` : `<p style="color: var(--r-text-faint, #9CA3AF);">✅ ${t('reports.mobile.noSignificantIssues', 'Your site handles mobile devices well. See the device details above for fine-tuning opportunities.')}</p>`}
-    `;
-
-    resultsContent.innerHTML = html;
-    window.mobileData = data;
-
-    // Setup accordion using event delegation on resultsContent
-    resultsContent.addEventListener('click', function(e) {
-      // Find if we clicked on or inside an accordion-header
-      const header = e.target.closest('.accordion-header');
-      if (header) {
-        // Don't toggle if clicking on a screenshot
-        if (e.target.classList.contains('device-screenshot')) return;
-        
-        const item = header.closest('.accordion-item');
-        if (item) {
-          e.preventDefault();
-          e.stopPropagation();
-          item.classList.toggle('open');
-        }
-      }
-    });
-
-    // Setup screenshot modal click handlers
-    const modal = document.getElementById('screenshotModal');
-    const modalImage = document.getElementById('modalImage');
-    const closeBtn = document.getElementById('screenshotModalClose');
-
-    if (modal && modalImage) {
-      const previousFocus = { el: null };
-
-      const closeModal = () => {
-        modal.classList.remove('active');
-        modal.setAttribute('aria-hidden', 'true');
-        modalImage.src = '';
-        if (previousFocus.el && typeof previousFocus.el.focus === 'function' && document.contains(previousFocus.el)) {
-          previousFocus.el.focus();
-        }
-      };
-
-      const openModal = (imgEl) => {
-        previousFocus.el = document.activeElement;
-        modalImage.src = imgEl.src;
-        modalImage.alt = imgEl.alt || t('reports.mobile.fullSizeScreenshot', 'Full size screenshot');
-        modal.classList.add('active');
-        modal.setAttribute('aria-hidden', 'false');
-        window.requestAnimationFrame(() => {
-          if (closeBtn) closeBtn.focus();
-          else modal.focus();
-        });
-      };
-
-      // Avoid stacking duplicate handlers across rerenders
-      if (modal.dataset.smWired !== 'true') {
-        modal.dataset.smWired = 'true';
-
-        if (closeBtn) closeBtn.addEventListener('click', closeModal);
-
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) closeModal();
-        });
-
-        document.addEventListener('keydown', (e) => {
-          if (!modal.classList.contains('active')) return;
-
-          if (e.key === 'Escape') {
-            e.preventDefault();
-            closeModal();
-            return;
-          }
-
-          if (e.key !== 'Tab') return;
-
-          const focusables = [closeBtn].filter(Boolean);
-          if (!focusables.length) {
-            e.preventDefault();
-            modal.focus();
-            return;
-          }
-
-          const first = focusables[0];
-          const last = focusables[focusables.length - 1];
-          if (e.shiftKey && document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          } else if (!e.shiftKey && document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        });
-      }
-
-      document.querySelectorAll('.device-screenshot img').forEach((imgEl) => {
-        imgEl.addEventListener('click', (e) => {
-          e.stopPropagation(); // Prevent accordion toggle
-          openModal(imgEl);
-        });
-      });
-    }
-  }
 
   function getScoreClass(score) {
     if (score >= 80) return 'excellent';
@@ -2088,7 +1598,7 @@ p, span {
       'Some text is too small on mobile': [
         t('reports.mobile.steps.setFontSize', 'Set body font-size to at least 16px'),
         t('reports.mobile.steps.useRelativeUnits', 'Use relative units (rem/em) instead of fixed pixels'),
-        t('reports.mobile.steps.testOnDevices', 'Test on actual devices at arm\\')
+        t('reports.mobile.steps.testOnDevices', 'Test on actual devices at arm\'s length')
       ],
       'Touch targets below WCAG minimum': [
         t('reports.mobile.steps.increaseButtonSize', 'Increase button/link size to at least 44x44 pixels'),
@@ -2141,8 +1651,8 @@ p, span {
 
     tabs.forEach(tab => {
       tab.style.background = 'transparent';
-      tab.style.color = '#aaa';
-      tab.style.borderColor = 'rgba(255,255,255,0.1)';
+      tab.style.color = 'var(--r-text-faint, #64748B)';
+      tab.style.borderColor = 'var(--r-border, rgba(0,0,0,0.10))';
       tab.classList.remove('active');
     });
     contents.forEach(content => {
@@ -2154,9 +1664,9 @@ p, span {
     const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
     if (activeTab) {
-      activeTab.style.background = 'rgba(255,255,255,0.1)';
-      activeTab.style.color = '#fff';
-      activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+      activeTab.style.background = 'var(--r-surface-2, #F8FAFC)';
+      activeTab.style.color = 'var(--r-text, #111827)';
+      activeTab.style.borderColor = 'var(--r-border, rgba(0,0,0,0.10))';
       activeTab.classList.add('active');
     }
     if (activeContent) {

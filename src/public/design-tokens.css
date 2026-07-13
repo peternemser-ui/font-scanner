@@ -518,7 +518,7 @@ html[data-theme="print"] {
   /* Core Surfaces */
   --r-bg: #FFFFFF;
   --r-surface-1: #FFFFFF;
-  --r-surface-2: #F9FAFB;
+  --r-surface-2: #F8FAFC;
   --r-border: rgba(0, 0, 0, 0.12);
   --r-shadow: none;
 
@@ -658,6 +658,71 @@ html[data-theme="print"] .report-scope {
 }
 
 /* ========================================
+   PRINT: FORCE LIGHT REPORT TOKENS
+   Browser print (Ctrl+P) from dark mode: the element-level dark tokens on
+   .report-shell/.report-scope above would otherwise beat the html/body print
+   overrides, producing dark printed reports. Declared after the element-level
+   blocks so, at equal specificity, these win when printing.
+   ======================================== */
+
+@media print {
+  .report-shell,
+  .report-scope {
+    --r-bg: #FFFFFF;
+    --r-surface-1: #FFFFFF;
+    --r-surface-2: #F8FAFC;
+    --r-border: rgba(0, 0, 0, 0.08);
+    --r-shadow: none;
+    --r-text: #111827;
+    --r-text-muted: #6B7280;
+    --r-text-faint: #64748B;
+    --r-good: #16A34A;
+    --r-warn: #D97706;
+    --r-bad: #DC2626;
+    --r-info: #2563EB;
+    --r-dial-track: rgba(0, 0, 0, 0.10);
+    --r-dial-glow: none;
+    --r-table-row-alt: rgba(0, 0, 0, 0.02);
+    --r-table-divider: rgba(0, 0, 0, 0.06);
+    --r-code-bg: #F3F4F6;
+    --r-code-border: rgba(0, 0, 0, 0.08);
+    --r-accordion-hover: transparent;
+
+    /* Legacy token overrides — light */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F8FAFC;
+    --bg-tertiary: #F1F3F5;
+    --bg-hover: #E9ECEF;
+    --bg-input: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --bg-elevated: #F8F9FA;
+    --bg-base: #FFFFFF;
+    --bg-overlay: rgba(255, 255, 255, 0.95);
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --text-tertiary: #6B7280;
+    --text-muted: #64748B;
+    --text-body: #374151;
+    --text-heading: #111827;
+    --text-label: #6B7280;
+    --color-white: #111827;
+    --color-text: #111827;
+    --color-text-secondary: #4B5563;
+    --color-text-muted: #6B7280;
+    --border-primary: #DEE2E6;
+    --border-secondary: #CED4DA;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --border-color-strong: rgba(0, 0, 0, 0.2);
+    --border-color-subtle: rgba(0, 0, 0, 0.05);
+    --surface-bg: rgba(0, 0, 0, 0.02);
+    --card-border: rgba(0, 0, 0, 0.08);
+    --donut-track: rgba(0, 0, 0, 0.1);
+    --shadow-sm: none;
+    --shadow-md: none;
+  }
+}
+
+/* ========================================
    REDUCED MOTION
    ======================================== */
 
@@ -674,8 +739,9 @@ html[data-theme="print"] .report-scope {
    FONT LOADING
    ======================================== */
 
-/* Inter Font Family */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+/* Inter is loaded via <link> tags in each HTML page's <head>.
+   (A trailing @import here was invalid CSS — @import must precede all
+   other rules — so it was ignored by browsers and has been removed.) */
 
 /* JetBrains Mono (existing) */
 /* Already loaded in styles.css - no need to duplicate */
