@@ -23,18 +23,7 @@ function t(key, fallback, params = {}) {
 // Tab switching
 document.querySelectorAll('.auth-tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    const targetTab = tab.dataset.tab;
-
-    // Update tabs
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-
-    // Update forms
-    document.getElementById('loginForm').classList.toggle('hidden', targetTab !== 'login');
-    document.getElementById('registerForm').classList.toggle('hidden', targetTab !== 'register');
-
-    // Clear error messages
-    clearMessages();
+    showAuthView(tab.dataset.tab);
   });
 });
 
@@ -44,6 +33,33 @@ function clearMessages() {
     el.classList.add('hidden');
     el.textContent = '';
   });
+  // These are tied to the forgot-password success state and must not outlive it
+  document.getElementById('forgotHint')?.classList.add('hidden');
+  document.querySelector('.reset-token-box')?.remove();
+}
+
+/**
+ * Show one of the auth views and keep the tab strip in sync. The tab strip is
+ * hidden for 'forgot'/'reset', which no tab represents.
+ */
+function showAuthView(view) {
+  const views = {
+    login: 'loginForm',
+    register: 'registerForm',
+    forgot: 'forgotPasswordForm',
+    reset: 'resetPasswordForm',
+  };
+  Object.entries(views).forEach(([name, id]) => {
+    document.getElementById(id)?.classList.toggle('hidden', name !== view);
+  });
+
+  const isTabbed = view === 'login' || view === 'register';
+  document.getElementById('authTabs')?.classList.toggle('hidden', !isTabbed);
+  document.querySelectorAll('.auth-tab').forEach(tab => {
+    tab.classList.toggle('active', isTabbed && tab.dataset.tab === view);
+  });
+
+  clearMessages();
 }
 
 // Show error message
@@ -268,22 +284,85 @@ let pendingResetToken = null;
 // Show forgot password form
 document.getElementById('forgotPasswordLink')?.addEventListener('click', (e) => {
   e.preventDefault();
-  document.getElementById('loginForm').classList.add('hidden');
-  document.getElementById('registerForm').classList.add('hidden');
-  document.getElementById('forgotPasswordForm').classList.remove('hidden');
-  document.getElementById('resetPasswordForm').classList.add('hidden');
-  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-  clearMessages();
+  showAuthView('forgot');
+
+  // Carry over anything already typed on the login form so the address does
+  // not have to be entered twice.
+  const forgotEmail = document.getElementById('forgotEmail');
+  const typedEmail = document.getElementById('loginEmail')?.value.trim();
+  if (typedEmail && !forgotEmail.value) forgotEmail.value = typedEmail;
+  forgotEmail.focus();
 });
 
-// Back to login
-document.getElementById('backToLoginLink')?.addEventListener('click', (e) => {
+// Back to login (from either the forgot or the reset view)
+['backToLoginLink', 'resetBackToLoginLink'].forEach(id => {
+  document.getElementById(id)?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showAuthView('login');
+    document.getElementById('loginEmail')?.focus();
+  });
+});
+
+// "create an account" escape hatch in the post-request hint
+document.getElementById('hintCreateAccountLink')?.addEventListener('click', (e) => {
   e.preventDefault();
-  document.getElementById('forgotPasswordForm').classList.add('hidden');
-  document.getElementById('resetPasswordForm').classList.add('hidden');
-  document.getElementById('loginForm').classList.remove('hidden');
-  document.querySelector('[data-tab="login"]').classList.add('active');
-  clearMessages();
+  const typedEmail = document.getElementById('forgotEmail')?.value.trim();
+  showAuthView('register');
+  const registerEmail = document.getElementById('registerEmail');
+  if (typedEmail) registerEmail.value = typedEmail;
+  registerEmail.focus();
+});
+
+// Password show/hide toggles
+document.querySelectorAll('.pw-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.pwToggle);
+    if (!input) return;
+    const reveal = input.type === 'password';
+    input.type = reveal ? 'text' : 'password';
+    btn.textContent = reveal ? t('auth.hide', 'Hide') : t('auth.show', 'Show');
+    btn.setAttribute('aria-label', reveal
+      ? t('auth.hidePassword', 'Hide password')
+      : t('auth.showPassword', 'Show password'));
+    input.focus();
+  });
+});
+
+/**
+ * Copy text, falling back to a hidden textarea + execCommand when the async
+ * clipboard API is unavailable or rejects (insecure context, no permission).
+ */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch { /* fall through */ }
+
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:-1000px;opacity:0;';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+// Copy the dev reset link (the button is only rendered in local dev)
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-action="copy-reset-url"]');
+  if (!btn) return;
+  const original = t('auth.copyLink', 'Copy Link');
+  const ok = await copyText(btn.dataset.url);
+  // Either way the user gets feedback; the URL is also shown in full above the
+  // button so it can be selected by hand if both copy paths fail.
+  btn.textContent = ok ? t('auth.copied', 'Copied') : t('auth.copyFailed', 'Select the link above to copy');
+  setTimeout(() => { btn.textContent = original; }, 2000);
 });
 
 // Forgot password form submission
@@ -295,7 +374,7 @@ document.getElementById('forgotPasswordForm')?.addEventListener('submit', async 
   const forgotBtn = document.getElementById('forgotBtn');
 
   if (!email) {
-    showError('forgot', 'Please enter your email address');
+    showError('forgot', t('auth.enterEmail', 'Please enter your email address'));
     return;
   }
 
@@ -312,33 +391,26 @@ document.getElementById('forgotPasswordForm')?.addEventListener('submit', async 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to send reset link');
+      throw new Error(data.error || t('auth.failedToSendResetLink', 'Could not send the reset link. Please try again.'));
     }
 
-    // Show success message
-    showSuccess('forgot', 'Reset link generated! Use the link below to reset your password.');
+    // The server deliberately does not reveal whether the address is
+    // registered, so this message must not promise that an email was sent to
+    // this specific address — only that one was sent if the account exists.
+    showSuccess('forgot', t(
+      'auth.resetLinkSent',
+      'If an account exists for {{email}}, we\'ve sent a password reset link. The link expires in 1 hour.',
+      { email }
+    ));
 
-    // DEV ONLY: Show reset token for testing (remove in production)
+    // Give the "no account" case a way out — otherwise the neutral message
+    // above is a dead end for anyone who mistyped or never registered.
+    document.getElementById('forgotHint')?.classList.remove('hidden');
+
+    // Local dev only: the server returns the token when NODE_ENV !== production
+    // so the flow is testable without SMTP. Never present in production.
     if (data.resetToken && data.userId) {
-      const resetUrl = `${window.location.origin}/auth.html?userId=${data.userId}&token=${encodeURIComponent(data.resetToken)}`;
-      
-      // Remove any existing token box
-      const existingBox = document.querySelector('.reset-token-box');
-      if (existingBox) existingBox.remove();
-      
-      const tokenBox = document.createElement('div');
-      tokenBox.className = 'reset-token-box';
-      tokenBox.innerHTML = `
-        <strong>🔧 Dev Mode: No Email Required</strong>
-        <p style="margin: 0.5rem 0; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">Click the button below to reset your password:</p>
-        <a href="${resetUrl}" class="reset-link-btn" style="display: inline-block; margin: 0.75rem 0; padding: 0.625rem 1.25rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark)); color: var(--accent-primary-contrast); text-decoration: none; border-radius: 6px; font-weight: 600; font-family: Inter, sans-serif;">Reset Password Now →</a>
-        <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.75rem;">Or copy the link:</p>
-        <code style="display: block; margin-top: 0.5rem; padding: 0.5rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; font-size: 0.7rem; word-break: break-all;">${resetUrl}</code>
-        <button type="button" class="copy-btn" data-action="copy-reset-url" data-url="${resetUrl}">Copy Link</button>
-      `;
-      
-      const successEl = document.getElementById('forgotSuccess');
-      successEl.parentNode.insertBefore(tokenBox, successEl.nextSibling);
+      renderDevResetBox(data.userId, data.resetToken);
     }
 
   } catch (error) {
@@ -349,14 +421,48 @@ document.getElementById('forgotPasswordForm')?.addEventListener('submit', async 
   }
 });
 
+/**
+ * Local-dev helper: renders a clickable reset link when the API returns the
+ * token (non-production only). Built with DOM APIs rather than innerHTML so
+ * the token never flows through an HTML string.
+ */
+function renderDevResetBox(userId, resetToken) {
+  document.querySelector('.reset-token-box')?.remove();
+
+  const resetUrl = `${window.location.origin}/auth.html?userId=${encodeURIComponent(userId)}&token=${encodeURIComponent(resetToken)}`;
+
+  const box = document.createElement('div');
+  box.className = 'reset-token-box';
+
+  const title = document.createElement('strong');
+  title.textContent = t('auth.devModeTitle', 'Dev mode: no email required');
+
+  const link = document.createElement('a');
+  link.className = 'reset-link-btn btn';
+  link.href = resetUrl;
+  link.textContent = t('auth.resetPasswordNow', 'Reset password now');
+  link.style.cssText = 'display:inline-block;width:auto;margin:0.75rem 0;padding:0.625rem 1.25rem;text-decoration:none;';
+
+  const code = document.createElement('code');
+  code.textContent = resetUrl;
+  code.style.cssText = 'display:block;margin-top:0.5rem;padding:0.5rem;background:var(--bg-input);border-radius:4px;font-size:0.7rem;word-break:break-all;';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.type = 'button';
+  copyBtn.className = 'copy-btn';
+  copyBtn.dataset.action = 'copy-reset-url';
+  copyBtn.dataset.url = resetUrl;
+  copyBtn.textContent = t('auth.copyLink', 'Copy Link');
+
+  box.append(title, link, code, copyBtn);
+
+  const successEl = document.getElementById('forgotSuccess');
+  successEl.parentNode.insertBefore(box, successEl.nextSibling);
+}
+
 // Show reset password form (called when user visits with reset token)
 async function showResetPasswordForm(userId, token) {
-  // Hide all other forms
-  document.getElementById('loginForm').classList.add('hidden');
-  document.getElementById('registerForm').classList.add('hidden');
-  document.getElementById('forgotPasswordForm').classList.add('hidden');
-  document.getElementById('resetPasswordForm').classList.remove('hidden');
-  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  showAuthView('reset');
 
   // Store for form submission
   pendingResetUserId = userId;
@@ -373,10 +479,12 @@ async function showResetPasswordForm(userId, token) {
     const data = await response.json();
 
     if (!response.ok || !data.valid) {
-      throw new Error(data.error || 'Reset link is invalid or expired');
+      throw new Error(data.error || t('auth.resetLinkInvalid', 'Reset link is invalid or expired'));
     }
+
+    document.getElementById('resetPassword').focus();
   } catch (error) {
-    showError('reset', error.message + '. Please request a new password reset.');
+    showError('reset', `${error.message}. ${t('auth.requestNewReset', 'Please request a new password reset.')}`);
     document.getElementById('resetBtn').disabled = true;
   }
 }
@@ -391,17 +499,17 @@ document.getElementById('resetPasswordForm')?.addEventListener('submit', async (
   const resetBtn = document.getElementById('resetBtn');
 
   if (!password) {
-    showError('reset', 'Please enter a new password');
+    showError('reset', t('auth.enterNewPassword', 'Please enter a new password'));
     return;
   }
 
   if (password !== passwordConfirm) {
-    showError('reset', 'Passwords do not match');
+    showError('reset', t('auth.passwordsDoNotMatch', 'Passwords do not match'));
     return;
   }
 
   if (!pendingResetUserId || !pendingResetToken) {
-    showError('reset', 'Reset token missing. Please request a new password reset.');
+    showError('reset', t('auth.resetTokenMissing', 'Reset token missing. Please request a new password reset.'));
     return;
   }
 
@@ -422,10 +530,10 @@ document.getElementById('resetPasswordForm')?.addEventListener('submit', async (
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Password reset failed');
+      throw new Error(data.error || t('auth.passwordResetFailed', 'Password reset failed'));
     }
 
-    showSuccess('reset', 'Password reset successfully! Redirecting to login...');
+    showSuccess('reset', t('auth.passwordResetSuccess', 'Password reset successfully. Redirecting to login…'));
 
     // Clear URL params and redirect
     setTimeout(() => {

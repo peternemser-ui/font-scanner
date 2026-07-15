@@ -12,50 +12,64 @@
   <!-- Preload critical fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <!-- Design System Foundation -->
   <link rel="stylesheet" href="/design-tokens.css?v=3.4.0">
   <link rel="stylesheet" href="/components.css?v=3.2.0">
-  <link rel="stylesheet" href="/styles.css?v=3.4.0">
+  <link rel="stylesheet" href="/styles.css?v=3.4.1">
 
   <style>
     .auth-container {
-      max-width: 450px;
+      max-width: 460px;
       margin: 3rem auto;
       padding: 2rem;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg, 12px);
+      box-shadow: var(--shadow-md, 0 4px 20px rgba(0, 0, 0, 0.07));
     }
 
+    /* Segmented control. Hidden entirely on the forgot/reset views, where
+       neither tab applies — a segmented control with nothing selected reads
+       as a broken state. */
     .auth-tabs {
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      gap: 0.25rem;
+      margin-bottom: 1.75rem;
+      padding: 0.25rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
     }
 
     .auth-tab {
       flex: 1;
-      padding: 0.75rem 1rem;
+      padding: 0.625rem 1rem;
       background: transparent;
       border: none;
-      color: #888;
+      border-radius: 6px;
+      color: var(--r-text-muted, #6B7280);
       cursor: pointer;
-      font-size: 1rem;
+      font-family: inherit;
+      font-size: 0.9375rem;
       font-weight: 600;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s ease;
+      transition: color 0.15s ease, background 0.15s ease;
     }
 
     .auth-tab:hover {
-      color: #fff;
+      color: var(--text-primary);
     }
 
     .auth-tab.active {
-      color: var(--accent-primary);
-      border-bottom-color: var(--accent-primary);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    }
+
+    .auth-tab:focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 1px;
     }
 
     .auth-form {
@@ -67,10 +81,16 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .auth-form { animation: none; }
+      .btn:hover { transform: none; }
+    }
+
     .auth-form h2 {
-      margin: 0 0 1.5rem 0;
-      color: #fff;
+      margin: 0 0 0.5rem 0;
+      color: var(--text-primary);
       font-size: 1.5rem;
+      letter-spacing: -0.015em;
     }
 
     .form-group {
@@ -80,33 +100,82 @@
     .form-group label {
       display: block;
       margin-bottom: 0.5rem;
-      color: #ccc;
-      font-size: 0.9rem;
-      font-weight: 500;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 600;
     }
 
     .form-group input {
+      box-sizing: border-box;
       width: 100%;
-      padding: 0.75rem;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 6px;
-      color: #fff;
+      padding: 0.75rem 0.875rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: inherit;
       font-size: 1rem;
-      transition: all 0.2s ease;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .form-group input::placeholder {
+      color: var(--r-text-muted, #6B7280);
+      opacity: 1;
     }
 
     .form-group input:focus {
       outline: none;
+      background: var(--bg-card);
       border-color: var(--accent-primary);
-      box-shadow: 0 0 0 2px rgba(var(--accent-primary-rgb), 0.12);
+      box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.15);
+    }
+
+    .form-group input:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .form-group small {
       display: block;
       margin-top: 0.5rem;
-      color: #888;
+      color: var(--r-text-muted, #6B7280);
       font-size: 0.8rem;
+    }
+
+    /* Password field + show/hide affordance */
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap input {
+      padding-right: 3.25rem;
+    }
+
+    .pw-toggle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      padding: 0 0.875rem;
+      background: none;
+      border: none;
+      border-radius: 0 8px 8px 0;
+      color: var(--r-text-muted, #6B7280);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .pw-toggle:hover {
+      color: var(--text-primary);
+    }
+
+    .pw-toggle:focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: -2px;
     }
 
     .btn {
@@ -115,17 +184,23 @@
       background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 1), rgba(var(--accent-primary-rgb), 0.82));
       color: var(--accent-primary-contrast);
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
+      font-family: inherit;
       font-size: 1rem;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
       margin-top: 0.5rem;
     }
 
-    .btn:hover {
+    .btn:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.28);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
     }
 
     .btn:disabled {
@@ -134,34 +209,83 @@
       transform: none;
     }
 
-    .error-message {
-      padding: 0.75rem;
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 6px;
-      color: #ef4444;
-      font-size: 0.875rem;
+    /* Status messages.
+       NOTE: the light theme ships a blanket `body.white-theme p, span, div`
+       rule that forces color:#000 !important, plus a `body.white-theme div…`
+       rule setting background-color:inherit. Both would strip the semantic
+       red/green off these boxes, so the colors below are re-asserted with
+       enough specificity (and !important) to survive. This <style> block is
+       parsed after styles.css, so equal-weight declarations resolve here. */
+    .error-message,
+    .success-message {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
       margin-top: 1rem;
+      padding: 0.75rem 0.875rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      line-height: 1.5;
     }
 
-    .success-message {
-      padding: 0.75rem;
-      background: rgba(34, 197, 94, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      border-radius: 6px;
-      color: #22c55e;
-      font-size: 0.875rem;
-      margin-top: 1rem;
+    body .auth-container .error-message {
+      background: rgba(239, 68, 68, 0.1) !important;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #b91c1c !important;
     }
+
+    body .auth-container .success-message {
+      background: rgba(22, 163, 74, 0.1) !important;
+      border: 1px solid rgba(22, 163, 74, 0.35);
+      color: #15803d !important;
+    }
+
+    html[data-theme="dark"] body .auth-container .error-message { color: #fca5a5 !important; }
+    html[data-theme="dark"] body .auth-container .success-message { color: #86efac !important; }
+
+    /* Same reason: keep the secondary/muted hierarchy from collapsing to solid
+       black under the light-theme blanket rule. */
+    body .auth-container .form-description { color: var(--text-secondary) !important; }
+    body .auth-container .reset-hint { color: var(--r-text-muted, #6B7280) !important; }
+    body .auth-container .form-group label { color: var(--text-secondary) !important; }
+    body .auth-container .social-divider { color: var(--r-text-muted, #6B7280) !important; }
+    body .auth-container .form-group small { color: var(--r-text-muted, #6B7280) !important; }
+
+    /* Inner spans are caught by the same blanket rule — let them take the
+       colour of the element they sit in rather than snapping to black. */
+    body .auth-container .reset-hint span,
+    body .auth-container .forgot-link a span,
+    body .auth-container .social-divider span,
+    body .auth-container .error-message span,
+    body .auth-container .success-message span,
+    body .pricing-teaser p span { color: inherit !important; }
+
+    body .auth-container .reset-hint a { color: var(--accent-primary) !important; }
+    body .auth-container .forgot-link a { color: var(--text-secondary) !important; }
+    body .auth-container .forgot-link a:hover { color: var(--accent-primary) !important; }
+    body .pricing-teaser p { color: var(--text-secondary) !important; }
+    body .pricing-teaser strong { color: var(--accent-primary) !important; }
+    body .reset-token-box { background: rgba(var(--accent-primary-rgb), 0.08) !important; }
+    body .reset-token-box code { color: var(--text-primary) !important; }
+
+    .error-message::before,
+    .success-message::before {
+      flex-shrink: 0;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .error-message::before { content: '!'; }
+    .success-message::before { content: '\2713'; }
 
     .hidden {
-      display: none;
+      display: none !important;
     }
 
     .divider {
       margin: 2rem 0;
       text-align: center;
-      color: #666;
+      color: var(--r-text-muted, #6B7280);
       position: relative;
     }
 
@@ -172,13 +296,13 @@
       left: 0;
       right: 0;
       height: 1px;
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--border-color);
       z-index: 0;
     }
 
     .divider span {
       position: relative;
-      background: rgba(0, 0, 0, 0.9);
+      background: var(--bg-card);
       padding: 0 1rem;
       z-index: 1;
     }
@@ -189,31 +313,59 @@
     }
 
     .forgot-link a {
-      color: #888;
+      color: var(--text-secondary);
       font-size: 0.875rem;
       text-decoration: none;
-      transition: color 0.2s ease;
+      transition: color 0.15s ease;
     }
 
     .forgot-link a:hover {
       color: var(--accent-primary);
+      text-decoration: underline;
+    }
+
+    .forgot-link a:focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
+      border-radius: 2px;
     }
 
     .form-description {
-      color: #888;
+      color: var(--text-secondary);
       font-size: 0.9rem;
       margin: 0 0 1.5rem 0;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
-    /* Reset token display (dev only) */
+    /* Escape hatch shown after a reset request: the server deliberately will
+       not say whether the address is registered, so the "no account" case is
+       otherwise a dead end. */
+    .reset-hint {
+      margin: 0.875rem 0 0 0;
+      color: var(--r-text-muted, #6B7280);
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .reset-hint a {
+      color: var(--accent-primary);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .reset-hint a:hover {
+      text-decoration: underline;
+    }
+
+    /* Local-dev only: surfaces the reset link when no SMTP is configured. */
     .reset-token-box {
       margin-top: 1rem;
       padding: 1rem;
       background: rgba(var(--accent-primary-rgb), 0.08);
       border: 1px solid rgba(var(--accent-primary-rgb), 0.25);
-      border-radius: 6px;
-      font-family: monospace;
+      border-radius: 8px;
+      font-family: var(--font-mono, monospace);
       font-size: 0.75rem;
       word-break: break-all;
     }
@@ -222,11 +374,11 @@
       display: block;
       margin-bottom: 0.5rem;
       color: var(--accent-primary);
-      font-family: Inter, sans-serif;
+      font-family: var(--font-sans, sans-serif);
     }
 
     .reset-token-box code {
-      color: #fff;
+      color: var(--text-primary);
     }
 
     .copy-btn {
@@ -237,9 +389,10 @@
       border: 1px solid rgba(var(--accent-primary-rgb), 0.35);
       border-radius: 4px;
       color: var(--accent-primary);
+      font-family: inherit;
       font-size: 0.75rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: background 0.15s ease;
     }
 
     .copy-btn:hover {
@@ -261,20 +414,25 @@
       gap: 0.625rem;
       width: 100%;
       padding: 0.75rem;
-      border-radius: 6px;
+      border-radius: 8px;
+      font-family: inherit;
       font-size: 0.9375rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      background: rgba(255, 255, 255, 0.05);
-      color: #fff;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+      border: 1px solid var(--border-color);
+      background: var(--bg-input);
+      color: var(--text-primary);
     }
 
     .btn-social:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.25);
+      background: var(--bg-hover, var(--bg-elevated));
       transform: translateY(-1px);
+    }
+
+    .btn-social:focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
     }
 
     .btn-social svg {
@@ -298,7 +456,7 @@
       align-items: center;
       gap: 1rem;
       margin-bottom: 1.25rem;
-      color: #666;
+      color: var(--r-text-muted, #6B7280);
       font-size: 0.8125rem;
     }
 
@@ -307,7 +465,48 @@
       content: '';
       flex: 1;
       height: 1px;
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--border-color);
+    }
+
+    /* ---- Pricing teaser ------------------------------------------------- */
+    .pricing-teaser {
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 1.5rem 2rem;
+      background: rgba(var(--accent-primary-rgb), 0.05);
+      border: 1px solid rgba(var(--accent-primary-rgb), 0.2);
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .pricing-teaser h2 {
+      margin: 0 0 0.75rem 0;
+      color: var(--text-primary);
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .pricing-teaser p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    .pricing-teaser strong {
+      color: var(--accent-primary);
+    }
+
+    @media (max-width: 520px) {
+      .auth-container {
+        margin: 1.5rem 0.75rem;
+        padding: 1.5rem 1.25rem;
+      }
+
+      .pricing-teaser {
+        margin: 1.5rem 0.75rem;
+        padding: 1.25rem;
+      }
     }
   </style>
 <!-- Google tag (gtag.js) -->
@@ -321,9 +520,9 @@
 
   <main class="page-shell">
     <div class="auth-container">
-      <div class="auth-tabs">
-        <button class="auth-tab active" data-tab="login" data-i18n="auth.login">Login</button>
-        <button class="auth-tab" data-tab="register" data-i18n="auth.createAccount">Create Account</button>
+      <div class="auth-tabs" id="authTabs">
+        <button type="button" class="auth-tab active" data-tab="login" data-i18n="auth.login">Login</button>
+        <button type="button" class="auth-tab" data-tab="register" data-i18n="auth.createAccount">Create Account</button>
       </div>
 
       <!-- Login Form -->
@@ -346,7 +545,10 @@
         </div>
         <div class="form-group">
           <label for="loginPassword" data-i18n="auth.password">Password</label>
-          <input type="password" id="loginPassword" required autocomplete="current-password">
+          <div class="input-wrap">
+            <input type="password" id="loginPassword" required autocomplete="current-password">
+            <button type="button" class="pw-toggle" data-pw-toggle="loginPassword" data-i18n="auth.show" aria-label="Show password">Show</button>
+          </div>
         </div>
         <button type="submit" class="btn" id="loginBtn" data-i18n="auth.loginButton">Login</button>
         <div id="loginError" class="error-message hidden"></div>
@@ -357,37 +559,50 @@
       </form>
 
       <!-- Forgot Password Form -->
-      <form id="forgotPasswordForm" class="auth-form hidden">
-        <h2>Reset Password</h2>
-        <p class="form-description">Enter your email address and we'll send you a link to reset your password.</p>
+      <form id="forgotPasswordForm" class="auth-form hidden" novalidate>
+        <h2 data-i18n="auth.forgotHeading">Forgot Password</h2>
+        <p class="form-description" data-i18n="auth.forgotDescription">Enter the email address you signed up with and we'll send you a link to reset your password.</p>
         <div class="form-group">
-          <label for="forgotEmail">Email</label>
-          <input type="email" id="forgotEmail" required autocomplete="email">
+          <label for="forgotEmail" data-i18n="auth.email">Email</label>
+          <input type="email" id="forgotEmail" required autocomplete="email" placeholder="you@example.com" data-i18n-placeholder="auth.emailPlaceholder">
         </div>
-        <button type="submit" class="btn" id="forgotBtn">Send Reset Link</button>
-        <div id="forgotError" class="error-message hidden"></div>
-        <div id="forgotSuccess" class="success-message hidden"></div>
+        <button type="submit" class="btn" id="forgotBtn" data-i18n="auth.sendResetLink">Send Reset Link</button>
+        <div id="forgotError" class="error-message hidden" role="alert"></div>
+        <div id="forgotSuccess" class="success-message hidden" role="status"></div>
+        <p class="reset-hint hidden" id="forgotHint">
+          <span data-i18n="auth.noEmailHint">No email after a few minutes? Check your spam folder, or</span>
+          <a href="#" id="hintCreateAccountLink" data-i18n="auth.createAnAccount">create an account</a>.
+        </p>
         <div class="forgot-link">
-          <a href="#" id="backToLoginLink">← Back to Login</a>
+          <a href="#" id="backToLoginLink"><span aria-hidden="true">&larr;</span> <span data-i18n="auth.backToLogin">Back to Login</span></a>
         </div>
       </form>
 
       <!-- Reset Password Form (shown when user clicks reset link) -->
-      <form id="resetPasswordForm" class="auth-form hidden">
-        <h2>Set New Password</h2>
-        <p class="form-description">Enter your new password below.</p>
+      <form id="resetPasswordForm" class="auth-form hidden" novalidate>
+        <h2 data-i18n="auth.setNewPassword">Set New Password</h2>
+        <p class="form-description" data-i18n="auth.setNewPasswordDescription">Enter your new password below.</p>
         <div class="form-group">
-          <label for="resetPassword">New Password</label>
-          <input type="password" id="resetPassword" required autocomplete="new-password">
-          <small>8+ characters, 1 uppercase, 1 lowercase, 1 number</small>
+          <label for="resetPassword" data-i18n="auth.newPassword">New Password</label>
+          <div class="input-wrap">
+            <input type="password" id="resetPassword" required autocomplete="new-password">
+            <button type="button" class="pw-toggle" data-pw-toggle="resetPassword" data-i18n="auth.show" aria-label="Show password">Show</button>
+          </div>
+          <small data-i18n="auth.passwordRequirements">8+ characters, 1 uppercase, 1 lowercase, 1 number</small>
         </div>
         <div class="form-group">
-          <label for="resetPasswordConfirm">Confirm New Password</label>
-          <input type="password" id="resetPasswordConfirm" required autocomplete="new-password">
+          <label for="resetPasswordConfirm" data-i18n="auth.confirmNewPassword">Confirm New Password</label>
+          <div class="input-wrap">
+            <input type="password" id="resetPasswordConfirm" required autocomplete="new-password">
+            <button type="button" class="pw-toggle" data-pw-toggle="resetPasswordConfirm" data-i18n="auth.show" aria-label="Show password">Show</button>
+          </div>
         </div>
-        <button type="submit" class="btn" id="resetBtn">Reset Password</button>
-        <div id="resetError" class="error-message hidden"></div>
-        <div id="resetSuccess" class="success-message hidden"></div>
+        <button type="submit" class="btn" id="resetBtn" data-i18n="auth.resetPassword">Reset Password</button>
+        <div id="resetError" class="error-message hidden" role="alert"></div>
+        <div id="resetSuccess" class="success-message hidden" role="status"></div>
+        <div class="forgot-link">
+          <a href="#" id="resetBackToLoginLink"><span aria-hidden="true">&larr;</span> <span data-i18n="auth.backToLogin">Back to Login</span></a>
+        </div>
       </form>
 
       <!-- Register Form -->
@@ -410,12 +625,18 @@
         </div>
         <div class="form-group">
           <label for="registerPassword" data-i18n="auth.password">Password</label>
-          <input type="password" id="registerPassword" required autocomplete="new-password">
+          <div class="input-wrap">
+            <input type="password" id="registerPassword" required autocomplete="new-password">
+            <button type="button" class="pw-toggle" data-pw-toggle="registerPassword" data-i18n="auth.show" aria-label="Show password">Show</button>
+          </div>
           <small data-i18n="auth.passwordRequirements">8+ characters, 1 uppercase, 1 lowercase, 1 number</small>
         </div>
         <div class="form-group">
           <label for="registerPasswordConfirm" data-i18n="auth.confirmPassword">Confirm Password</label>
-          <input type="password" id="registerPasswordConfirm" required autocomplete="new-password">
+          <div class="input-wrap">
+            <input type="password" id="registerPasswordConfirm" required autocomplete="new-password">
+            <button type="button" class="pw-toggle" data-pw-toggle="registerPasswordConfirm" data-i18n="auth.show" aria-label="Show password">Show</button>
+          </div>
         </div>
         <button type="submit" class="btn" id="registerBtn" data-i18n="auth.registerButton">Create Account</button>
         <div id="registerError" class="error-message hidden"></div>
@@ -424,22 +645,24 @@
     </div>
 
     <!-- Pricing Teaser -->
-    <div class="pricing-teaser" style="max-width: 600px; margin: 2rem auto; padding: 1.5rem 2rem; background: rgba(91, 244, 231, 0.05); border: 1px solid rgba(91, 244, 231, 0.2); border-radius: 12px; text-align: center;">
-      <h3 style="margin: 0 0 0.75rem 0; color: #fff; font-size: 1.125rem; font-weight: 600;">
+    <div class="pricing-teaser">
+      <h2 data-i18n="auth.teaserHeading">
         Run a scan &rarr; See top issues &rarr; Unlock full reports
-      </h3>
-      <p style="margin: 0; color: #9ca3af; font-size: 0.9375rem; line-height: 1.6;">
-        Free users get basic scans. <strong style="color: var(--accent-primary, #5bf4e7);">Pro ($30/mo or $240/yr)</strong> unlocks PDF exports, full fix code, and all premium features.
-        Or buy a <strong style="color: var(--accent-primary, #5bf4e7);">single report for $5</strong>.
+      </h2>
+      <p>
+        <span data-i18n="auth.teaserFree">Free users get basic scans.</span>
+        <strong data-i18n="auth.teaserPro">Pro ($30/mo or $240/yr)</strong>
+        <span data-i18n="auth.teaserUnlocks">unlocks PDF exports, full fix code, and all premium features. Or buy a</span>
+        <strong data-i18n="auth.teaserSingle">single report for $5</strong><span>.</span>
       </p>
     </div>
   </main>
 
   <script src="/i18n.js?v=3.2.0"></script>
   <script src="/pro-utils.js?v=3.2.0"></script>
-  <script src="/nav-template.js?v=3.2.0"></script>
+  <script src="/nav-template.js?v=3.4.1"></script>
   <!-- Language Switcher (after nav-template so container exists) -->
   <script src="/language-switcher.js?v=3.2.0"></script>
-  <script src="/auth-script.js?v=3.2.0"></script>
+  <script src="/auth-script.js?v=3.4.1"></script>
 </body>
 </html>

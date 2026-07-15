@@ -2841,7 +2841,7 @@ body.white-theme #analyzeBtn:focus {
    NOTE: UI kit buttons use `.btn` + variants (e.g. `.btn-primary`) and manage
    their own colors. Avoid overriding them here.
 */
-body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.hp-form__button):not(.pro-upsell__cta):not(.example-chip):not(.auth-user-trigger) {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.hp-form__button):not(.pro-upsell__cta):not(.example-chip):not(.auth-user-trigger):not(.auth-tab):not(.pw-toggle) {
   background-color: #f8f9fa !important; /* Light neutral background */
   color: #1a1a1a !important; /* Dark text */
   border: 2px solid #dee2e6 !important; /* Subtle border */
@@ -2852,7 +2852,7 @@ body.white-theme button[style*="color"] {
   color: inherit !important; /* Respect inline color for special buttons */
 }
 
-body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.hp-form__button):not(.pro-upsell__cta):not(.example-chip):not(.auth-user-trigger):hover {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.hp-form__button):not(.pro-upsell__cta):not(.example-chip):not(.auth-user-trigger):not(.auth-tab):not(.pw-toggle):hover {
   background-color: #e9ecef !important; /* Slightly darker on hover */
   border-color: #adb5bd !important;
 }

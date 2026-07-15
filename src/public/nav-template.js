@@ -1327,9 +1327,15 @@ function removeMergeConflictArtifacts() {
       text = text.replace(phrase, '');
     });
 
+    // Only touch nodes that actually contained an artifact. Anything else is
+    // ordinary content — including the whitespace-only text nodes that carry
+    // the space between adjacent inline elements ("</span> <a>"), which this
+    // used to delete on every page, running the words together.
+    if (text === originalText) return;
+
     if (text.trim().length === 0) {
       node.parentNode && node.parentNode.removeChild(node);
-    } else if (text !== originalText) {
+    } else {
       node.nodeValue = text.trim();
     }
   });

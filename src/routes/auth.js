@@ -496,12 +496,22 @@ router.post('/forgot-password', async (req, res) => {
 
     const result = await authService.generateResetToken(email, locale);
 
-    // In production, the token would be sent via email
-    // Never expose the token in the API response
-    res.json({
+    // The response is intentionally identical whether or not the address is
+    // registered — it must not be usable to enumerate accounts.
+    const payload = {
       success: true,
       message: 'If this email exists, a password reset link has been generated'
-    });
+    };
+
+    // Local-dev convenience only: generateResetToken returns the token when
+    // NODE_ENV !== 'production' so the flow can be exercised without SMTP.
+    // Gated again here so the token can never leak from a production box.
+    if (result && result._devOnly && process.env.NODE_ENV !== 'production') {
+      payload.resetToken = result.resetToken;
+      payload.userId = result.userId;
+    }
+
+    res.json(payload);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
