@@ -1,47 +1,72 @@
 /**
  * Test Setup Helpers
- * Provides utilities for setting up test database and cleaning up
+ * Provides utilities for setting up test database and cleaning up.
+ *
+ * Tests run against PostgreSQL — the same engine as production. Each
+ * TestDatabase gets its own schema, so suites are fully isolated and the
+ * `public` schema of the target database is never touched.
+ *
+ * Requires a reachable PostgreSQL. Override the target with TEST_DATABASE_URL
+ * (falls back to DATABASE_URL, then the local dev DSN).
+ *
+ * This previously created a SQLite file per instance — except Database's
+ * constructor ignored the path, so every suite silently shared
+ * ./data/fontscanner.db, writing test users into the real dev database.
  */
 
+const { Client } = require('pg');
 const { Database } = require('../../src/db');
-const fs = require('fs');
-const path = require('path');
 
 let dbCounter = 0;
 
+function testConnectionString() {
+  return process.env.TEST_DATABASE_URL
+    || process.env.DATABASE_URL
+    || 'postgresql://fontscanner:fontscanner_dev@localhost:5432/fontscanner';
+}
+
 class TestDatabase {
   constructor() {
-    // Each instance gets a unique db file to avoid EBUSY conflicts in parallel test suites
-    const uniqueId = `${process.pid}_${++dbCounter}_${Date.now()}`;
-    this.testDbPath = path.join(__dirname, '..', `test_${uniqueId}.db`);
+    // Unique per process + instance so parallel workers cannot collide.
+    this.schema = `test_${process.pid}_${++dbCounter}_${Date.now()}`;
+    this.connectionString = testConnectionString();
     this.db = null;
   }
 
+  /** Run a statement on a throwaway admin connection (outside the pool). */
+  async _admin(sql) {
+    const client = new Client({ connectionString: this.connectionString });
+    await client.connect();
+    try {
+      await client.query(sql);
+    } finally {
+      await client.end();
+    }
+  }
+
   /**
-   * Initialize test database with schema
+   * Initialize an isolated schema with the full production schema + migrations.
    */
   async setup() {
-    // Remove existing test database (shouldn't exist with unique paths, but just in case)
     try {
-      if (fs.existsSync(this.testDbPath)) {
-        fs.unlinkSync(this.testDbPath);
-      }
+      await this._admin(`CREATE SCHEMA IF NOT EXISTS "${this.schema}"`);
     } catch (err) {
-      // Ignore EBUSY on Windows — the unique path should prevent conflicts
+      throw new Error(
+        `Could not create test schema — is PostgreSQL running and reachable at ` +
+        `${this.connectionString.replace(/:\/\/[^@]*@/, '://***@')}? Original error: ${err.message}`
+      );
     }
 
-    // Initialize database
-    this.db = new Database(this.testDbPath);
+    // Pinning search_path to the test schema means schema.pg.sql and every
+    // migration build their objects inside it.
+    this.db = new Database({ connectionString: this.connectionString, schema: this.schema });
     await this.db.initialize();
-
-    // Run migrations
-    await this.db.runMigrationFiles();
 
     return this.db;
   }
 
   /**
-   * Clean up test database
+   * Drop the schema and close the pool.
    */
   async teardown() {
     if (this.db) {
@@ -53,22 +78,10 @@ class TestDatabase {
       this.db = null;
     }
 
-    // Remove test database file and WAL/SHM files
-    const filesToRemove = [
-      this.testDbPath,
-      this.testDbPath + '-wal',
-      this.testDbPath + '-shm'
-    ];
-
-    for (const file of filesToRemove) {
-      try {
-        if (fs.existsSync(file)) {
-          fs.unlinkSync(file);
-        }
-      } catch (err) {
-        // On Windows, files may be locked briefly - ignore errors
-        console.warn(`Could not remove ${file}:`, err.message);
-      }
+    try {
+      await this._admin(`DROP SCHEMA IF EXISTS "${this.schema}" CASCADE`);
+    } catch (err) {
+      console.warn(`Could not drop test schema ${this.schema}:`, err.message);
     }
   }
 
@@ -82,6 +95,8 @@ class TestDatabase {
     // Child tables (those with FK references to users) must be cleared BEFORE users.
     const tables = [
       // Child tables first (FK → users or FK → scans)
+      'bug_reward_tokens',
+      'bug_reports',
       'usage_tracking',
       'scan_usage',
       'scan_results',

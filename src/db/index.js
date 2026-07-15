@@ -1,10 +1,17 @@
 /**
- * Database Module — driver-agnostic facade
+ * Database Module — PostgreSQL facade
  *
  * Consumer files (services, routes, middleware) continue calling:
  *   db.run(sql, params)  db.get(sql, params)  db.all(sql, params)  db.transaction(cb)
  *
- * The active driver (SQLite or PostgreSQL) is chosen via DB_DRIVER env var.
+ * PostgreSQL is the only supported database — see ./dbConfig.js for why the
+ * SQLite driver and its silent fallback were removed.
+ *
+ * @param {object} [options]
+ * @param {string} [options.connectionString] - Override the configured DSN
+ *   (used by the test harness to target an isolated database).
+ * @param {string} [options.schema] - Pin connections to this schema
+ *   (used by the test harness to isolate each suite).
  */
 
 const fs = require('fs');
@@ -12,21 +19,21 @@ const path = require('path');
 const dbConfig = require('./dbConfig');
 
 class Database {
-  constructor() {
+  constructor(options = {}) {
     this.driver = null;
-    this.driverName = dbConfig.driver; // 'sqlite' | 'postgres'
+    this.driverName = 'postgres';
+    this.connectionString = options.connectionString || dbConfig.postgres.connectionString;
+    this.schema = options.schema || null;
   }
 
   async initialize() {
     try {
-      // Instantiate the correct driver
-      if (this.driverName === 'postgres') {
-        const PostgresDriver = require('./drivers/postgres');
-        this.driver = new PostgresDriver(dbConfig.postgres);
-      } else {
-        const SqliteDriver = require('./drivers/sqlite');
-        this.driver = new SqliteDriver(dbConfig.sqlite.path);
-      }
+      const PostgresDriver = require('./drivers/postgres');
+      this.driver = new PostgresDriver({
+        ...dbConfig.postgres,
+        connectionString: this.connectionString,
+        schema: this.schema,
+      });
 
       await this.driver.open();
       await this.driver.applyPragmas();
@@ -50,18 +57,10 @@ class Database {
   // ── Schema & migrations ───────────────────────────────────────────
 
   async runMigrations() {
-    const schemaFile = this.driverName === 'postgres' ? 'schema.pg.sql' : 'schema.sql';
-    const schemaPath = path.join(__dirname, schemaFile);
+    const schemaPath = path.join(__dirname, 'schema.pg.sql');
 
-    // If no PG schema file yet, skip (allows SQLite-only dev to keep working)
     if (!fs.existsSync(schemaPath)) {
-      if (this.driverName === 'postgres') {
-        console.warn(`PostgreSQL schema file not found at ${schemaPath} — skipping base schema`);
-      }
-      if (this.driverName === 'sqlite') {
-        throw new Error(`Schema file not found: ${schemaPath}`);
-      }
-      return;
+      throw new Error(`PostgreSQL schema file not found: ${schemaPath}`);
     }
 
     const schema = fs.readFileSync(schemaPath, 'utf8');
@@ -71,7 +70,7 @@ class Database {
       try {
         await this.run(statement);
       } catch (error) {
-        // Ignore "already exists" errors (both SQLite and PG)
+        // Ignore "already exists" errors — schema application is idempotent
         if (!error.message.includes('already exists')) {
           console.error('Migration error:', error.message);
           console.error('Statement:', statement.substring(0, 100) + '...');
@@ -84,10 +83,7 @@ class Database {
   }
 
   async runMigrationFiles() {
-    // Postgres reads from migrations/pg/, SQLite from migrations/
-    const migrationsDir = this.driverName === 'postgres'
-      ? path.join(__dirname, 'migrations', 'pg')
-      : path.join(__dirname, 'migrations');
+    const migrationsDir = path.join(__dirname, 'migrations', 'pg');
 
     if (!fs.existsSync(migrationsDir)) {
       return;
@@ -133,10 +129,7 @@ class Database {
 
       // Record migration
       try {
-        const insertSQL = this.driverName === 'postgres'
-          ? 'INSERT INTO migrations (name) VALUES ($1) ON CONFLICT DO NOTHING'
-          : 'INSERT OR IGNORE INTO migrations (name) VALUES (?)';
-        await this.run(insertSQL, [migrationName]);
+        await this.run('INSERT INTO migrations (name) VALUES ($1) ON CONFLICT DO NOTHING', [migrationName]);
         console.log(`Applied migration: ${migrationName}`);
       } catch (error) {
         console.warn(`Could not record migration ${migrationName}:`, error.message);

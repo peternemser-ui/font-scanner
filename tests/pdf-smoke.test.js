@@ -211,7 +211,7 @@ if (typeof describe === 'function') {
     it('should persist locale in scans table (migration exists)', () => {
       const fs = require('fs');
       const path = require('path');
-      const migrationPath = path.join(__dirname, '..', 'src', 'db', 'migrations', '009_add_locale_to_scans.sql');
+      const migrationPath = path.join(__dirname, '..', 'src', 'db', 'migrations', 'pg', '009_add_locale_to_scans.sql');
       expect(fs.existsSync(migrationPath)).toBe(true);
       const sql = fs.readFileSync(migrationPath, 'utf8');
       expect(sql).toContain('locale');

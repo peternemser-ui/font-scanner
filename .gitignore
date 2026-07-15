@@ -88,7 +88,9 @@ reports/
 ehthumbs.db
 Thumbs.db
 
-# SQLite WAL/SHM files (never track these)
+# Legacy SQLite artifacts. SQLite support was removed (PostgreSQL only) — these
+# should not exist, but a stale file must never be committed or silently used.
+data/*.db
 data/*.db-wal
 data/*.db-shm
 *.db-wal

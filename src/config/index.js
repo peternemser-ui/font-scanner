@@ -223,10 +223,10 @@ const config = {
     appUrl: process.env.APP_URL || 'https://sitemechanic.io'
   },
 
-  // Database
+  // Database — PostgreSQL only; see src/db/dbConfig.js for why there is no
+  // SQLite fallback.
   database: {
-    driver: (process.env.DB_DRIVER || 'sqlite').toLowerCase(),
-    sqlitePath: process.env.DATABASE_PATH || './data/fontscanner.db',
+    driver: (process.env.DB_DRIVER || 'postgres').toLowerCase(),
     postgresUrl: process.env.DATABASE_URL || '',
     pgPoolMin: parseInt(process.env.PG_POOL_MIN || '2', 10),
     pgPoolMax: parseInt(process.env.PG_POOL_MAX || '10', 10),

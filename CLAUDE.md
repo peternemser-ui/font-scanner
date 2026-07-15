@@ -3,7 +3,7 @@
 ## Tech Stack
 
 - **Runtime**: Node.js (>= 16), Express 4.18
-- **Database**: SQLite3 (WAL mode), file at `./data/fontscanner.db`
+- **Database**: PostgreSQL only (`pg`), via `DATABASE_URL`. Dev, test and prod all use Postgres — there is no SQLite driver and no fallback; an unset/invalid `DB_DRIVER` throws at startup rather than silently writing to a local file. Tests run against a real Postgres, each suite in its own schema (`TEST_DATABASE_URL` overrides the target).
 - **Frontend**: Vanilla JavaScript (no framework), CSS variables for design tokens
 - **PDF Generation**: Puppeteer (headless Chrome renders HTML templates to PDF)
 - **Browser Automation**: Puppeteer + Playwright (scanning), Lighthouse 11 (performance audits)
@@ -132,7 +132,7 @@ npm run i18n:audit   # Check i18n key completeness
 | `observability-engineer` | Structured logging, Prometheus/Grafana dashboards, OpenTelemetry tracing, alerting rules | opus |
 | `security-hardening-auditor` | CSP hardening, SSRF prevention, Redis rate limiting, audit logging, OWASP Top 10 | opus |
 | `perf-scalability-engineer` | Load testing, browser pool tuning, caching layers, asset optimization, horizontal scaling | opus |
-| `db-migration-architect` | Schema migrations, backup/recovery, index optimization, SQLite-to-PostgreSQL roadmap | sonnet |
+| `db-migration-architect` | Schema migrations (`src/db/migrations/pg/`), backup/recovery, index optimization, Postgres performance | sonnet |
 | `api-contract-guardian` | OpenAPI spec, API versioning, error standardization, request validation, contract testing | sonnet |
 | `error-resilience-engineer` | Circuit breakers, retry with backoff, timeout budgets, graceful degradation, crash recovery | sonnet |
 | `seo-i18n-optimizer` | Site SEO: meta tags, OG/Twitter Cards, hreflang (8 locales), sitemap, structured data, SEO parity | sonnet |

@@ -16,11 +16,20 @@ pg.types.setTypeParser(pg.types.builtins.DATE, (val) => val);
 
 class PostgresDriver {
   constructor(config) {
-    this.pool = new Pool({
+    const poolConfig = {
       connectionString: config.connectionString,
       min: config.pool.min,
       max: config.pool.max,
-    });
+    };
+
+    // Pin every pooled connection to a schema. Used by the test harness to
+    // isolate each suite in its own schema; unset in normal operation, where
+    // the server's default search_path applies.
+    if (config.schema) {
+      poolConfig.options = `-c search_path=${config.schema}`;
+    }
+
+    this.pool = new Pool(poolConfig);
   }
 
   async open() {
