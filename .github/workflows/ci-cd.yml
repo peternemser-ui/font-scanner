@@ -84,6 +84,11 @@ jobs:
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
+        # Advisory only. This fails with "Code scanning is not enabled for this
+        # repository" until code scanning is turned on in Settings → Security.
+        # Publishing a vulnerability report must not gate the pipeline; the Trivy
+        # scan step above still surfaces findings in the job log either way.
+        continue-on-error: true
         with:
           sarif_file: 'trivy-results.sarif'
 
@@ -147,64 +152,28 @@ jobs:
       - name: Upload image scan results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
+        continue-on-error: true  # Advisory only — see note in security-scan
         with:
           sarif_file: 'trivy-image-results.sarif'
 
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: github.ref == 'refs/heads/develop'
-    environment:
-      name: staging
-      url: https://staging.font-scanner.example.com
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Configure kubectl
-        run: |
-          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
-          export KUBECONFIG=kubeconfig
-
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl set image deployment/font-scanner \
-            font-scanner=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            -n font-scanner
-          kubectl rollout status deployment/font-scanner -n font-scanner
-
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
-    environment:
-      name: production
-      url: https://font-scanner.example.com
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Configure kubectl
-        run: |
-          echo "${{ secrets.KUBE_CONFIG_PROD }}" | base64 -d > kubeconfig
-          export KUBECONFIG=kubeconfig
-
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl set image deployment/font-scanner \
-            font-scanner=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            -n font-scanner
-          kubectl rollout status deployment/font-scanner -n font-scanner
-
-      - name: Verify deployment
-        run: |
-          kubectl get pods -n font-scanner
-          kubectl get svc -n font-scanner
+  # ─────────────────────────────────────────────────────────────────────────────
+  # No automated deploy job.
+  #
+  # Production is a single DigitalOcean droplet running Docker Compose, not a
+  # Kubernetes cluster. This file previously carried `deploy-staging` and
+  # `deploy-production` jobs that ran `kubectl set image` against
+  # `font-scanner.example.com` using `KUBE_CONFIG_STAGING`/`KUBE_CONFIG_PROD`.
+  # Neither secret nor cluster has ever existed, so those jobs described
+  # infrastructure we do not have. They never actually ran — `lint-and-test` was
+  # failing first and short-circuited the pipeline — so the moment lint went
+  # green they would have started failing on every push to main.
+  #
+  # Deploying is a deliberate manual step:
+  #
+  #   ssh sitemechanic
+  #   cd /root/sitemechanic
+  #   git pull && docker compose up -d --build && docker compose ps
+  #
+  # See DEPLOY.md for the full procedure and rollback. The `build-and-push` job
+  # above still publishes an image to ghcr.io on every push to main, which is
+  # what you roll back to if a deploy goes wrong.
