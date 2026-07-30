@@ -1696,7 +1696,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // =============================================================================
 
 let healthSocket = null;
-let healthHistory = {
+const healthHistory = {
   heap: [],
   rss: [],
   cpu: [],

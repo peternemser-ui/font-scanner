@@ -7,7 +7,7 @@
   },
   "extends": ["eslint:recommended"],
   "parserOptions": {
-    "ecmaVersion": 2020
+    "ecmaVersion": 2022
   },
   "globals": {
     "BigInt": "readonly"
@@ -74,7 +74,13 @@
         "generateSecurityFixesData": "readonly",
         "healthTimeline": "readonly",
         "urlInput": "readonly",
-        "urlValue": "readonly"
+        "urlValue": "readonly",
+        "initializeNavigation": "readonly",
+        "PDFExportUtility": "readonly",
+        "loadAnalytics": "readonly",
+        "_renderCharts": "readonly",
+        "_drawBarChart": "readonly",
+        "_analyticsData": "writable"
       },
       "rules": {
         "no-console": "off",
