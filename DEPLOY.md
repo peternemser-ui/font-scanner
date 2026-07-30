@@ -2,7 +2,72 @@
 
 # Font Scanner - DigitalOcean Deployment Guide
 
-Complete step-by-step guide to deploy Font Scanner to DigitalOcean.
+> ## ⚠️ Read this first — how production actually runs
+>
+> **Production is Docker Compose on a single DigitalOcean droplet, with nginx as a
+> reverse proxy on the host.** There is no pm2 and no Kubernetes cluster.
+>
+> Everything below this box is the original pm2-based guide from the first
+> deployment. It is kept for historical reference only — **it does not describe
+> the running system** and its `pm2` commands will fail (pm2 is not installed).
+> Treat this box as the source of truth.
+>
+> ### Deploy
+>
+> ```bash
+> ssh sitemechanic
+> cd /root/sitemechanic
+> git pull
+> docker compose up -d --build
+> docker compose ps          # both services should report "healthy"
+> ```
+>
+> ### Layout
+>
+> | Thing | Value |
+> |---|---|
+> | Droplet SSH alias | `sitemechanic` |
+> | App directory | `/root/sitemechanic` |
+> | Compose services | `font-scanner`, `db` |
+> | Containers | `font-scanner-app`, `font-scanner-db` |
+> | Database | PostgreSQL 16 in the `db` service (never SQLite) |
+> | TLS / reverse proxy | nginx on the host (see `deploy/nginx.conf`), certbot for certs |
+> | Published image | `ghcr.io/peternemser-ui/font-scanner:latest` (built by CI on push to main) |
+>
+> ### Verify
+>
+> ```bash
+> docker compose ps                        # health status
+> docker compose logs -f --tail=100 font-scanner
+> curl -fsS https://sitemechanic.io/api/health   # -> {"status":"OK","timestamp":...}
+> ```
+>
+> (`/api/health` is the public endpoint — there is no `/health`. Deeper detail is
+> admin-only at `/api/health/details`.)
+>
+> ### Roll back
+>
+> ```bash
+> cd /root/sitemechanic
+> git log --oneline -5                     # find the last good commit
+> git checkout <good-sha>
+> docker compose up -d --build
+> ```
+>
+> ### If a scan fails in production
+>
+> Check memory and disk before anything else — past outages were container memory
+> exhaustion and a full tmpfs `/tmp` from leaked Chromium profiles:
+>
+> ```bash
+> docker stats --no-stream
+> df -h /tmp /
+> ```
+>
+> ### CI
+>
+> Pushing to `main` runs lint, tests (against real PostgreSQL) and builds/pushes a
+> container image. **CI does not deploy.** Deploying is the manual step above.
 
 ---
 

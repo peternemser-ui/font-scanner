@@ -61,3 +61,13 @@ Jenkinsfile
 .prettierrc
 .eslintrc*
 .editorconfig
+
+# Design sources — never ship layered originals from the served assets dir
+*.psd
+*.ai
+*.sketch
+*.fig
+
+# Local scratch
+tmp-*
+nav-check.js

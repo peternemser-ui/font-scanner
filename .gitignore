@@ -101,3 +101,25 @@ tests/*.db-shm
 
 # Database backups
 backups/
+
+# Design sources. These live next to the exported web assets for convenience, but
+# src/public/ is served directly by Express — committing them would publish the
+# layered originals at /assets/*.psd and add ~12MB to the image.
+*.psd
+*.ai
+*.sketch
+*.fig
+
+# Local scratch files. Throwaway probes that kept landing in `git status`.
+tmp-*
+nav-check.js
+
+# Per-machine Claude Code permission grants. This is local state, not shared
+# config, and it accumulates whatever was typed at a prompt — the tracked copy
+# had picked up sample JWTs and a real account UUID/email. This repo is public,
+# so keep it out of git. Shared settings belong in .claude/settings.json.
+.claude/settings.local.json
+
+# A stray Windows path once got used as a filename ("F:\dev\...\seo-resp.json"),
+# creating a root file with an escaped colon. Keep it from coming back.
+F*devfont-scanner*.json

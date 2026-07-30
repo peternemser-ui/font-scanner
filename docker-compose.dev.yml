@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   font-scanner-dev:
     build:
@@ -25,9 +23,9 @@ services:
       - REPORTS_RETENTION_DAYS=7
       - MAX_PAGES_TO_SCAN=10
       - SCAN_TIMEOUT=60000
-      # Uncomment to use PostgreSQL instead of SQLite:
-      # - DB_DRIVER=postgres
-      # - DATABASE_URL=postgresql://fontscanner:fontscanner_dev@postgres-dev:5432/fontscanner
+      # PostgreSQL (matches production)
+      - DB_DRIVER=postgres
+      - DATABASE_URL=postgresql://fontscanner:fontscanner_dev@postgres-dev:5432/fontscanner
     volumes:
       - ./src:/app/src:cached
       - ./tests:/app/tests:cached
