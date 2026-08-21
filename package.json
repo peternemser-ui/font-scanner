@@ -48,7 +48,7 @@
     "generic-pool": "^3.9.0",
     "helmet": "^7.0.0",
     "html2canvas": "^1.4.1",
-    "jsdom": "^27.1.0",
+    "jsdom": "^27.4.0",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^4.0.0",
     "lighthouse": "^11.0.0",
