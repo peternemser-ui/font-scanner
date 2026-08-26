@@ -128,33 +128,31 @@ describe('Report Cleanup Service', () => {
     });
 
     it('should handle file deletion errors gracefully', async () => {
-      // Create a report
+      // Create an old report that is eligible for deletion
       const report = path.join(testReportsDir, 'report.pdf');
       await fs.writeFile(report, 'content');
-      
+
       const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
       await fs.utimes(report, tenDaysAgo, tenDaysAgo);
 
-      // Skip this test on Windows as file permissions work differently
-      if (process.platform === 'win32') {
-        // Just verify cleanup runs without throwing
+      // Force the unlink to fail the same way a real permission/IO error would.
+      // Mocking the delete (rather than chmod'ing the directory) keeps this
+      // deterministic across platforms and privilege levels, and — because the
+      // spy is always restored — never leaves the fixture dir in a state that
+      // poisons the following tests.
+      const unlinkSpy = jest
+        .spyOn(fs, 'unlink')
+        .mockRejectedValueOnce(new Error('EACCES: permission denied, unlink'));
+
+      try {
         const result = await cleanupOldReports();
-        expect(result).toHaveProperty('deleted');
-        return;
+
+        // The failed delete must be counted as an error, not a deletion
+        expect(result.errors).toBeGreaterThan(0);
+        expect(result.deleted).toBe(0);
+      } finally {
+        unlinkSpy.mockRestore();
       }
-
-      // Make directory read-only (permission issue) - Unix only
-      await fs.chmod(testReportsDir, 0o444);
-
-      // Run cleanup
-      const result = await cleanupOldReports();
-
-      // Should track as error
-      expect(result.errors).toBeGreaterThan(0);
-      expect(result.deleted).toBe(0);
-
-      // Restore permissions for cleanup
-      await fs.chmod(testReportsDir, 0o755);
     });
   });
 
